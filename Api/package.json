@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "otrelink api",
   "author": "Heberto Urribarri",
-  "main": "src/index.js",
+  "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon server.js"
   }
 }

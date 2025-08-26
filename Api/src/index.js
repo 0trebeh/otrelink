@@ -22,14 +22,14 @@ import userRoutes from './routes/user.routes.js';
 
 const app = express();
 
-// Basic security & middlewares
+// Middlewares
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 app.use(rateLimit({ windowMs: 60 * 1000, max: 120 }));
 
-// Health
+// Health check
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // Routes
@@ -47,7 +47,8 @@ app.use('/socialIcon', socialIconRoutes);
 app.use('/textStyle', textStyleRoutes);
 app.use('/user', userRoutes);
 
-const PORT = process.env.PORT || 4000;
 connectDB().then(() => {
-    app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));
+  console.log(`API connected to database`);
 });
+
+export default app;
