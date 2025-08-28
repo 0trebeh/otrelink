@@ -4,7 +4,7 @@ import {
     getSocialIconsByPage,
     updateSocialIconById,
     deleteSocialIconById
-} from '../controllers/SocialIcon.controllers.js';
+} from '../controllers/socialIcon.controllers.js';
 
 const router = Router();
 

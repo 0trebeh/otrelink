@@ -4,7 +4,7 @@ import {
     getTextStylesByPage,
     updateTextStyleById,
     deleteTextStyleById
-} from '../controllers/TextStyle.controllers.js';
+} from '../controllers/textStyle.controllers.js';
 
 const router = Router();
 
