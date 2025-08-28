@@ -7,8 +7,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "api_dev": "nodemon api/src/index.js",
-    "api": "node api/src/index.js"
+    "api_dev": "nodemon api/server.js",
+    "api": "node api/server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
