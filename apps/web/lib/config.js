@@ -10,6 +10,7 @@ export const config = {
   pagesPerUser: 10,
 };
 
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  console.warn('[otrelink] JWT_SECRET is not set. Set it before deploying!');
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET) console.warn('[otrelink] JWT_SECRET is not set. Set it before deploying!');
+  if (!process.env.NEXT_PUBLIC_PAGE_URL) console.warn('[otrelink] NEXT_PUBLIC_PAGE_URL is not set: "View page" links will point to http://localhost:5173');
 }

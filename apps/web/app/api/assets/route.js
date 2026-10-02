@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/db';
 import { config } from '@/lib/config';
 import { handler, json, error, requireUser, rateLimit } from '@/lib/http';
+import { publicOrigin } from '@/lib/origin';
 
 const ALLOWED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif'];
 
@@ -16,6 +17,6 @@ export const POST = handler(async (req) => {
 
   const db = await getDb();
   const { id } = await db.assets.create({ userId: user.id, mime: file.type, data: Buffer.from(await file.arrayBuffer()) });
-  const origin = new URL(req.url).origin;
+  const origin = publicOrigin(req);
   return json({ id, url: `${origin}/api/assets/${id}` }, { status: 201 });
 });
