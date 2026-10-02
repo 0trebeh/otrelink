@@ -15,10 +15,15 @@
     "dev:web": "npm run dev -w @otrelink/web",
     "dev:page": "npm run dev -w @otrelink/page",
     "build": "npm run build -w @otrelink/web && npm run build -w @otrelink/page",
+    "build:web": "npm run build -w @otrelink/web",
+    "build:page": "npm run build -w @otrelink/page",
     "start": "npm run start -w @otrelink/web",
     "test": "node --test packages/core/test/*.test.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }
