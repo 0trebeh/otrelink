@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { copyFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -17,9 +17,21 @@ const spaFallback = () => ({
   },
 });
 
-export default defineConfig({
-  base,
-  appType: 'spa',
-  build: { target: 'es2020' },
-  plugins: [spaFallback()],
+export default defineConfig(({ command, mode }) => {
+  // A production build without VITE_API_URL would silently call http://localhost:3000.
+  const env = { ...loadEnv(mode, import.meta.dirname, 'VITE_'), ...process.env };
+  if (command === 'build' && !env.VITE_API_URL) {
+    throw new Error(
+      '\n\nVITE_API_URL is not set. The public page needs the URL of the Otrelink app (API), e.g.\n'
+      + '  VITE_API_URL=https://your-app.onrender.com\n'
+      + 'GitHub Pages: add it in Settings → Secrets and variables → Actions → Variables.\n'
+      + 'Local build: put it in apps/page/.env\n',
+    );
+  }
+  return {
+    base,
+    appType: 'spa',
+    build: { target: 'es2020' },
+    plugins: [spaFallback()],
+  };
 });
