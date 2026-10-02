@@ -1,0 +1,68 @@
+# Builds the public link page (apps/page) and deploys it to GitHub Pages.
+name: Deploy link page to Pages
+
+on:
+  push:
+    branches: ["main"]
+    # Only rebuild when the public page or the shared modules change.
+    paths:
+      - "apps/page/**"
+      - "packages/core/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/static.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Build link page
+        run: npm run build:page
+        env:
+          # Set in: Settings → Secrets and variables → Actions → Variables
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_HOME_URL: ${{ vars.VITE_HOME_URL || vars.VITE_API_URL }}
+          # "/otrelink/" for username.github.io/otrelink, "/" with a custom domain
+          VITE_BASE: ${{ steps.pages.outputs.base_path }}/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/page/dist
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

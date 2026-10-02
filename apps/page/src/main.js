@@ -10,7 +10,10 @@ const app = document.getElementById('app');
 function getSlug() {
   const q = new URLSearchParams(location.search).get('u');
   if (q) return q;
-  return decodeURIComponent(location.pathname.split('/').filter(Boolean)[0] || '').replace(/^@/, '');
+  // Ignore the base path (e.g. "/otrelink/" on GitHub Pages).
+  const base = import.meta.env.BASE_URL || '/';
+  const path = location.pathname.startsWith(base) ? location.pathname.slice(base.length) : location.pathname;
+  return decodeURIComponent(path.split('/').filter(Boolean)[0] || '').replace(/^@/, '');
 }
 
 function visitorId() {
