@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Otrelink</title>
+    <meta name="description" content="" />
+    <meta property="og:title" content="" />
+    <meta property="og:description" content="" />
+    <meta property="og:image" content="" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f3f3f1; }
+      #app { min-height: 100vh; }
+      .ol-state { min-height: 100vh; display: grid; place-items: center; text-align: center; padding: 24px; font-family: system-ui, sans-serif; color: #17171f; }
+      .ol-state h1 { font-size: 22px; margin: 0 0 6px; }
+      .ol-state p { margin: 0 0 18px; color: #6a6a78; }
+      .ol-state a { display: inline-block; padding: 12px 20px; border-radius: 999px; background: #17171f; color: #fff; text-decoration: none; font-weight: 600; }
+      .ol-spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid #ddd; border-top-color: #7a2cf0; animation: s .8s linear infinite; }
+      @keyframes s { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div id="app"><div class="ol-state"><div class="ol-spinner" aria-label="Loading"></div></div></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
