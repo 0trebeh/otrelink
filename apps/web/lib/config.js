@@ -6,7 +6,8 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'dev-only-insecure-secret-change-me',
   pageUrl: (process.env.NEXT_PUBLIC_PAGE_URL || 'http://localhost:5173').replace(/\/$/, ''),
   corsOrigins: (process.env.PUBLIC_CORS_ORIGINS || '*').split(',').map((s) => s.trim()).filter(Boolean),
-  maxUploadBytes: 3 * 1024 * 1024,
+  maxUploadBytes: 3 * 1024 * 1024, // images
+  maxPdfBytes: 10 * 1024 * 1024,
   pagesPerUser: 10,
 };
 

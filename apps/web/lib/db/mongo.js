@@ -82,14 +82,14 @@ export async function createMongoDriver() {
       removeForPage: async (pageId) => { await events.deleteMany({ pageId }); },
     },
     assets: {
-      create: async ({ userId, mime, data }) => {
+      create: async ({ userId, mime, data, name = '' }) => {
         const id = crypto.randomUUID().replace(/-/g, '');
-        await assets.insertOne({ _id: id, userId, mime, size: data.length, data: new Binary(data), createdAt: new Date() });
+        await assets.insertOne({ _id: id, userId, mime, name, size: data.length, data: new Binary(data), createdAt: new Date() });
         return { id };
       },
       findById: async (id) => {
         const doc = await assets.findOne({ _id: id });
-        return doc ? { id: doc._id, userId: doc.userId, mime: doc.mime, data: Buffer.from(doc.data.buffer) } : null;
+        return doc ? { id: doc._id, userId: doc.userId, mime: doc.mime, name: doc.name || '', data: Buffer.from(doc.data.buffer) } : null;
       },
       remove: async (id) => { await assets.deleteOne({ _id: id }); },
     },

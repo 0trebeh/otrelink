@@ -35,13 +35,17 @@ import faq from './faq.js';
 import countdown from './countdown.js';
 import divider from './divider.js';
 import share from './share.js';
+import pdf from './pdf.js';
+import collection from './collection.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
+  collection,
   header,
   text,
   image,
   gallery,
+  pdf,
   video,
   music,
   map,

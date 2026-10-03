@@ -25,6 +25,14 @@ export const iconPaths = {
   star: '<path d="m12 3 2.7 5.6 6.2.9-4.5 4.4 1 6.1L12 17.1 6.6 20l1-6.1L3.1 9.5l6.2-.9z"/>',
   button: '<rect x="3" y="8" width="18" height="8" rx="4"/>',
   spacer: '<path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  chevron: '<path d="m6 9 6 6 6-6"/>',
+  collection: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5" opacity=".55"/>',
+  arrowLeft: '<path d="m15 6-6 6 6 6"/>',
+  arrowRight: '<path d="m9 6 6 6-6 6"/>',
+  external: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
 };
 
 export const verifiedSvg =

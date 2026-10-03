@@ -22,6 +22,20 @@ export default function Preview({ page, replayKey = 0, className, scale = 1 }) {
     if (doc?.readyState === 'complete' && doc.getElementById('root')) setReady(true);
   }, []);
 
+  // Editor shortcuts (Ctrl+S, Ctrl+Z…) keep working after clicking inside the preview.
+  useEffect(() => {
+    if (!ready) return;
+    const doc = frameRef.current?.contentDocument;
+    if (!doc) return;
+    const forward = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || !['s', 'z', 'y'].includes(e.key.toLowerCase())) return;
+      e.preventDefault();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, ctrlKey: e.ctrlKey, metaKey: e.metaKey, shiftKey: e.shiftKey, cancelable: true }));
+    };
+    doc.addEventListener('keydown', forward);
+    return () => doc.removeEventListener('keydown', forward);
+  }, [ready]);
+
   useEffect(() => {
     if (!ready) return;
     const doc = frameRef.current?.contentDocument;

@@ -80,10 +80,10 @@ export async function createFileDriver() {
       },
     },
     assets: {
-      create: async ({ userId, mime, data }) => {
+      create: async ({ userId, mime, data, name = '' }) => {
         const id = crypto.randomUUID().replace(/-/g, '');
         await fs.writeFile(path.join(ASSETS, id), data);
-        state.assets.push({ id, userId, mime, size: data.length, createdAt: now() });
+        state.assets.push({ id, userId, mime, name, size: data.length, createdAt: now() });
         await persist();
         return { id };
       },

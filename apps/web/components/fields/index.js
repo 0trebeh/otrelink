@@ -6,6 +6,7 @@ import { fieldOptions } from '@otrelink/core';
 import { Input, Textarea, Select, Toggle } from '../ui';
 import ColorField from './ColorField';
 import ImageField from './ImageField';
+import FileField from './FileField';
 import ListField from './ListField';
 import FontField from './FontField';
 import ChoiceField from './ChoiceField';
@@ -40,6 +41,7 @@ export const fieldInputs = {
   font: FontField,
   color: ColorField,
   image: ImageField,
+  file: FileField,
   list: ListField,
   datetime: ({ value, onChange, id }) => (
     <Input id={id} type="datetime-local" value={toLocal(value)} onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : '')} />

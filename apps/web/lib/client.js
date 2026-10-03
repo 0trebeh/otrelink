@@ -26,8 +26,8 @@ const MESSAGES = {
   invalid_credentials: 'Email or password is incorrect.',
   too_many_requests: 'Too many attempts. Wait a minute and try again.',
   page_limit: 'You reached the maximum number of pages.',
-  file_too_large: 'That image is larger than 3 MB.',
-  unsupported_type: 'Upload a PNG, JPG, WebP, GIF or AVIF image.',
+  file_too_large: 'That file is too large.',
+  unsupported_type: 'That file type is not supported here.',
   unauthorized: 'Your session expired. Log in again.',
 };
 
@@ -36,6 +36,7 @@ export function errorMessage(err) {
     const min = Math.ceil(err.data.retryAfter / 60);
     return `Too many attempts. Try again in ${min} minute${min === 1 ? '' : 's'}.`;
   }
+  if (err?.code === 'file_too_large' && err.data?.max) return `That file is too large. The limit is ${Math.round(err.data.max / 1048576)} MB.`;
   if (err?.code === 'internal_error') return 'The server had a problem. Try again in a moment.';
   return MESSAGES[err?.code] || 'Something went wrong. Try again.';
 }
@@ -58,5 +59,12 @@ export async function prepareImage(file, maxSize = 1600) {
 export async function uploadImage(file, maxSize) {
   const form = new FormData();
   form.append('file', await prepareImage(file, maxSize));
+  return api('/api/assets', { method: 'POST', form });
+}
+
+/** Upload any allowed file (images are resized first). Returns { url, name, size, type }. */
+export async function uploadFile(file, maxSize) {
+  const form = new FormData();
+  form.append('file', file.type.startsWith('image/') ? await prepareImage(file, maxSize) : file);
   return api('/api/assets', { method: 'POST', form });
 }

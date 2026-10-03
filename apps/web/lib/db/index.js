@@ -17,21 +17,22 @@ const drivers = {
   file: () => import('./file.js').then((m) => m.createFileDriver()),
 };
 
-let dbPromise = globalThis.__otrelinkDb;
+// One shared instance per process. Next.js loads server code in separate
+// bundles (pages vs. API routes, plus hot reloads), so the instance lives on
+// globalThis instead of a module variable — otherwise the file driver would
+// keep two different copies of the data in memory.
+const KEY = Symbol.for('otrelink.db');
 
 export function getDb() {
-  if (!dbPromise) {
+  if (!globalThis[KEY]) {
     const load = drivers[config.dbDriver];
     if (!load) throw new Error(`Unknown DB_DRIVER "${config.dbDriver}"`);
-    dbPromise = load().catch((err) => {
+    globalThis[KEY] = load().catch((err) => {
       // Don't cache a failed connection: the next request retries.
-      dbPromise = null;
-      globalThis.__otrelinkDb = null;
+      globalThis[KEY] = null;
       console.error(`[otrelink] Could not connect to the "${config.dbDriver}" database:`, err?.message || err);
       throw err;
     });
-    // Survive hot reloads in dev.
-    globalThis.__otrelinkDb = dbPromise;
   }
-  return dbPromise;
+  return globalThis[KEY];
 }

@@ -57,6 +57,15 @@ export const fieldTypes = {
       return /^(https?:|\/)/.test(u) ? u.slice(0, 2048) : '';
     },
   },
+  // Uploaded file (PDF…). Same storage as images: an http(s) or relative URL.
+  // Field props: accept ('application/pdf'), maxSize (bytes, informative).
+  file: {
+    default: '',
+    sanitize: (v) => {
+      const u = normalizeUrl(v);
+      return /^(https?:|\/)/.test(u) ? u.slice(0, 2048) : '';
+    },
+  },
   email: {
     default: '',
     sanitize: (v) => {
