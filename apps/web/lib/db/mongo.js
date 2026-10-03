@@ -20,15 +20,24 @@ export async function createMongoDriver() {
   const events = db.collection('events');
   const assets = db.collection('assets');
 
-  await Promise.all([
-    users.createIndex({ email: 1 }, { unique: true }),
-    pages.createIndex({ slug: 1 }, { unique: true }),
-    pages.createIndex({ userId: 1 }),
-    events.createIndex({ pageId: 1, ts: -1 }),
+  console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
+
+  // Index problems (e.g. old data in the same database) must not take the app down.
+  const indexes = [
+    [users, { email: 1 }, { unique: true }],
+    [pages, { slug: 1 }, { unique: true }],
+    [pages, { userId: 1 }, {}],
+    [events, { pageId: 1, ts: -1 }, {}],
     // Analytics events expire after 180 days.
-    events.createIndex({ ts: 1 }, { expireAfterSeconds: 180 * 86400 }),
-    assets.createIndex({ userId: 1 }),
-  ]);
+    [events, { ts: 1 }, { expireAfterSeconds: 180 * 86400 }],
+    [assets, { userId: 1 }, {}],
+  ];
+  const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') {
+      console.warn(`[otrelink] Could not create index ${JSON.stringify(indexes[i][1])} on "${indexes[i][0].collectionName}":`, r.reason?.message);
+    }
+  });
 
   const dupe = (err) => {
     if (err?.code === 11000) throw Object.assign(new Error('slug_taken'), { code: 'slug_taken' });

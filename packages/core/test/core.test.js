@@ -71,3 +71,15 @@ test('registries are populated', () => {
   assert.ok(buttonStyles.list().length >= 6 && fonts.list().length >= 10 && socials.list().length >= 30);
   assert.equal(defaultDesign().wallpaper.type, 'solid');
 });
+
+test('header layout styles target the root element', () => {
+  for (const layout of ['hero', 'left']) {
+    const page = createDefaultPage({ slug: 'demo' });
+    page.design.headerLayout = layout;
+    const { html, css } = renderPage(sanitizePage(page));
+    assert.ok(html.includes(`class="ol-root ol-layout-${layout}`), `root has ol-layout-${layout}`);
+    // The layout class sits on .ol-root itself, so it must be ".ol-root.ol-layout-x", never ".ol-root .ol-layout-x".
+    assert.ok(css.includes(`.ol-root.ol-layout-${layout}`), `css for ${layout}`);
+    assert.ok(!css.includes(`.ol-root .ol-layout-`), 'no descendant layout selectors');
+  }
+});

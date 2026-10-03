@@ -23,7 +23,13 @@ export function getDb() {
   if (!dbPromise) {
     const load = drivers[config.dbDriver];
     if (!load) throw new Error(`Unknown DB_DRIVER "${config.dbDriver}"`);
-    dbPromise = load();
+    dbPromise = load().catch((err) => {
+      // Don't cache a failed connection: the next request retries.
+      dbPromise = null;
+      globalThis.__otrelinkDb = null;
+      console.error(`[otrelink] Could not connect to the "${config.dbDriver}" database:`, err?.message || err);
+      throw err;
+    });
     // Survive hot reloads in dev.
     globalThis.__otrelinkDb = dbPromise;
   }

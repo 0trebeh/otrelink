@@ -2,7 +2,7 @@
 // Browser-side API helper.
 
 export class ApiError extends Error {
-  constructor(status, code) { super(code); this.status = status; this.code = code; }
+  constructor(status, code, data = {}) { super(code); this.status = status; this.code = code; this.data = data; }
 }
 
 export async function api(path, { method = 'GET', body, form } = {}) {
@@ -13,7 +13,7 @@ export async function api(path, { method = 'GET', body, form } = {}) {
     credentials: 'same-origin',
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, data?.error || 'request_failed');
+  if (!res.ok) throw new ApiError(res.status, data?.error || 'request_failed', data || {});
   return data;
 }
 
@@ -31,7 +31,14 @@ const MESSAGES = {
   unauthorized: 'Your session expired. Log in again.',
 };
 
-export const errorMessage = (err) => MESSAGES[err?.code] || 'Something went wrong. Try again.';
+export function errorMessage(err) {
+  if (err?.code === 'too_many_requests' && err.data?.retryAfter) {
+    const min = Math.ceil(err.data.retryAfter / 60);
+    return `Too many attempts. Try again in ${min} minute${min === 1 ? '' : 's'}.`;
+  }
+  if (err?.code === 'internal_error') return 'The server had a problem. Try again in a moment.';
+  return MESSAGES[err?.code] || 'Something went wrong. Try again.';
+}
 
 /** Resize an image file in the browser before uploading (keeps GIFs as-is). */
 export async function prepareImage(file, maxSize = 1600) {

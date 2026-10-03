@@ -5,7 +5,7 @@ import { createSession, publicUser } from '@/lib/auth';
 import { handler, json, error, readJson, rateLimit } from '@/lib/http';
 
 export const POST = handler(async (req) => {
-  rateLimit(req, 'register', 10, 60 * 60 * 1000);
+  rateLimit(req, 'register', 15, 15 * 60 * 1000);
   const body = await readJson(req);
   const email = String(body.email || '').trim().toLowerCase();
   const password = String(body.password || '');

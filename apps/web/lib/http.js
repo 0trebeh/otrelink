@@ -13,8 +13,12 @@ export function handler(fn) {
     try {
       return await fn(req, ctx);
     } catch (err) {
-      if (err instanceof HttpError) return error(err.status, err.code);
-      console.error(err);
+      if (err instanceof HttpError) {
+        const res = error(err.status, err.code, err.retryAfter ? { retryAfter: err.retryAfter } : {});
+        if (err.retryAfter) res.headers.set('Retry-After', String(err.retryAfter));
+        return res;
+      }
+      console.error(`[otrelink] ${req?.method} ${req?.url ? new URL(req.url).pathname : ''} failed:`, err);
       return error(500, 'internal_error');
     }
   };
@@ -54,10 +58,23 @@ export function corsHeaders(req) {
 
 // Very small in-memory rate limiter (per process). Good enough for a single
 // server; swap for Redis/Upstash if you scale horizontally.
+// Note: buckets live in memory, so a restart/redeploy resets them.
 const buckets = new Map();
+
+/** Best-effort client IP behind proxies (Render, Vercel, Cloudflare, Nginx). */
+export function clientIp(req) {
+  const h = req.headers;
+  return (
+    h.get('cf-connecting-ip')
+    || h.get('true-client-ip')
+    || (h.get('x-forwarded-for') || '').split(',')[0].trim()
+    || h.get('x-real-ip')
+    || 'local'
+  );
+}
+
 export function rateLimit(req, name, limit, windowMs) {
-  const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || req.headers.get('x-real-ip') || 'local';
-  const key = `${name}:${ip}`;
+  const key = `${name}:${clientIp(req)}`;
   const now = Date.now();
   const b = buckets.get(key);
   if (!b || b.reset < now) {
@@ -65,5 +82,9 @@ export function rateLimit(req, name, limit, windowMs) {
     if (buckets.size > 5000) for (const [k, v] of buckets) if (v.reset < now) buckets.delete(k);
     return;
   }
-  if (++b.count > limit) throw new HttpError(429, 'too_many_requests');
+  if (++b.count > limit) {
+    const err = new HttpError(429, 'too_many_requests');
+    err.retryAfter = Math.ceil((b.reset - now) / 1000);
+    throw err;
+  }
 }

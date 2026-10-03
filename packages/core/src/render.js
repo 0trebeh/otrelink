@@ -24,10 +24,10 @@ const BASE_CSS = `
 .ol-root .ol-title svg{color:#3b82f6;font-size:.8em;flex-shrink:0}
 .ol-root .ol-bio{margin:0;line-height:1.5;max-width:46ch;opacity:.92}
 .ol-root .ol-bio a{color:inherit}
-.ol-root .ol-layout-hero .ol-avatar{width:100%;height:auto;aspect-ratio:4/3;border-radius:var(--ol-surface-radius);margin-bottom:16px;font-size:64px}
-.ol-root .ol-layout-left .ol-profile{align-items:flex-start;text-align:left}
+.ol-root.ol-layout-hero .ol-avatar{width:100%;height:auto;aspect-ratio:4/3;border-radius:var(--ol-surface-radius);margin-bottom:16px;font-size:64px}
+.ol-root.ol-layout-left .ol-profile{align-items:flex-start;text-align:left}
 .ol-root .ol-socials{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:10px}
-.ol-root .ol-layout-left .ol-profile .ol-socials{justify-content:flex-start}
+.ol-root.ol-layout-left .ol-profile .ol-socials{justify-content:flex-start}
 .ol-root .ol-socials-bottom{margin:28px 0 0}
 .ol-root .ol-social{color:var(--ol-social-color);display:inline-grid;place-items:center;transition:transform .15s,opacity .15s;text-decoration:none}
 .ol-root .ol-social svg{width:var(--ol-social-size);height:var(--ol-social-size)}
