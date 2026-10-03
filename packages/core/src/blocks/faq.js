@@ -6,6 +6,12 @@ export default {
   description: 'Collapsible questions and answers.',
   icon: 'list',
   category: 'Content',
+  cssClasses: [
+    { selector: '.ol-faq', description: 'Card with all questions' },
+    { selector: '.ol-faq-item', description: 'One question (details element)' },
+    { selector: '.ol-faq-item summary', description: 'Question text' },
+    { selector: '.ol-faq-item div', description: 'Answer' },
+  ],
   fields: [
     { key: 'title', type: 'text', label: 'Title (optional)' },
     { key: 'items', type: 'list', label: 'Questions', itemLabel: 'question', max: 30, fields: [

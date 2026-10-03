@@ -17,6 +17,11 @@ export default {
   description: 'Count down to a launch, drop or event.',
   icon: 'clock',
   category: 'Content',
+  cssClasses: [
+    { selector: '.ol-countdown', description: 'Card' },
+    { selector: '.ol-countdown-grid', description: 'Row of numbers' },
+    { selector: '.ol-countdown-grid strong / small', description: 'Number / unit label' },
+  ],
   fields: [
     { key: 'title', type: 'text', label: 'Title', default: 'Something big is coming' },
     { key: 'date', type: 'datetime', label: 'Date & time', required: true },

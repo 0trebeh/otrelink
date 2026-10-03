@@ -9,6 +9,9 @@ export default {
   description: 'A “Save contact” button that downloads your details.',
   icon: 'card',
   category: 'Contact',
+  cssClasses: [
+    { selector: '.ol-btn', description: '“Save contact” button' },
+  ],
   fields: [
     { key: 'name', type: 'text', label: 'Full name', required: true },
     { key: 'org', type: 'text', label: 'Company' },

@@ -6,6 +6,11 @@ export default {
   description: 'A picture, optionally linked.',
   icon: 'image',
   category: 'Media',
+  cssClasses: [
+    { selector: '.ol-image', description: 'figure wrapper' },
+    { selector: '.ol-image img', description: 'The image' },
+    { selector: '.ol-image figcaption', description: 'Caption' },
+  ],
   fields: [
     { key: 'image', type: 'image', label: 'Image', required: true },
     { key: 'alt', type: 'text', label: 'Alt text', help: 'Describes the image for screen readers.' },

@@ -21,6 +21,7 @@ export default async function Home() {
       <header className="flex items-center justify-between h-16 px-4 sm:px-8 max-w-6xl mx-auto">
         <Logo />
         <nav className="flex items-center gap-2">
+          <Link href="/docs" className="h-10 px-4 inline-flex items-center rounded-full text-sm font-semibold hover:bg-panel">Docs</Link>
           {user ? (
             <Link href="/dashboard" className="h-10 px-4 inline-flex items-center rounded-full bg-ink text-white text-sm font-semibold">Open dashboard</Link>
           ) : (

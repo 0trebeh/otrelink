@@ -6,6 +6,10 @@ export default {
   description: 'A title to separate sections.',
   icon: 'heading',
   category: 'Essentials',
+  cssClasses: [
+    { selector: '.ol-header', description: 'The header text' },
+    { selector: '.ol-header-sm / -md / -lg', description: 'Size variants' },
+  ],
   fields: [
     { key: 'text', type: 'text', label: 'Text', required: true, max: 100, placeholder: 'My projects' },
     { key: 'size', type: 'select', label: 'Size', default: 'md', options: [

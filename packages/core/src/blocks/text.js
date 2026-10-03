@@ -6,6 +6,10 @@ export default {
   description: 'A paragraph. Supports **bold**, *italic* and [links](https://…).',
   icon: 'text',
   category: 'Content',
+  cssClasses: [
+    { selector: '.ol-text', description: 'The paragraph' },
+    { selector: '.ol-text.ol-card', description: 'When “Show on a card” is on' },
+  ],
   fields: [
     { key: 'text', type: 'textarea', label: 'Text', required: true, max: 3000 },
     { key: 'align', type: 'select', label: 'Alignment', default: 'center', options: ['center', 'left', 'right'] },

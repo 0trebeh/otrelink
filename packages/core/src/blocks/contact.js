@@ -6,6 +6,11 @@ export default {
   description: 'Email, call or WhatsApp in one tap.',
   icon: 'message',
   category: 'Contact',
+  cssClasses: [
+    { selector: '.ol-contact', description: 'Wrapper' },
+    { selector: '.ol-contact-stack / .ol-contact-row', description: 'Layout variants' },
+    { selector: '.ol-btn', description: 'Each contact button' },
+  ],
   fields: [
     { key: 'email', type: 'email', label: 'Email' },
     { key: 'emailLabel', type: 'text', label: 'Email button text', default: 'Send me an email', showIf: { key: 'email', truthy: true } },

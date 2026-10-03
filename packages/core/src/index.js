@@ -24,3 +24,4 @@ export * from './design.js';
 export * from './blocks/index.js';
 export * from './page.js';
 export * from './render.js';
+export * from './docs.js';

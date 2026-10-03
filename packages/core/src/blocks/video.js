@@ -19,6 +19,10 @@ export default {
   description: 'YouTube, Vimeo, TikTok or a video file.',
   icon: 'video',
   category: 'Media',
+  cssClasses: [
+    { selector: '.ol-frame', description: 'YouTube / Vimeo / TikTok embed' },
+    { selector: '.ol-video', description: 'Native player for .mp4/.webm files' },
+  ],
   fields: [
     { key: 'url', type: 'url', label: 'Video URL', required: true, placeholder: 'https://youtube.com/watch?v=…' },
     { key: 'title', type: 'text', label: 'Title (optional)' },

@@ -161,3 +161,35 @@ export function wallpaperBaseColor(w = {}) {
   if (w.type === 'image' || w.type === 'video') return null;
   return w.color || w.bg || w.from || null;
 }
+
+// ── CSS variables reference (used by the /docs page) ──────────────────────
+// Every variable written by designCss() above. A unit test checks both stay in sync.
+export const cssVariables = [
+  { name: '--ol-btn-bg', setting: 'buttonColor', description: 'Button background (and accent for outline/neon styles).' },
+  { name: '--ol-btn-fg', setting: 'buttonTextColor', description: 'Button text color.' },
+  { name: '--ol-btn-border', setting: 'buttonBorderColor', description: 'Button border / secondary accent color.' },
+  { name: '--ol-btn-bw', setting: 'buttonBorderWidth', description: 'Button border width.' },
+  { name: '--ol-btn-shadow', setting: 'buttonShadowColor', description: 'Button shadow color.' },
+  { name: '--ol-btn-radius', setting: 'buttonRadius', description: 'Button corner radius (999px = pill).' },
+  { name: '--ol-btn-h', setting: 'buttonHeight', description: 'Minimum button height.' },
+  { name: '--ol-btn-align', setting: 'buttonAlign', description: 'Button text alignment (center | left).' },
+  { name: '--ol-btn-transform', setting: 'buttonTransform', description: 'Button text case (none | uppercase | lowercase).' },
+  { name: '--ol-title-font', setting: 'titleFont', description: 'Font stack for the title and headers.' },
+  { name: '--ol-body-font', setting: 'bodyFont', description: 'Font stack for everything else.' },
+  { name: '--ol-title-color', setting: 'titleColor', description: 'Title and header color.' },
+  { name: '--ol-text-color', setting: 'textColor', description: 'Body text color.' },
+  { name: '--ol-title-size', setting: 'titleSize', description: 'Profile title font size.' },
+  { name: '--ol-title-weight', setting: 'titleWeight', description: 'Title and header font weight.' },
+  { name: '--ol-body-size', setting: 'bodySize', description: 'Base font size of the page.' },
+  { name: '--ol-avatar-size', setting: 'avatarSize', description: 'Avatar width and height.' },
+  { name: '--ol-avatar-bw', setting: 'avatarBorderWidth', description: 'Avatar border width.' },
+  { name: '--ol-avatar-bc', setting: 'avatarBorderColor', description: 'Avatar border color.' },
+  { name: '--ol-social-color', setting: 'socialsColor', description: 'Social icons color.' },
+  { name: '--ol-social-size', setting: 'socialsSize', description: 'Social icons size.' },
+  { name: '--ol-surface', setting: 'surfaceColor', description: 'Card background (text cards, FAQ, countdown…).' },
+  { name: '--ol-surface-fg', setting: 'surfaceTextColor', description: 'Text color on cards.' },
+  { name: '--ol-surface-radius', setting: 'surfaceRadius', description: 'Corner radius of cards, images and embeds.' },
+  { name: '--ol-max-width', setting: 'maxWidth', description: 'Maximum width of the content column.' },
+  { name: '--ol-gap', setting: 'gap', description: 'Space between blocks.' },
+  { name: '--ol-pad-top', setting: 'paddingTop', description: 'Space above the profile.' },
+];

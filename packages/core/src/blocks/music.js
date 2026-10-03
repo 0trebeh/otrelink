@@ -19,6 +19,9 @@ export default {
   description: 'Spotify, SoundCloud or Apple Music player.',
   icon: 'music',
   category: 'Media',
+  cssClasses: [
+    { selector: '.ol-frame', description: 'Spotify / SoundCloud / Apple Music embed' },
+  ],
   fields: [
     { key: 'url', type: 'url', label: 'Song, album or playlist URL', required: true, placeholder: 'https://open.spotify.com/track/…' },
     { key: 'compact', type: 'toggle', label: 'Compact player', default: true },

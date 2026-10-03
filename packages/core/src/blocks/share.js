@@ -6,6 +6,9 @@ export default {
   description: 'Lets visitors share your page.',
   icon: 'arrow',
   category: 'Essentials',
+  cssClasses: [
+    { selector: '.ol-share', description: 'Share button (also .ol-btn)' },
+  ],
   fields: [{ key: 'label', type: 'text', label: 'Button text', default: 'Share this page' }],
   summary: (d) => d.label,
   render: (d, ctx) => `<button type="button" class="ol-btn ol-share" data-ol-track="${esc(ctx.blockId)}"><span class="ol-btn-label"><span class="ol-btn-title">${esc(d.label)}</span></span></button>`,

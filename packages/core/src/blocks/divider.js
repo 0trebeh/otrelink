@@ -4,6 +4,10 @@ export default {
   description: 'A line or empty space between blocks.',
   icon: 'divider',
   category: 'Content',
+  cssClasses: [
+    { selector: '.ol-divider', description: 'Line (hr)' },
+    { selector: '.ol-divider-dots', description: 'Dots variant' },
+  ],
   fields: [
     { key: 'style', type: 'select', label: 'Style', default: 'line', options: [
       { value: 'line', label: 'Line' }, { value: 'dashed', label: 'Dashed' }, { value: 'dots', label: 'Dots' }, { value: 'space', label: 'Empty space' },

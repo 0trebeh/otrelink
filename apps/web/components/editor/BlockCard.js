@@ -65,6 +65,7 @@ export default function BlockCard({ block, expanded, onToggleExpand, onChange, o
             {showMore && (
               <div className="mt-3 rounded-2xl bg-soft p-4">
                 <FieldList fields={commonBlockFields} values={block.options || {}} onChange={onOptions} compact />
+                <CssSelector id={block.id} />
               </div>
             )}
           </div>
@@ -74,6 +75,28 @@ export default function BlockCard({ block, expanded, onToggleExpand, onChange, o
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Shows the CSS selector of this block so it can be styled in Custom CSS. */
+function CssSelector({ id }) {
+  const [copied, setCopied] = useState(false);
+  const selector = `.ol-root [data-block-id="${id}"]`;
+  return (
+    <div className="mt-4 pt-3 border-t border-line">
+      <p className="text-[13px] font-semibold mb-1.5">CSS selector</p>
+      <div className="flex items-center gap-2">
+        <code className="flex-1 min-w-0 truncate font-mono text-xs bg-panel border border-line rounded-lg px-2.5 py-2">{selector}</code>
+        <button
+          type="button"
+          onClick={async () => { await navigator.clipboard.writeText(selector); setCopied(true); setTimeout(() => setCopied(false), 1400); }}
+          className="shrink-0 h-8 px-3 rounded-full border border-line bg-panel text-xs font-semibold hover:border-ink/30 cursor-pointer"
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <p className="text-xs text-muted mt-1">Use it in Style → Custom CSS. <a href="/docs#css-blocks" target="_blank" rel="noreferrer" className="underline">See block classes</a></p>
     </div>
   );
 }

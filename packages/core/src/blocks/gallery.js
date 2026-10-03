@@ -6,6 +6,11 @@ export default {
   description: 'A grid or swipeable carousel of images.',
   icon: 'images',
   category: 'Media',
+  cssClasses: [
+    { selector: '.ol-gallery', description: 'Wrapper' },
+    { selector: '.ol-gallery-grid / .ol-gallery-carousel', description: 'Layout variants' },
+    { selector: '.ol-gallery figure', description: 'One image + caption' },
+  ],
   fields: [
     { key: 'layout', type: 'choice', label: 'Layout', default: 'carousel', options: [
       { value: 'carousel', label: 'Carousel' }, { value: 'grid', label: 'Grid' },

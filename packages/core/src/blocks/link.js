@@ -7,6 +7,11 @@ export default {
   description: 'A button to any website.',
   icon: 'link',
   category: 'Essentials',
+  cssClasses: [
+    { selector: '.ol-btn', description: 'Classic link button' },
+    { selector: '.ol-featured', description: 'Featured layout (image card)' },
+    { selector: '.ol-featured-text', description: 'Text over the featured image' },
+  ],
   fields: [
     { key: 'title', type: 'text', label: 'Title', placeholder: 'My website', required: true, max: 100 },
     { key: 'url', type: 'url', label: 'URL', placeholder: 'https://', required: true },

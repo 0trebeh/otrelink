@@ -9,6 +9,7 @@
 //    type: 'my-block',            unique id stored in the database
 //    label, description, icon,    shown in the dashboard "Add" modal
 //    category: 'Essentials',      groups blocks in the "Add" modal
+//    cssClasses?: [{ selector, description }]  documented on the /docs page
 //    fields: [...],               settings (see ../fields.js) -> form + validation
 //    summary(data) -> string,     one-line summary in the dashboard list
 //    render(data, ctx) -> html,   ESCAPE user values with esc()/safeUrl()

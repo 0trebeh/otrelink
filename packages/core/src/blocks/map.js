@@ -7,6 +7,9 @@ export default {
   description: 'Show a location with Google Maps.',
   icon: 'map',
   category: 'Content',
+  cssClasses: [
+    { selector: '.ol-frame', description: 'Google Maps embed' },
+  ],
   fields: [
     { key: 'address', type: 'text', label: 'Address or place', required: true, placeholder: 'Eiffel Tower, Paris' },
     { key: 'title', type: 'text', label: 'Title (optional)' },

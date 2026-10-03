@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   blockTypes, themes, wallpapers, buttonStyles, fonts, socials,
   createDefaultPage, sanitizePage, sanitizeSlug, renderPage, applyTheme, newBlock, defaultDesign,
+  designCss, resolveDesign, cssVariables, cssElements,
 } from '../src/index.js';
 
 test('every block type renders with its defaults', () => {
@@ -81,5 +82,27 @@ test('header layout styles target the root element', () => {
     // The layout class sits on .ol-root itself, so it must be ".ol-root.ol-layout-x", never ".ol-root .ol-layout-x".
     assert.ok(css.includes(`.ol-root.ol-layout-${layout}`), `css for ${layout}`);
     assert.ok(!css.includes(`.ol-root .ol-layout-`), 'no descendant layout selectors');
+  }
+});
+
+test('docs: every CSS variable written by designCss is documented (and vice versa)', () => {
+  const written = [...designCss(resolveDesign({})).matchAll(/(--ol-[\w-]+):/g)].map((m) => m[1]);
+  const documented = cssVariables.map((v) => v.name);
+  assert.deepEqual([...documented].sort(), [...written].sort());
+});
+
+test('docs: documented class names exist in the rendered output', () => {
+  const page = createDefaultPage({ slug: 'demo' });
+  page.blocks = blockTypes.list().map((m) => newBlock(m.type));
+  const { html, css } = renderPage(sanitizePage(page), { mode: 'preview' });
+  const all = html + css;
+  const firstClass = (sel) => sel.match(/\.(ol-[\w-]+)/)?.[1];
+  for (const mod of blockTypes.list()) {
+    assert.ok(Array.isArray(mod.cssClasses) && mod.cssClasses.length, `${mod.type} documents its classes`);
+    for (const c of mod.cssClasses) assert.ok(all.includes(firstClass(c.selector)), `${mod.type}: ${c.selector}`);
+  }
+  for (const e of cssElements) {
+    const cls = firstClass(e.selector);
+    if (cls && cls !== 'ol-gate') assert.ok(all.includes(cls), e.selector);
   }
 });
