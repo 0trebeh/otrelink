@@ -4,7 +4,7 @@
 //   when offline, an offline screen is shown instead.
 // - API calls are never cached (except immutable uploaded images).
 // Bump VERSION to force clients to drop old caches.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const STATIC = `otrelink-static-${VERSION}`;
 const RUNTIME = `otrelink-runtime-${VERSION}`;
 const PRECACHE = ['/offline', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon.svg'];
@@ -72,4 +72,33 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(cacheFirst(req, STATIC));
   }
+});
+
+// ── Push notifications (new bookings, reminders) ─────────────────────────
+self.addEventListener('push', (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data?.text() }; }
+  event.waitUntil(self.registration.showNotification(data.title || 'Otrelink', {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    tag: data.tag,
+    renotify: Boolean(data.tag),
+    data: { url: data.url || '/dashboard' },
+  }));
+});
+
+// Tapping a notification focuses an open dashboard tab or opens a new one.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url || '/dashboard', self.location.origin).href;
+  event.waitUntil((async () => {
+    const tabs = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const tab = tabs.find((c) => c.url.startsWith(self.location.origin));
+    if (tab) {
+      await tab.navigate(url).catch(() => {});
+      return tab.focus();
+    }
+    return self.clients.openWindow(url);
+  })());
 });

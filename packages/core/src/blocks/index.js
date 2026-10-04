@@ -37,6 +37,7 @@ import divider from './divider.js';
 import share from './share.js';
 import pdf from './pdf.js';
 import collection from './collection.js';
+import booking from './booking.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
@@ -50,6 +51,7 @@ export const blockTypes = createRegistry('blockTypes', [
   music,
   map,
   contact,
+  booking,
   vcard,
   faq,
   countdown,

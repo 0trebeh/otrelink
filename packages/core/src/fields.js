@@ -122,6 +122,14 @@ export const fieldTypes = {
       return f.default ?? '#000000';
     },
   },
+  // Time of day "HH:MM" (24h).
+  time: {
+    default: '09:00',
+    sanitize: (v, f) => {
+      const m = String(v || '').trim().match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+      return m ? `${m[1].padStart(2, '0')}:${m[2]}` : f.default ?? '09:00';
+    },
+  },
   datetime: {
     default: '',
     sanitize: (v) => {

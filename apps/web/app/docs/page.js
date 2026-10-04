@@ -25,6 +25,7 @@ const toc = [
   { id: 'css-modifiers', label: 'Modifiers', sub: true },
   { id: 'css-recipes', label: 'Recipes', sub: true },
   { id: 'css-tips', label: 'Tips & limits', sub: true },
+  { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
@@ -216,6 +217,24 @@ export default function DocsPage() {
           </ul>
 
           {/* ── Sharing ── */}
+          <H2 id="bookings">Bookings &amp; agenda</H2>
+          <P>Add a <i>Booking</i> block (Contact category) to let visitors book an appointment. Set your services (name, duration, price), weekly hours and your time zone. Visitors see the free times in their own time zone; a taken time disappears for everyone.</P>
+          <Table
+            head={['Option', 'What it does']}
+            rows={[
+              ['Slot step', 'How often a start time is offered (e.g. every 30 min).'],
+              ['Buffer', 'Free minutes kept after each appointment.'],
+              ['Minimum notice', 'How soon a visitor can book (e.g. not within the next 2 hours).'],
+              ['Days ahead', 'How far into the future bookings are allowed.'],
+              ['Confirmation', 'Automatic, or Manual: bookings stay Pending until you confirm them in Agenda.'],
+              ['Reminders', 'When you get a reminder before each appointment (e.g. 1 day and 1 hour before).'],
+            ]}
+          />
+          <P>The <i>Agenda</i> section of the dashboard lists upcoming, pending, past and cancelled bookings. From there you can confirm, reschedule or cancel, and contact the visitor by email, phone or WhatsApp. A badge shows how many bookings are waiting for confirmation.</P>
+          <P><b>Notifications:</b> in Agenda, press <i>Turn on</i> to get an alert on this device for every new booking and for reminders. Install the dashboard as an app for the best result. On iPhone/iPad it only works after adding the app to the Home Screen (iOS 16.4+).</P>
+          <P><b>Calendar:</b> copy the private calendar link from Agenda and subscribe to it from Google Calendar, Apple Calendar or Outlook. If the link leaks, press <i>Reset link</i>.</P>
+          <P>Visitors can add the appointment to their calendar (with an alarm) after booking, and receive emails when the server has email configured. Booking only works on the live page, not in the preview or in exported sites (there it links to your live page).</P>
+
           <H2 id="sharing">Sharing &amp; analytics</H2>
           <P>In <i>Settings</i> you can copy your link, download a QR code, change your username, add an SEO title, description and sharing image, hide the page, hide the footer, or show a sensitive-content warning.</P>
           <Table

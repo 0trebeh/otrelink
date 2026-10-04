@@ -1,4 +1,5 @@
 import { exportSite } from '@/lib/export';
+import { config } from '@/lib/config';
 import { publicOrigin } from '@/lib/origin';
 import { handler, requireOwnedPage, rateLimit } from '@/lib/http';
 
@@ -6,7 +7,7 @@ import { handler, requireOwnedPage, rateLimit } from '@/lib/http';
 export const GET = handler(async (req, { params }) => {
   rateLimit(req, 'export', 30, 60 * 60 * 1000);
   const { page } = await requireOwnedPage((await params).id);
-  const { filename, data } = await exportSite(page, { homeUrl: publicOrigin(req) });
+  const { filename, data } = await exportSite(page, { homeUrl: publicOrigin(req), liveUrl: `${config.pageUrl}/${page.slug}` });
   return new Response(data, {
     headers: {
       'Content-Type': 'application/zip',

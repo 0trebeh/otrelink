@@ -70,6 +70,7 @@ async function main() {
     mountPage(app, page, {
       mode: 'live',
       footerUrl: HOME,
+      apiBase: API, // used by blocks that talk to the server (Booking)
       onTrack: (target) => track(page.id, { type: 'click', target }),
     });
     track(page.id, { type: 'view', referrer: document.referrer });

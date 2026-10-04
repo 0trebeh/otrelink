@@ -147,6 +147,23 @@ El dashboard se puede instalar como app (Chrome/Edge en escritorio y Android; en
 
 El service worker **solo se registra en producción** (`npm run build && npm start`), para no interferir con la recarga en caliente de `npm run dev`. Requiere HTTPS en producción (localhost está permitido). Si cambias `sw.js`, sube `VERSION` para que los clientes descarten la caché vieja.
 
+## 📅 Agenda y reservas
+
+Bloque **Booking** + sección **Agenda** del dashboard: servicios, horario semanal en una zona horaria IANA, confirmación automática o manual, recordatorios, notificaciones push (PWA), feed de calendario `.ics` y correos opcionales al visitante.
+
+Variables de entorno (en `apps/web`):
+
+| Variable | Para qué |
+|---|---|
+| `VAPID_PUBLIC_KEY` · `VAPID_PRIVATE_KEY` | Notificaciones push. Generar con `npx web-push generate-vapid-keys` |
+| `VAPID_SUBJECT` | `mailto:tu@correo.com` |
+| `CRON_SECRET` | Clave larga aleatoria que protege `/api/cron/reminders` |
+| `RESEND_API_KEY` · `EMAIL_FROM` | Opcional: correos al visitante vía [Resend](https://resend.com) |
+
+**Recordatorios con cron-job.org:** crea un job que llame cada 1–5 min a `https://TU-APP/api/cron/reminders` (GET) con la cabecera `Authorization: Bearer <CRON_SECRET>` (o `?key=<CRON_SECRET>`). Responde `{ ok, checked, reminded }`. En Render gratis, además mantiene el servicio despierto.
+
+Notas: las reservas se guardan en UTC y un índice único (`slotKey`) evita reservas dobles. Push solo funciona en el build de producción (el service worker no se registra en `dev`); en iOS hay que instalar la app en la pantalla de inicio (16.4+).
+
 ## 🛰️ API
 
 | Método | Ruta | Auth | Descripción |
@@ -162,6 +179,14 @@ El service worker **solo se registra en producción** (`npm run build && npm sta
 | GET | `/api/assets/:id` | — | Servir imagen |
 | GET | `/api/public/:slug` | — | Datos públicos de una página (CORS) |
 | POST | `/api/public/track` | — | Beacon de visita/clic (CORS) |
+| GET | `/api/public/booking/slots?pageId&blockId&serviceId&date` | — | Horas libres (CORS) |
+| POST | `/api/public/booking` | — | Crear reserva (CORS, rate limit) |
+| GET | `/api/bookings?pageId&view=` · `&count=1` | ✔ | Listar reservas · contar pendientes |
+| PATCH | `/api/bookings/:id` | ✔ | `{ status }` o `{ start }` (confirmar, cancelar, reprogramar) |
+| GET · POST | `/api/bookings/calendar` | ✔ | Link privado del calendario · regenerarlo |
+| GET | `/api/calendar/:token` | — | Feed `.ics` |
+| POST | `/api/push/subscribe` · `unsubscribe` · `test` | ✔ | Notificaciones push |
+| GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes |
 
 ---
 

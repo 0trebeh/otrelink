@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -26,6 +26,14 @@ export async function createFileDriver() {
     users: {
       findByEmail: async (email) => clone(state.users.find((u) => u.email === email)),
       findById: async (id) => clone(state.users.find((u) => u.id === id)),
+      findByCalendarToken: async (token) => clone(state.users.find((u) => token && u.calendarToken === token)),
+      update: async (id, patch) => {
+        const u = state.users.find((x) => x.id === id);
+        if (!u) return null;
+        Object.assign(u, patch);
+        await persist();
+        return clone(u);
+      },
       create: async (user) => {
         const doc = { id: crypto.randomUUID(), createdAt: now(), ...user };
         state.users.push(doc);
@@ -76,6 +84,43 @@ export async function createFileDriver() {
       },
       removeForPage: async (pageId) => {
         state.events = state.events.filter((e) => e.pageId !== pageId);
+        await persist();
+      },
+    },
+    bookings: {
+      create: async (b) => {
+        if (b.slotKey && state.bookings.some((x) => x.slotKey === b.slotKey)) throw Object.assign(new Error('slot_taken'), { code: 'slot_taken' });
+        const doc = { id: crypto.randomUUID(), createdAt: now(), remindersSent: [], ...b };
+        state.bookings.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.bookings.find((b) => b.id === id)),
+      list: async ({ pageId, blockId, userId, from, to, statuses, desc = false, limit = 500 } = {}) => clone(state.bookings
+        .filter((b) => (!pageId || b.pageId === pageId) && (!blockId || b.blockId === blockId) && (!userId || b.userId === userId)
+          && (!from || b.start >= from) && (!to || b.start < to) && (!statuses || statuses.includes(b.status)))
+        .sort((a, b) => (desc ? b.start.localeCompare(a.start) : a.start.localeCompare(b.start)))
+        .slice(0, limit)),
+      update: async (id, patch) => {
+        const i = state.bookings.findIndex((b) => b.id === id);
+        if (i < 0) return null;
+        const next = { ...state.bookings[i], ...patch, updatedAt: now() };
+        if (next.slotKey === null) delete next.slotKey;
+        if (next.slotKey && state.bookings.some((x) => x.id !== id && x.slotKey === next.slotKey)) throw Object.assign(new Error('slot_taken'), { code: 'slot_taken' });
+        state.bookings[i] = next;
+        await persist();
+        return clone(next);
+      },
+    },
+    push: {
+      save: async (userId, sub) => {
+        state.push = state.push.filter((p) => p.endpoint !== sub.endpoint);
+        state.push.push({ userId, endpoint: sub.endpoint, keys: sub.keys, createdAt: now() });
+        await persist();
+      },
+      listByUser: async (userId) => clone(state.push.filter((p) => p.userId === userId)),
+      remove: async (endpoint) => {
+        state.push = state.push.filter((p) => p.endpoint !== endpoint);
         await persist();
       },
     },

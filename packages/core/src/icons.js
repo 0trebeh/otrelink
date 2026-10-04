@@ -29,6 +29,7 @@ export const iconPaths = {
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
   check: '<path d="m5 12 5 5 9-10"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
+  calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
   collection: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5" opacity=".55"/>',
   arrowLeft: '<path d="m15 6-6 6 6 6"/>',
   arrowRight: '<path d="m9 6 6 6-6 6"/>',

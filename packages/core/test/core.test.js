@@ -156,3 +156,40 @@ test('moving blocks in and out of collections', () => {
   const ids = new Set(flattenBlocks(blocks).map((b) => b.id));
   assert.ok(flattenBlocks([copy]).every((b) => !ids.has(b.id)));
 });
+
+import { computeSlots, zonedToUtc, bookableDays, icsCalendar } from '../src/index.js';
+
+const bookingData = (extra = {}) => ({
+  timezone: 'America/Caracas', // UTC-4, no DST
+  services: [{ id: 's1', name: 'Cut', duration: '60' }],
+  hours: [{ id: 'h', day: 'mon', from: '09:00', to: '12:00' }],
+  slotStep: 'service', buffer: '0', minNotice: '0', maxDays: 30, ...extra,
+});
+const NOW = new Date('2026-10-01T12:00:00Z'); // a Thursday
+
+test('booking: slots follow business hours in the block time zone', () => {
+  const slots = computeSlots({ data: bookingData(), serviceId: 's1', date: '2026-10-05', now: NOW });
+  assert.deepEqual(slots, ['2026-10-05T13:00:00.000Z', '2026-10-05T14:00:00.000Z', '2026-10-05T15:00:00.000Z']);
+  assert.deepEqual(computeSlots({ data: bookingData(), serviceId: 's1', date: '2026-10-06', now: NOW }), []); // Tuesday: closed
+});
+
+test('booking: existing bookings, buffer and minimum notice remove slots', () => {
+  const taken = [{ start: '2026-10-05T14:00:00.000Z', end: '2026-10-05T15:00:00.000Z' }];
+  assert.deepEqual(computeSlots({ data: bookingData(), serviceId: 's1', date: '2026-10-05', bookings: taken, now: NOW }), ['2026-10-05T13:00:00.000Z', '2026-10-05T15:00:00.000Z']);
+  assert.deepEqual(computeSlots({ data: bookingData({ buffer: '15' }), serviceId: 's1', date: '2026-10-05', bookings: taken, now: NOW }), []);
+  const nearNow = new Date('2026-10-05T12:30:00Z');
+  assert.deepEqual(computeSlots({ data: bookingData({ minNotice: '2' }), serviceId: 's1', date: '2026-10-05', now: nearNow }), ['2026-10-05T15:00:00.000Z']);
+});
+
+test('booking: DST-aware conversion and bookable days', () => {
+  // New York: EDT (UTC-4) in October, EST (UTC-5) in December.
+  assert.equal(zonedToUtc('2026-10-05', 9 * 60, 'America/New_York').toISOString(), '2026-10-05T13:00:00.000Z');
+  assert.equal(zonedToUtc('2026-12-07', 9 * 60, 'America/New_York').toISOString(), '2026-12-07T14:00:00.000Z');
+  const days = bookableDays(bookingData({ maxDays: 14 }), NOW);
+  assert.deepEqual(days, ['2026-10-05', '2026-10-12']);
+});
+
+test('booking: ics has the event and alarms', () => {
+  const ics = icsCalendar([{ uid: 'x@o', start: '2026-10-05T13:00:00Z', end: '2026-10-05T14:00:00Z', title: 'Cut, wash', alarms: [60] }]);
+  assert.ok(ics.includes('DTSTART:20261005T130000Z') && ics.includes('SUMMARY:Cut\\, wash') && ics.includes('TRIGGER:-PT60M'));
+});

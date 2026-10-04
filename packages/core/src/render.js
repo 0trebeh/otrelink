@@ -124,7 +124,7 @@ export function renderPage(page, opts = {}) {
       usedTypes.add(mod.type);
       const anim = block.options?.animation && block.options.animation !== 'none' ? block.options.animation : '';
       if (anim) usedAnims.add(anim);
-      const ctx = { blockId: block.id, design: d, page, mode, depth, container };
+      const ctx = { blockId: block.id, design: d, page, mode, depth, container, apiBase: opts.apiBase ?? '', liveUrl: opts.liveUrl || '' };
       if (mod.container) {
         const me = { type: mod.type, id: block.id, layout: block.data?.layout };
         ctx.children = (block.children || [])

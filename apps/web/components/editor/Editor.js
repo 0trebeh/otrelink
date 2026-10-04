@@ -20,6 +20,7 @@ export default function Editor({ initialPage, pageUrl }) {
   const [mobilePreview, setMobilePreview] = useState(false);
   const [replay, setReplay] = useState(0);
   const [analytics, setAnalytics] = useState(null);
+  const [pendingBookings, setPendingBookings] = useState(0);
   const pageRef = useRef(page);
   pageRef.current = page;
 
@@ -36,6 +37,20 @@ export default function Editor({ initialPage, pageUrl }) {
     history.replaceState(null, '', `#${id}`);
     window.scrollTo({ top: 0 });
   };
+
+  // Bookings waiting for confirmation: badge on "Agenda" and on the app icon.
+  const refreshPending = useCallback(() => {
+    api(`/api/bookings?pageId=${initialPage.id}&count=1`).then((r) => {
+      setPendingBookings(r.pending);
+      if ('setAppBadge' in navigator) (r.pending ? navigator.setAppBadge(r.pending) : navigator.clearAppBadge()).catch(() => {});
+    }).catch(() => {});
+  }, [initialPage.id]);
+  useEffect(() => {
+    refreshPending();
+    const t = setInterval(refreshPending, 60_000);
+    window.addEventListener('focus', refreshPending);
+    return () => { clearInterval(t); window.removeEventListener('focus', refreshPending); };
+  }, [refreshPending]);
 
   // Click counts shown on block cards.
   useEffect(() => {
@@ -85,7 +100,7 @@ export default function Editor({ initialPage, pageUrl }) {
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty }), [page, set, pageUrl, saved.slug, analytics, dirty]);
+  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, pendingBookings, refreshPending }), [page, set, pageUrl, saved.slug, analytics, dirty, pendingBookings, refreshPending]);
   const Section = section.Component;
   const liveUrl = `${pageUrl}/${saved.slug}`;
 
@@ -127,6 +142,7 @@ export default function Editor({ initialPage, pageUrl }) {
                   className={cx('w-full flex items-center gap-2.5 h-10 px-3 rounded-xl text-sm font-medium cursor-pointer transition-colors', tab === s.id ? 'bg-panel text-ink shadow-sm' : 'text-muted hover:text-ink hover:bg-panel/60')}
                 >
                   <s.icon size={17} /> {s.label}
+                  {s.badge && ed[s.badge] > 0 && <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-accent text-white text-[11px] font-bold grid place-items-center">{ed[s.badge]}</span>}
                 </button>
               </li>
             ))}
@@ -156,7 +172,7 @@ export default function Editor({ initialPage, pageUrl }) {
             <li key={s.id} className="shrink-0">
               <button type="button" onClick={() => go(s.id)} aria-current={tab === s.id ? 'page' : undefined}
                 className={cx('flex flex-col items-center gap-0.5 w-[68px] py-1.5 rounded-2xl text-[11px] font-medium cursor-pointer', tab === s.id ? 'bg-accent-soft text-accent-ink' : 'text-muted')}>
-                <s.icon size={19} /> {s.label}
+                <span className="relative"><s.icon size={19} />{s.badge && ed[s.badge] > 0 && <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[10px] font-bold grid place-items-center">{ed[s.badge]}</span>}</span> {s.label}
               </button>
             </li>
           ))}
