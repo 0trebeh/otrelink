@@ -29,6 +29,8 @@ export default {
     { selector: '.ol-book-form', description: 'Visitor details form' },
     { selector: '.ol-book-submit', description: 'Confirm button' },
     { selector: '.ol-book-done', description: 'Success message' },
+    { selector: '.ol-book-mine', description: 'Appointments this visitor already booked (with “Add to calendar”)' },
+    { selector: '.ol-book-mine-item', description: 'One saved appointment (.is-pending, .is-confirmed, .is-cancelled)' },
   ],
   fields: [
     { key: 'buttonLabel', type: 'text', label: 'Button text', default: 'Book an appointment' },
@@ -79,9 +81,9 @@ export default {
     }
     return `<details class="ol-booking"${d.startOpen ? ' open' : ''}>`
       + `<summary class="ol-btn has-media" data-ol-track="${esc(ctx.blockId)}"><span class="ol-btn-icon">${icon('calendar', 20)}</span>`
-      + `<span class="ol-btn-label"><span class="ol-btn-title">${label}</span>${d.description ? `<span class="ol-btn-sub">${esc(d.description)}</span>` : ''}</span>`
+      + `<span class="ol-btn-label"><span class="ol-btn-title">${label}</span><span class="ol-btn-sub"${d.description ? '' : ' hidden'}>${esc(d.description)}</span></span>`
       + `<span class="ol-btn-icon ol-book-chevron">${icon('chevron', 18)}</span></summary>`
-      + `<div class="ol-card ol-book" data-api="${esc(ctx.apiBase)}" data-page="${esc(ctx.page?.id || '')}" data-block="${esc(ctx.blockId)}" data-mode="${esc(ctx.mode)}">`
+      + `<div class="ol-card ol-book" data-api="${esc(ctx.apiBase)}" data-page="${esc(ctx.page?.id || '')}" data-block="${esc(ctx.blockId)}" data-mode="${esc(ctx.mode)}" data-title="${esc(ctx.page?.profile?.title || '')}">`
       + '<p class="ol-book-note">Loading…</p></div></details>';
   },
   hydrate(el, data) {
@@ -90,6 +92,13 @@ export default {
     if (!box) return;
     let started = false;
     const start = () => { if (!started) { started = true; bookingApp(el.ownerDocument, box, data); } };
+    // Returning visitor: show their next appointment on the button right away.
+    const next = box.dataset.mode === 'preview' ? null : savedBookings(box).find((b) => b.status !== 'cancelled');
+    const sub = details.querySelector('.ol-btn-sub');
+    if (next && sub) {
+      sub.textContent = `Your appointment: ${new Date(next.start).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
+      sub.hidden = false;
+    }
     if (details.open) start();
     details.addEventListener('toggle', () => details.open && start());
   },
@@ -124,8 +133,32 @@ export default {
 .ol-root .ol-book-submit[disabled]{opacity:.5;cursor:default}
 .ol-root .ol-book-back{align-self:center;border:0;background:transparent;padding:0;font-size:.85em;opacity:.75;text-decoration:underline}
 .ol-root .ol-book-done{text-align:center;display:flex;flex-direction:column;gap:10px}
-.ol-root .ol-book-done strong{font-size:1.1em}`,
+.ol-root .ol-book-done strong{font-size:1.1em}
+.ol-root .ol-book-mine{display:flex;flex-direction:column;gap:8px}
+.ol-root .ol-book-mine-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent)}
+.ol-root .ol-book-mine-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;font-size:.9em}
+.ol-root .ol-book-mine-info span{opacity:.85}
+.ol-root .ol-book-status{font-size:.8em;font-weight:700;opacity:.65}
+.ol-root .ol-book-mine-item.is-confirmed .ol-book-status{color:#0f9d58;opacity:1}
+.ol-root .ol-book-mine-item.is-cancelled{opacity:.6}
+.ol-root .ol-book-mine-item.is-cancelled strong{text-decoration:line-through}
+.ol-root .ol-book-cal-sm{flex:none;min-height:36px;padding:0 14px;font-size:.85em;background:var(--ol-surface-fg);color:var(--ol-surface)!important}
+.ol-root .ol-book-again{margin-top:6px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--ol-surface-fg) 12%,transparent)}`,
 };
+
+// ── Appointments booked from this browser ────────────────────────────────
+// Saved in localStorage so a returning visitor can add them to their calendar again.
+const storeKey = (box) => `ol-bookings:${box.dataset.page}:${box.dataset.block}`;
+function savedBookings(box) {
+  try {
+    const list = JSON.parse(localStorage.getItem(storeKey(box)) || '[]');
+    const now = Date.now();
+    return Array.isArray(list) ? list.filter((b) => b && b.id && new Date(b.end).getTime() > now).sort((a, b) => a.start.localeCompare(b.start)).slice(0, 5) : [];
+  } catch { return []; }
+}
+function saveBookings(box, list) {
+  try { localStorage.setItem(storeKey(box), JSON.stringify(list.slice(-5))); } catch { /* storage blocked */ }
+}
 
 // ── Browser app (vanilla DOM) ────────────────────────────────────────────
 function bookingApp(doc, box, data) {
@@ -135,7 +168,28 @@ function bookingApp(doc, box, data) {
   const preview = box.dataset.mode === 'preview';
   const visitorTz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return ''; } })();
   const services = data.services || [];
-  const st = { service: services.length === 1 ? services[0].id : null, day: null, slot: null, slots: null, error: '', loading: false, done: null };
+  const st = { service: services.length === 1 ? services[0].id : null, day: null, slot: null, slots: null, error: '', loading: false, done: null, mine: preview ? [] : savedBookings(box) };
+  const alarms = (REMINDER_PRESETS[data.reminders]?.minutes || []).filter((m) => m <= 1440);
+  const eventTitle = (b) => [b.serviceName, box.dataset.title].filter(Boolean).join(' · ');
+  const icsHref = (b) => `data:text/calendar;charset=utf-8,${encodeURIComponent(icsCalendar([{
+    uid: `${b.id}@otrelink`, start: b.start, end: b.end, title: eventTitle(b), alarms: alarms.length ? alarms : [60],
+  }], eventTitle(b)))}`;
+
+  // Refresh saved appointments: the owner may have confirmed, moved or cancelled them.
+  async function refreshMine() {
+    if (!st.mine.length) return;
+    try {
+      const q = new URLSearchParams({ pageId, ids: st.mine.map((b) => b.id).join(',') });
+      const res = await fetch(`${api}/api/public/booking?${q}`);
+      if (!res.ok) return;
+      const { bookings = [] } = await res.json();
+      const byId = Object.fromEntries(bookings.map((b) => [b.id, b]));
+      st.mine = st.mine.filter((b) => byId[b.id]).map((b) => byId[b.id]);
+      // Keep cancelled ones visible this time, but forget them.
+      saveBookings(box, st.mine.filter((b) => b.status !== 'cancelled'));
+      draw();
+    } catch { /* offline: keep what we have */ }
+  }
 
   const h = (tag, attrs = {}, ...kids) => {
     const n = doc.createElement(tag);
@@ -174,6 +228,8 @@ function bookingApp(doc, box, data) {
       if (res.status === 409) { st.loading = false; await loadSlots(); st.error = 'That time was just taken. Please pick another one.'; return draw(); }
       if (!res.ok) throw new Error(json.error === 'too_many_requests' ? 'Too many attempts. Try again later.' : 'Could not book. Check your details and try again.');
       st.done = json.booking;
+      st.mine = [...st.mine.filter((b) => b.id !== json.booking.id), json.booking];
+      saveBookings(box, st.mine);
     } catch (err) { st.error = err.message; }
     st.loading = false; draw();
   }
@@ -181,6 +237,7 @@ function bookingApp(doc, box, data) {
   function draw() {
     box.textContent = '';
     if (st.done) { box.append(doneView()); return; }
+    if (st.mine.length) box.append(mineView());
     if (!services.length) { box.append(h('p', { class: 'ol-book-note' }, 'No services available yet.')); return; }
 
     if (services.length > 1) {
@@ -229,17 +286,31 @@ function bookingApp(doc, box, data) {
     ));
   }
 
+  function mineView() {
+    const label = { pending: 'Waiting for confirmation', confirmed: 'Confirmed', cancelled: 'Cancelled' };
+    return h('div', { class: 'ol-book-mine' },
+      h('p', { class: 'ol-book-step' }, st.mine.length > 1 ? 'Your appointments' : 'Your appointment'),
+      st.mine.map((b) => h('div', { class: `ol-book-mine-item is-${b.status}` },
+        h('div', { class: 'ol-book-mine-info' },
+          h('strong', {}, b.serviceName),
+          h('span', {}, fmtWhen(b.start)),
+          h('small', { class: 'ol-book-status' }, label[b.status] || '')),
+        b.status !== 'cancelled' && h('a', { class: 'ol-book-cal ol-book-cal-sm', href: icsHref(b), download: 'appointment.ics', 'aria-label': `Add ${b.serviceName} to my calendar` }, 'Add to calendar'))),
+      h('p', { class: 'ol-book-step ol-book-again' }, 'Book another appointment'),
+    );
+  }
+
   function doneView() {
     const b = st.done;
-    const ics = icsCalendar([{ uid: `${b.id}@otrelink`, start: b.start, end: b.end, title: b.serviceName, alarms: [60] }], b.serviceName);
     return h('div', { class: 'ol-book-done' },
       h('strong', {}, b.status === 'pending' ? 'Request sent!' : (data.successMessage || 'Booked!')),
       h('p', { class: 'ol-book-note' }, `${b.serviceName} · ${fmtWhen(b.start)}`),
       b.status === 'pending' && h('p', { class: 'ol-book-note' }, 'You will receive a confirmation soon.'),
-      h('a', { class: 'ol-book-cal', href: `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`, download: 'appointment.ics' }, 'Add to my calendar'),
+      h('a', { class: 'ol-book-cal', href: icsHref(b), download: 'appointment.ics' }, 'Add to my calendar'),
       h('button', { type: 'button', class: 'ol-book-back', on: { click: () => { st.done = null; st.slot = null; st.day = null; draw(); } } }, 'Book another time'),
     );
   }
 
   draw();
+  refreshMine();
 }

@@ -77,4 +77,18 @@ export const POST = handler(async (req) => {
   return NextResponse.json({ booking: toVisitorBooking(booking) }, { status: 201, headers });
 });
 
+// A returning visitor checks the appointments saved in their browser (by id).
+// Ids are random UUIDs and only non-personal fields are returned.
+export const GET = handler(async (req) => {
+  rateLimit(req, 'booking-status', 60, 60 * 1000);
+  const headers = corsHeaders(req);
+  const q = new URL(req.url).searchParams;
+  const pageId = String(q.get('pageId') || '');
+  const ids = String(q.get('ids') || '').split(',').map((s) => s.trim()).filter((s) => /^[\w-]{8,64}$/.test(s)).slice(0, 10);
+  const db = await getDb();
+  const found = await Promise.all(ids.map((id) => db.bookings.findById(id)));
+  const bookings = found.filter((b) => b && b.pageId === pageId).map(toVisitorBooking);
+  return NextResponse.json({ bookings }, { headers: { ...headers, 'Cache-Control': 'no-store' } });
+});
+
 export const OPTIONS = (req) => new Response(null, { status: 204, headers: corsHeaders(req) });

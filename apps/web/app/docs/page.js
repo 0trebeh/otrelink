@@ -242,7 +242,7 @@ export default function DocsPage() {
           <P>The <i>Agenda</i> section of the dashboard lists upcoming, pending, past and cancelled bookings. From there you can confirm, reschedule or cancel, and contact the visitor by email, phone or WhatsApp. A badge shows how many bookings are waiting for confirmation.</P>
           <P><b>Notifications:</b> in Agenda, press <i>Turn on</i> to get an alert on this device for every new booking and for reminders. Install the dashboard as an app for the best result.</P>
           <P><b>Calendar:</b> copy the private calendar link from Agenda and subscribe to it from Google Calendar, Apple Calendar or Outlook. If the link leaks, press <i>Reset link</i>.</P>
-          <P>Visitors can add the appointment to their calendar (with an alarm) after booking, and receive emails when the server has email configured.</P>
+          <P>Visitors can add the appointment to their calendar (with alarms that follow your <i>Reminders</i> setting) after booking, and receive emails when the server has email configured. When they come back to your page on the same browser, the button shows their next appointment, and the calendar shows it again with its status (waiting for confirmation, confirmed or cancelled) and an <i>Add to calendar</i> button. If you reschedule it, they get the new time.</P>
           <Warning>
             <ul className="list-disc pl-5 space-y-1">
               <li>On iPhone/iPad you have to add the app to the Home Screen (iOS 16.4 or later) before turning on notifications.</li>
