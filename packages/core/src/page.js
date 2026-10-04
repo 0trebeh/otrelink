@@ -29,7 +29,7 @@ export const settingsFields = [
   { key: 'seoTitle', type: 'text', label: 'SEO title', max: 70, help: 'Browser tab and search results. Defaults to your title.' },
   { key: 'seoDescription', type: 'textarea', label: 'SEO description', max: 200 },
   { key: 'ogImage', type: 'image', label: 'Sharing image', help: 'Shown when your link is shared on social media.' },
-  { key: 'hideFooter', type: 'toggle', label: 'Hide “Made with Otrelink” footer', default: true },
+  { key: 'hideFooter', type: 'toggle', label: 'Hide “Made with Otrelink” footer', default: false },
   { key: 'sensitive', type: 'toggle', label: 'Sensitive content warning', default: false, help: 'Visitors must confirm before seeing the page.' },
   { key: 'sensitiveMessage', type: 'text', label: 'Warning message', default: 'This page may contain sensitive content.', showIf: { key: 'sensitive', truthy: true } },
 ];
@@ -102,6 +102,18 @@ export function sanitizeBlock(b, depth = 0, state = { count: 0 }) {
     block.children = kids.map((c) => sanitizeBlock(c, depth + 1, state)).filter(Boolean);
   }
   return block;
+}
+
+/**
+ * Remove fields declared `private: true` (e.g. a booking's meeting link) from
+ * blocks sent to visitors. The server hands them out only when appropriate.
+ */
+export function stripPrivateFields(blocks = []) {
+  return blocks.map((b) => {
+    const priv = (blockTypes.get(b.type)?.fields || []).filter((f) => f.private).map((f) => f.key);
+    const data = priv.length ? Object.fromEntries(Object.entries(b.data || {}).filter(([k]) => !priv.includes(k))) : b.data;
+    return { ...b, data, ...(b.children ? { children: stripPrivateFields(b.children) } : {}) };
+  });
 }
 
 export function sanitizeSocials(list) {

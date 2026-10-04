@@ -237,12 +237,15 @@ export default function DocsPage() {
               ['Days ahead', 'How far into the future bookings are allowed.'],
               ['Confirmation', 'Automatic, or Manual: bookings stay Pending until you confirm them in Agenda.'],
               ['Reminders', 'When you get a reminder before each appointment (e.g. 1 day and 1 hour before).'],
+              ['Meeting link', 'Your recurring Zoom, Google Meet or Teams link. It is added to every appointment: in the visitor’s calendar file, in your calendar feed and in emails. Choose whether visitors get it as soon as they book or only after you confirm.'],
+              ['Visitors can cancel', 'Lets visitors cancel from your page, up to the time you choose (e.g. 2 hours before). The time becomes free again and you get a notification.'],
             ]}
           />
           <P>The <i>Agenda</i> section of the dashboard lists upcoming, pending, past and cancelled bookings. From there you can confirm, reschedule or cancel, and contact the visitor by email, phone or WhatsApp. A badge shows how many bookings are waiting for confirmation.</P>
           <P><b>Notifications:</b> in Agenda, press <i>Turn on</i> to get an alert on this device for every new booking and for reminders. Install the dashboard as an app for the best result.</P>
           <P><b>Calendar:</b> copy the private calendar link from Agenda and subscribe to it from Google Calendar, Apple Calendar or Outlook. If the link leaks, press <i>Reset link</i>.</P>
-          <P>Visitors can add the appointment to their calendar (with alarms that follow your <i>Reminders</i> setting) after booking, and receive emails when the server has email configured. When they come back to your page on the same browser, the button shows their next appointment, and the calendar shows it again with its status (waiting for confirmation, confirmed or cancelled) and an <i>Add to calendar</i> button. If you reschedule it, they get the new time.</P>
+          <P>Visitors can add the appointment to their calendar (with alarms that follow your <i>Reminders</i> setting) after booking, and receive emails when the server has email configured. When they come back to your page on the same browser, the button shows their next appointment, and the calendar shows it again with its status (waiting for confirmation, confirmed or cancelled) and an <i>Add to calendar</i> button, a <i>Join meeting</i> button when you set a meeting link (it turns on 15 minutes before the start and off when the appointment ends), and <i>Cancel appointment</i> when cancelling is allowed. If you reschedule it, they get the new time. Appointments cancelled by the visitor show “Cancelled by visitor” in Agenda.</P>
+          <Note>The meeting link is private: it is not part of your public page. Only people who booked receive it (from the browser they booked with, by email, or in the calendar file).</Note>
           <Warning>
             <ul className="list-disc pl-5 space-y-1">
               <li>On iPhone/iPad you have to add the app to the Home Screen (iOS 16.4 or later) before turning on notifications.</li>

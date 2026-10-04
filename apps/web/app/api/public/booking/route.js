@@ -3,6 +3,7 @@ import { getDb } from '@/lib/db';
 import { pushToUser } from '@/lib/notify';
 import {
   loadBookingBlock, freeSlots, pickService, zonedDateStr, toVisitorBooking, whenText, emailVisitor,
+  newCancelToken, tokenMatches, blockDataFor,
 } from '@/lib/bookings';
 import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
 
@@ -57,6 +58,7 @@ export const POST = handler(async (req) => {
       status: data.confirmMode === 'manual' ? 'pending' : 'confirmed',
       // Unique per block + start: two visitors can't take the same time.
       slotKey: `${block.id}|${iso}`,
+      cancelToken: newCancelToken(),
     });
   } catch (err) {
     if (err.code === 'slot_taken') return fail(409, 'slot_taken');
@@ -74,20 +76,32 @@ export const POST = handler(async (req) => {
     emailVisitor('created', booking, page),
   ]);
 
-  return NextResponse.json({ booking: toVisitorBooking(booking) }, { status: 201, headers });
+  // The token is only sent here, to the browser that booked.
+  return NextResponse.json({ booking: { ...toVisitorBooking(booking, data, true), token: booking.cancelToken } }, { status: 201, headers });
 });
 
-// A returning visitor checks the appointments saved in their browser (by id).
-// Ids are random UUIDs and only non-personal fields are returned.
+// A returning visitor checks the appointments saved in their browser.
+//   ?pageId=…&items=id~token,id~token   (the token unlocks the meeting link and cancelling)
+//   ?pageId=…&ids=id,id                 (older saved data: basic info only)
+// Ids are random UUIDs and no personal data is returned.
 export const GET = handler(async (req) => {
   rateLimit(req, 'booking-status', 60, 60 * 1000);
   const headers = corsHeaders(req);
   const q = new URL(req.url).searchParams;
   const pageId = String(q.get('pageId') || '');
-  const ids = String(q.get('ids') || '').split(',').map((s) => s.trim()).filter((s) => /^[\w-]{8,64}$/.test(s)).slice(0, 10);
+  const items = String(q.get('items') || q.get('ids') || '').split(',').slice(0, 10)
+    .map((s) => { const [id, token = ''] = s.trim().split('~'); return { id, token }; })
+    .filter((x) => /^[\w-]{8,64}$/.test(x.id));
   const db = await getDb();
-  const found = await Promise.all(ids.map((id) => db.bookings.findById(id)));
-  const bookings = found.filter((b) => b && b.pageId === pageId).map(toVisitorBooking);
+  const page = await db.pages.findById(pageId.slice(0, 64));
+  const bookings = [];
+  if (page) {
+    for (const { id, token } of items) {
+      const b = await db.bookings.findById(id);
+      if (!b || b.pageId !== page.id) continue;
+      bookings.push(toVisitorBooking(b, blockDataFor(page, b.blockId), tokenMatches(b, token)));
+    }
+  }
   return NextResponse.json({ bookings }, { headers: { ...headers, 'Cache-Control': 'no-store' } });
 });
 

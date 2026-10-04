@@ -1,5 +1,5 @@
 // Page helpers shared by API routes.
-import { sanitizePage } from '@otrelink/core';
+import { sanitizePage, stripPrivateFields } from '@otrelink/core';
 
 /** Shape returned to the dashboard. */
 export const toDashboardPage = (p) => ({
@@ -15,7 +15,8 @@ export const toPublicPage = (p) => {
     slug: p.slug,
     ...clean,
     // Hide disabled blocks (at any depth) from the public payload entirely.
-    blocks: onlyEnabled(clean.blocks),
+    // Private fields (e.g. a meeting link) never reach visitors through the page data.
+    blocks: stripPrivateFields(onlyEnabled(clean.blocks)),
   };
 };
 

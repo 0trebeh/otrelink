@@ -128,7 +128,7 @@ function BookingCard({ b, view, onAction }) {
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold truncate">{b.name}</p>
-          <span className={cx('text-[11px] font-semibold px-2 py-0.5 rounded-full', s.cls)}>{s.label}</span>
+          <span className={cx('text-[11px] font-semibold px-2 py-0.5 rounded-full', s.cls)}>{b.status === 'cancelled' && b.cancelledBy === 'visitor' ? 'Cancelled by visitor' : s.label}</span>
         </div>
         <p className="text-sm text-muted">{b.serviceName} · {b.duration} min</p>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-[13px]">

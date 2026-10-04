@@ -238,3 +238,12 @@ test('survey: renders every question type', () => {
   const exp = renderPage(sanitizePage(page), { mode: 'export', liveUrl: 'https://x.io/demo' }).html;
   assert.ok(exp.includes('https://x.io/demo') && !exp.includes('<form'));
 });
+
+test('booking: private fields (meeting link) are removed from public blocks', async () => {
+  const { stripPrivateFields } = await import('../src/index.js');
+  const blocks = [{ id: 'c', type: 'collection', data: {}, children: [{ id: 'b', type: 'booking', data: { meetingUrl: 'https://meet.google.com/abc', buttonLabel: 'Book' } }] }];
+  const out = stripPrivateFields(blocks);
+  assert.equal(out[0].children[0].data.meetingUrl, undefined);
+  assert.equal(out[0].children[0].data.buttonLabel, 'Book');
+  assert.equal(blocks[0].children[0].data.meetingUrl, 'https://meet.google.com/abc'); // original untouched
+});

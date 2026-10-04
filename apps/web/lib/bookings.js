@@ -2,6 +2,7 @@
 import {
   findBlock, sanitizeBlock, computeSlots, pickService, zonedDateStr, addDays, formatInZone, icsCalendar, ACTIVE_STATUSES,
 } from '@otrelink/core';
+import crypto from 'node:crypto';
 import { sendEmail } from './notify.js';
 
 /** Load a page + its Booking block (only if the block exists and is enabled). */
@@ -25,21 +26,59 @@ export async function freeSlots(db, { data, blockId, serviceId, date, now = new 
 
 export { pickService, zonedDateStr };
 
+/** Secret given only to the browser that made the booking (lets the visitor cancel and see the meeting link). */
+export const newCancelToken = () => crypto.randomBytes(24).toString('hex');
+export function tokenMatches(b, token) {
+  if (!b?.cancelToken || typeof token !== 'string' || token.length !== b.cancelToken.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(b.cancelToken));
+}
+
+/** Current settings of the Booking block a booking belongs to (null if the block was removed). */
+export function blockDataFor(page, blockId) {
+  const raw = findBlock(page?.blocks || [], blockId);
+  return raw && raw.type === 'booking' ? sanitizeBlock(raw).data : null;
+}
+
+/** Meeting link the visitor may see for this booking ('' when none or not yet). */
+export function meetingFor(data, b) {
+  if (!data?.meetingUrl || b.status === 'cancelled') return '';
+  if (data.meetingShow === 'confirmed' && b.status !== 'confirmed') return '';
+  return data.meetingUrl;
+}
+
+/** Last moment the visitor can cancel online (null when not allowed). */
+export function cancelUntil(data, b) {
+  if (!data?.allowCancel || b.status === 'cancelled') return null;
+  return new Date(new Date(b.start).getTime() - Number(data.cancelNotice || 0) * 3600e3).toISOString();
+}
+
 /** What the owner sees in the dashboard. */
 export const toOwnerBooking = (b) => ({
   id: b.id, pageId: b.pageId, blockId: b.blockId, serviceName: b.serviceName, duration: b.duration,
   start: b.start, end: b.end, timezone: b.timezone, visitorTimezone: b.visitorTimezone || '',
   name: b.name, email: b.email, phone: b.phone || '', note: b.note || '', status: b.status, createdAt: b.createdAt,
+  cancelledBy: b.cancelledBy || '',
 });
 
-/** What the visitor gets back after booking. */
-export const toVisitorBooking = (b) => ({ id: b.id, status: b.status, start: b.start, end: b.end, serviceName: b.serviceName });
+/**
+ * What the visitor gets back. `full` (only with the visitor's token) adds the
+ * meeting link and until when they can cancel.
+ */
+export const toVisitorBooking = (b, data = null, full = false) => ({
+  id: b.id, status: b.status, start: b.start, end: b.end, serviceName: b.serviceName,
+  ...(full ? {
+    meetingUrl: meetingFor(data, b),
+    meetingPending: Boolean(data?.meetingUrl) && b.status === 'pending' && !meetingFor(data, b),
+    cancelUntil: cancelUntil(data, b),
+  } : {}),
+});
 
 export const whenText = (b, tz = b.timezone) => formatInZone(b.start, tz, { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
 
-export function bookingIcs(b, title) {
+export function bookingIcs(b, title, meetingUrl = '') {
   return icsCalendar([{
     uid: `${b.id}@otrelink`, start: b.start, end: b.end, title: title || b.serviceName,
+    location: meetingUrl, url: meetingUrl, description: meetingUrl ? `Join: ${meetingUrl}` : '',
     status: b.status === 'pending' ? 'TENTATIVE' : b.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED',
     alarms: [60],
   }], title || b.serviceName);
@@ -59,15 +98,16 @@ export async function emailVisitor(kind, b, page) {
   const lines = {
     created: b.status === 'pending' ? `We received your request for ${b.serviceName} on ${when}. You'll get a confirmation soon.` : `${b.serviceName} on ${when}.`,
     confirmed: `${b.serviceName} on ${when} is confirmed.`,
-    cancelled: `${b.serviceName} on ${when} was cancelled.`,
+    cancelled: b.cancelledBy === 'visitor' ? `You cancelled ${b.serviceName} on ${when}.` : `${b.serviceName} on ${when} was cancelled.`,
     rescheduled: `${b.serviceName} is now on ${when}.`,
     reminder: `This is a reminder of your appointment: ${b.serviceName} on ${when}.`,
   };
-  const text = `Hi ${b.name},\n\n${lines[kind]}\n\n— ${who}`;
+  const link = kind === 'cancelled' ? '' : meetingFor(blockDataFor(page, b.blockId), b);
+  const text = `Hi ${b.name},\n\n${lines[kind]}${link ? `\n\nMeeting link: ${link}` : ''}\n\n— ${who}`;
   return sendEmail({
     to: b.email,
     subject: subjects[kind],
     text,
-    ics: kind === 'cancelled' ? undefined : bookingIcs(b, `${b.serviceName} — ${who}`),
+    ics: kind === 'cancelled' ? undefined : bookingIcs(b, `${b.serviceName} — ${who}`, link),
   });
 }

@@ -31,6 +31,8 @@ export default {
     { selector: '.ol-book-done', description: 'Success message' },
     { selector: '.ol-book-mine', description: 'Appointments this visitor already booked (with “Add to calendar”)' },
     { selector: '.ol-book-mine-item', description: 'One saved appointment (.is-pending, .is-confirmed, .is-cancelled)' },
+    { selector: '.ol-book-join', description: '“Join meeting” button (when you set a meeting link; [disabled] until 15 min before)' },
+    { selector: '.ol-book-cancel', description: '“Cancel appointment” button' },
   ],
   fields: [
     { key: 'buttonLabel', type: 'text', label: 'Button text', default: 'Book an appointment' },
@@ -64,6 +66,17 @@ export default {
     { key: 'reminders', type: 'select', label: 'Reminders', default: '1d1h',
       options: Object.entries(REMINDER_PRESETS).map(([value, p]) => ({ value, label: p.label })),
       help: 'Push notifications to you. Visitors also get them by email when email is set up on the server.' },
+    { key: 'meetingUrl', type: 'url', label: 'Meeting link (optional)', private: true,
+      placeholder: 'https://zoom.us/j/… or https://meet.google.com/…',
+      help: 'Your recurring Zoom, Google Meet or Teams link. It goes into every appointment in the calendar. Only people who book see it.' },
+    { key: 'meetingShow', type: 'select', label: 'Visitors get the link', default: 'booked', showIf: { key: 'meetingUrl', truthy: true }, options: [
+      { value: 'booked', label: 'As soon as they book' }, { value: 'confirmed', label: 'Only after I confirm' },
+    ] },
+    { key: 'allowCancel', type: 'toggle', label: 'Visitors can cancel', default: true, help: 'From your page, on the browser they booked with.' },
+    { key: 'cancelNotice', type: 'select', label: 'Cancel up to', default: '2', showIf: { key: 'allowCancel', truthy: true }, options: [
+      { value: '0', label: 'The start time' }, { value: '1', label: '1 hour before' }, { value: '2', label: '2 hours before' },
+      { value: '12', label: '12 hours before' }, { value: '24', label: '1 day before' }, { value: '48', label: '2 days before' },
+    ] },
     { key: 'askPhone', type: 'toggle', label: 'Ask for phone number', default: true },
     { key: 'askNote', type: 'toggle', label: 'Ask for a note', default: true },
     { key: 'startOpen', type: 'toggle', label: 'Show the calendar open', default: false },
@@ -93,12 +106,7 @@ export default {
     let started = false;
     const start = () => { if (!started) { started = true; bookingApp(el.ownerDocument, box, data); } };
     // Returning visitor: show their next appointment on the button right away.
-    const next = box.dataset.mode === 'preview' ? null : savedBookings(box).find((b) => b.status !== 'cancelled');
-    const sub = details.querySelector('.ol-btn-sub');
-    if (next && sub) {
-      sub.textContent = `Your appointment: ${new Date(next.start).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`;
-      sub.hidden = false;
-    }
+    if (box.dataset.mode !== 'preview') syncSubtitle(box, savedBookings(box));
     if (details.open) start();
     details.addEventListener('toggle', () => details.open && start());
   },
@@ -135,8 +143,18 @@ export default {
 .ol-root .ol-book-done{text-align:center;display:flex;flex-direction:column;gap:10px}
 .ol-root .ol-book-done strong{font-size:1.1em}
 .ol-root .ol-book-mine{display:flex;flex-direction:column;gap:8px}
-.ol-root .ol-book-mine-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent)}
-.ol-root .ol-book-mine-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;font-size:.9em}
+.ol-root .ol-book-mine-item{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent)}
+.ol-root .ol-book-mine-info{min-width:0;display:flex;flex-direction:column;gap:1px;font-size:.9em}
+.ol-root .ol-book-actions{display:flex;flex-wrap:wrap;gap:6px}
+.ol-root .ol-book-ico{display:inline-grid;line-height:0}
+.ol-root .ol-book .ol-book-join[disabled]{opacity:.4;cursor:not-allowed}
+.ol-root .ol-book-join-note{font-size:.78em;opacity:.65}
+.ol-root .ol-book-actions .ol-book-cal-sm{flex:1 1 auto}
+.ol-root .ol-book-actions .ol-book-join{background:transparent;color:var(--ol-surface-fg)!important;box-shadow:inset 0 0 0 1.5px var(--ol-surface-fg)}
+.ol-root .ol-book .ol-book-cancel{align-self:flex-start;font-size:.8em;opacity:.7}
+.ol-root .ol-book-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:.85em;font-weight:600}
+.ol-root .ol-book-cancel-yes{border:0;border-radius:999px;padding:7px 14px;background:#dc2626;color:#fff;font-weight:700}
+.ol-root .ol-book-cancel-yes[disabled]{opacity:.6}
 .ol-root .ol-book-mine-info span{opacity:.85}
 .ol-root .ol-book-status{font-size:.8em;font-weight:700;opacity:.65}
 .ol-root .ol-book-mine-item.is-confirmed .ol-book-status{color:#0f9d58;opacity:1}
@@ -160,6 +178,18 @@ function saveBookings(box, list) {
   try { localStorage.setItem(storeKey(box), JSON.stringify(list.slice(-5))); } catch { /* storage blocked */ }
 }
 
+/** Show the visitor's next appointment under the button (or the normal description). */
+function syncSubtitle(box, list) {
+  const sub = box.closest('.ol-booking')?.querySelector(':scope > summary .ol-btn-sub');
+  if (!sub) return;
+  if (sub.dataset.desc === undefined) sub.dataset.desc = sub.textContent;
+  const next = list.find((b) => b.status !== 'cancelled');
+  sub.textContent = next
+    ? `Your appointment: ${new Date(next.start).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+    : sub.dataset.desc;
+  sub.hidden = !sub.textContent;
+}
+
 // ── Browser app (vanilla DOM) ────────────────────────────────────────────
 function bookingApp(doc, box, data) {
   const api = box.dataset.api || '';
@@ -173,22 +203,43 @@ function bookingApp(doc, box, data) {
   const eventTitle = (b) => [b.serviceName, box.dataset.title].filter(Boolean).join(' · ');
   const icsHref = (b) => `data:text/calendar;charset=utf-8,${encodeURIComponent(icsCalendar([{
     uid: `${b.id}@otrelink`, start: b.start, end: b.end, title: eventTitle(b), alarms: alarms.length ? alarms : [60],
+    location: b.meetingUrl || '', url: b.meetingUrl || '', description: b.meetingUrl ? `Join: ${b.meetingUrl}` : '',
   }], eventTitle(b)))}`;
+  const svg = (name) => { const n = doc.createElement('span'); n.className = 'ol-book-ico'; n.innerHTML = icon(name, 16); return n; };
+  const canCancel = (b) => b.token && b.cancelUntil && b.status !== 'cancelled' && Date.now() < new Date(b.cancelUntil).getTime();
 
   // Refresh saved appointments: the owner may have confirmed, moved or cancelled them.
   async function refreshMine() {
     if (!st.mine.length) return;
     try {
-      const q = new URLSearchParams({ pageId, ids: st.mine.map((b) => b.id).join(',') });
+      // "id~token": the token proves this browser made the booking (needed for the meeting link and cancelling).
+      const q = new URLSearchParams({ pageId, items: st.mine.map((b) => (b.token ? `${b.id}~${b.token}` : b.id)).join(',') });
       const res = await fetch(`${api}/api/public/booking?${q}`);
       if (!res.ok) return;
       const { bookings = [] } = await res.json();
       const byId = Object.fromEntries(bookings.map((b) => [b.id, b]));
-      st.mine = st.mine.filter((b) => byId[b.id]).map((b) => byId[b.id]);
+      st.mine = st.mine.filter((b) => byId[b.id]).map((b) => ({ ...byId[b.id], token: b.token }));
       // Keep cancelled ones visible this time, but forget them.
       saveBookings(box, st.mine.filter((b) => b.status !== 'cancelled'));
       draw();
     } catch { /* offline: keep what we have */ }
+  }
+
+  async function cancelMine(b) {
+    st.cancelling = b.id; st.cancelError = ''; draw();
+    try {
+      const res = await fetch(`${api}/api/public/booking/cancel`, {
+        method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ pageId, id: b.id, token: b.token }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.error === 'too_late' ? 'It is too late to cancel online. Please contact me.' : 'Could not cancel. Try again.');
+      }
+      st.mine = st.mine.map((x) => (x.id === b.id ? { ...json.booking, token: b.token } : x));
+      saveBookings(box, st.mine.filter((x) => x.status !== 'cancelled'));
+      st.confirm = null;
+    } catch (err) { st.cancelError = err.message; }
+    st.cancelling = null; draw();
   }
 
   const h = (tag, attrs = {}, ...kids) => {
@@ -236,6 +287,8 @@ function bookingApp(doc, box, data) {
 
   function draw() {
     box.textContent = '';
+    if (!preview) syncSubtitle(box, st.mine);
+    scheduleJoin();
     if (st.done) { box.append(doneView()); return; }
     if (st.mine.length) box.append(mineView());
     if (!services.length) { box.append(h('p', { class: 'ol-book-note' }, 'No services available yet.')); return; }
@@ -286,6 +339,42 @@ function bookingApp(doc, box, data) {
     ));
   }
 
+  // The join button only works from 15 minutes before the start until the end.
+  const JOIN_EARLY = 15 * 60e3;
+  let joinTimer = null;
+  function joinButton(b, cls) {
+    const opens = new Date(b.start).getTime() - JOIN_EARLY;
+    const now = Date.now();
+    if (now >= opens && now < new Date(b.end).getTime()) {
+      return h('a', { class: `${cls} ol-book-join`, href: b.meetingUrl, target: '_blank', rel: 'noopener' }, 'Join meeting');
+    }
+    const ended = now >= new Date(b.end).getTime();
+    return h('button', { type: 'button', class: `${cls} ol-book-join`, disabled: true, 'aria-disabled': 'true',
+      title: ended ? 'This meeting has ended' : `Available from ${fmtTime(new Date(opens).toISOString())}` }, 'Join meeting');
+  }
+  // Re-draw when the next join button should turn on (or off at the end).
+  function scheduleJoin() {
+    clearTimeout(joinTimer);
+    const now = Date.now();
+    const list = [...st.mine, st.done].filter((b) => b?.meetingUrl && b.status !== 'cancelled');
+    const next = list.flatMap((b) => [new Date(b.start).getTime() - JOIN_EARLY, new Date(b.end).getTime()]).filter((t) => t > now).sort((a, b) => a - b)[0];
+    if (next && next - now < 2 ** 31 - 1) joinTimer = setTimeout(() => { if (box.isConnected) draw(); }, next - now + 500);
+  }
+  const joinNote = (b) => {
+    if (!b.meetingUrl || b.status === 'cancelled') return null;
+    const now = Date.now();
+    if (now >= new Date(b.end).getTime()) return h('small', { class: 'ol-book-join-note' }, 'This meeting has ended.');
+    if (now < new Date(b.start).getTime() - JOIN_EARLY) return h('small', { class: 'ol-book-join-note' }, 'The Join button turns on 15 minutes before the start.');
+    return null;
+  };
+
+  function actions(b) {
+    if (b.status === 'cancelled') return null;
+    return h('div', { class: 'ol-book-actions' },
+      h('a', { class: 'ol-book-cal ol-book-cal-sm', href: icsHref(b), download: 'appointment.ics', 'aria-label': `Add ${b.serviceName} to my calendar` }, svg('calendar'), 'Add to calendar'),
+      b.meetingUrl && joinButton(b, 'ol-book-cal ol-book-cal-sm'));
+  }
+
   function mineView() {
     const label = { pending: 'Waiting for confirmation', confirmed: 'Confirmed', cancelled: 'Cancelled' };
     return h('div', { class: 'ol-book-mine' },
@@ -294,8 +383,17 @@ function bookingApp(doc, box, data) {
         h('div', { class: 'ol-book-mine-info' },
           h('strong', {}, b.serviceName),
           h('span', {}, fmtWhen(b.start)),
-          h('small', { class: 'ol-book-status' }, label[b.status] || '')),
-        b.status !== 'cancelled' && h('a', { class: 'ol-book-cal ol-book-cal-sm', href: icsHref(b), download: 'appointment.ics', 'aria-label': `Add ${b.serviceName} to my calendar` }, 'Add to calendar'))),
+          h('small', { class: 'ol-book-status' }, label[b.status] || ''),
+          b.meetingPending && b.status !== 'cancelled' && h('small', {}, 'You will get the meeting link once it is confirmed.')),
+        actions(b),
+        joinNote(b),
+        st.confirm === b.id
+          ? h('div', { class: 'ol-book-confirm', role: 'group', 'aria-label': 'Cancel appointment' },
+            h('span', {}, 'Cancel this appointment?'),
+            h('button', { type: 'button', class: 'ol-book-cancel-yes', disabled: st.cancelling === b.id, on: { click: () => cancelMine(b) } }, st.cancelling === b.id ? 'Cancelling…' : 'Yes, cancel'),
+            h('button', { type: 'button', class: 'ol-book-back', on: { click: () => { st.confirm = null; st.cancelError = ''; draw(); } } }, 'Keep it'))
+          : canCancel(b) && h('button', { type: 'button', class: 'ol-book-back ol-book-cancel', on: { click: () => { st.confirm = b.id; st.cancelError = ''; draw(); } } }, 'Cancel appointment'),
+        st.confirm === b.id && st.cancelError && h('p', { class: 'ol-book-error', role: 'alert' }, st.cancelError))),
       h('p', { class: 'ol-book-step ol-book-again' }, 'Book another appointment'),
     );
   }
@@ -307,6 +405,9 @@ function bookingApp(doc, box, data) {
       h('p', { class: 'ol-book-note' }, `${b.serviceName} · ${fmtWhen(b.start)}`),
       b.status === 'pending' && h('p', { class: 'ol-book-note' }, 'You will receive a confirmation soon.'),
       h('a', { class: 'ol-book-cal', href: icsHref(b), download: 'appointment.ics' }, 'Add to my calendar'),
+      b.meetingUrl && joinButton(b, 'ol-book-cal'),
+      joinNote(b),
+      b.meetingPending && h('p', { class: 'ol-book-note' }, 'You will get the meeting link once it is confirmed.'),
       h('button', { type: 'button', class: 'ol-book-back', on: { click: () => { st.done = null; st.slot = null; st.day = null; draw(); } } }, 'Book another time'),
     );
   }
