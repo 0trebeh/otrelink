@@ -29,7 +29,7 @@ export const settingsFields = [
   { key: 'seoTitle', type: 'text', label: 'SEO title', max: 70, help: 'Browser tab and search results. Defaults to your title.' },
   { key: 'seoDescription', type: 'textarea', label: 'SEO description', max: 200 },
   { key: 'ogImage', type: 'image', label: 'Sharing image', help: 'Shown when your link is shared on social media.' },
-  { key: 'hideFooter', type: 'toggle', label: 'Hide “Made with Otrelink” footer', default: false },
+  { key: 'hideFooter', type: 'toggle', label: 'Hide “Made with Otrelink” footer', default: true },
   { key: 'sensitive', type: 'toggle', label: 'Sensitive content warning', default: false, help: 'Visitors must confirm before seeing the page.' },
   { key: 'sensitiveMessage', type: 'text', label: 'Warning message', default: 'This page may contain sensitive content.', showIf: { key: 'sensitive', truthy: true } },
 ];
