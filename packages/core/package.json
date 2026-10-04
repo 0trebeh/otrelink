@@ -6,9 +6,12 @@
   "type": "module",
   "main": "./src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./standalone": "./src/standalone.js"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./src/standalone.js"
+  ],
   "dependencies": {
     "simple-icons": "^16.0.0"
   }

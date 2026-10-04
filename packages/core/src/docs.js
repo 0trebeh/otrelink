@@ -44,7 +44,7 @@ export const cssElements = [
 /** Modifier classes and attributes. */
 export const cssModifiers = [
   { selector: '.ol-root.ol-layout-classic | -hero | -left', description: 'Header layout chosen in Style → Header. Note: no space after .ol-root.' },
-  { selector: '.ol-root[data-mode="preview"]', description: 'Only in the dashboard preview. Use [data-mode="live"] for the public page only.' },
+  { selector: '.ol-root[data-mode="preview"]', description: 'Only in the dashboard preview. [data-mode="live"] = public page, [data-mode="export"] = downloaded website.' },
   { selector: '.ol-avatar-circle | -rounded | -square', description: 'Avatar shape.' },
   { selector: '.ol-socials-plain | -filled | -outline', description: 'Social icons style.' },
   { selector: '.ol-btn.has-media', description: 'Button that has a thumbnail or an icon.' },

@@ -85,7 +85,7 @@ export default function Editor({ initialPage, pageUrl }) {
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics }), [page, set, pageUrl, saved.slug, analytics]);
+  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty }), [page, set, pageUrl, saved.slug, analytics, dirty]);
   const Section = section.Component;
   const liveUrl = `${pageUrl}/${saved.slug}`;
 

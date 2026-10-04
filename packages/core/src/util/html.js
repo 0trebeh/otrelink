@@ -27,6 +27,8 @@ export function safeUrl(value, { allowRelative = true } = {}) {
   if (!value) return '';
   const url = String(value).trim();
   if (allowRelative && url.startsWith('/') && !url.startsWith('//')) return url;
+  // "./assets/…" is used by exported static sites.
+  if (allowRelative && url.startsWith('./') && !url.includes('..')) return url;
   try {
     const parsed = new URL(url);
     return SAFE_PROTOCOLS.includes(parsed.protocol) ? parsed.href : '';

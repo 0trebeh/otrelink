@@ -233,6 +233,7 @@ export default function DocsPage() {
 
           {/* ── Data ── */}
           <H2 id="data">Backup &amp; data</H2>
+          <P><i>Settings → Download as website</i> gives you a .zip with <C>index.html</C>, <C>style.css</C>, <C>script.js</C> and an <C>assets/</C> folder with your images and PDFs. Open <C>index.html</C> on any computer: it works without the Otrelink server or database (internet is only needed for Google Fonts, videos, music players and maps). You can also upload that folder to any static host. It uses your last saved version, and visits to it are not counted in Analytics.</P>
           <P><i>Settings → Backup</i> exports your page as a JSON file and imports it back (useful to copy a design to another page). Importing replaces the current content until you save. <i>Delete page</i> removes the page, its link and its analytics permanently.</P>
 
           {/* ── Shortcuts ── */}

@@ -100,6 +100,12 @@ export default function SettingsSection({ ed }) {
           <FieldList fields={settingsFields} values={page.settings} onChange={(k, v) => set((p) => ({ ...p, settings: { ...p.settings, [k]: v } }), `settings:${k}`)} />
         </div>
       </Panel>
+      <Panel title="Download as website" description="A .zip with index.html, style.css, script.js and your images and PDFs. Open index.html on any computer: no server or database needed. Uses the last saved version.">
+        <a href={`/api/pages/${page.id}/export`} download className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-line text-[13px] font-semibold bg-panel hover:border-ink/30">
+          <Download size={15} /> Download website (.zip)
+        </a>
+        {ed.dirty && <p className="text-xs text-muted mt-2">You have unsaved changes. Save first to include them.</p>}
+      </Panel>
       <Panel title="Backup" description="Download your page as a file, or restore one. Restoring replaces the current content until you save.">
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={exportJson}><Download size={15} /> Export JSON</Button>

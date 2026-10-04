@@ -107,7 +107,7 @@ function renderProfile(page, d) {
 export function renderPage(page, opts = {}) {
   const mode = opts.mode || 'live';
   const now = opts.now ?? Date.now();
-  const animate = opts.animate ?? mode === 'live';
+  const animate = opts.animate ?? mode !== 'preview';
   const d = resolveDesign(page.design);
   const usedTypes = new Set();
   const usedAnims = new Set();
@@ -117,7 +117,7 @@ export function renderPage(page, opts = {}) {
       const mod = blockTypes.get(block.type);
       if (!mod || !block.enabled) return '';
       const scheduledOut = isScheduledOut(block, now);
-      if (scheduledOut && mode === 'live') return '';
+      if (scheduledOut && mode !== 'preview') return '';
       usedTypes.add(mod.type);
       const anim = block.options?.animation && block.options.animation !== 'none' ? block.options.animation : '';
       if (anim) usedAnims.add(anim);
@@ -174,7 +174,17 @@ export function mountPage(container, page, opts = {}) {
   const { html, css, fontsHref } = renderPage(page, opts);
   const fonts = fontsHref ? `<link rel="stylesheet" href="${esc(fontsHref)}">` : '';
   container.innerHTML = `${fonts}<style>${css}</style>${html}`;
+  return hydratePage(container, page, opts);
+}
 
+/**
+ * Add browser behavior to an already rendered page: entrance animation
+ * stagger, block behaviors (countdown, copy buttons, carousels…), the
+ * sensitive-content gate and click tracking.
+ * Used by mountPage() and by exported static sites (HTML is pre-rendered).
+ * @returns {() => void} cleanup function
+ */
+export function hydratePage(container, page, opts = {}) {
   // Stagger entrance animations.
   container.querySelectorAll('.ol-enter').forEach((el, i) => {
     el.style.animationDelay = `${Math.min(i, 14) * 55}ms`;

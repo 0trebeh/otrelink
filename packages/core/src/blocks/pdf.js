@@ -60,6 +60,15 @@ export default {
       return button({ href: url, label: title, sub: d.description, iconName: 'file', ctx })
         + (dl ? `<div class="ol-pdf-actions ol-pdf-actions-solo">${dl}</div>` : '');
     }
+    // Exported sites are opened from disk (file://), where PDF.js can't load the
+    // file; the browser's own PDF viewer is used instead.
+    if (ctx.mode === 'export') {
+      return `<div class="ol-card ol-pdf">`
+        + `<div class="ol-pdf-head"><span class="ol-pdf-icon">${icon('file', 20)}</span><span><strong>${esc(title)}</strong>${d.description ? `<small>${esc(d.description)}</small>` : ''}</span></div>`
+        + `<iframe class="ol-pdf-frame" src="${esc(url)}" title="${esc(title)}" style="height:${d.height}px"></iframe>`
+        + `<div class="ol-pdf-actions"><a class="ol-pdf-action" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${icon('external', 16)} Open</a>${d.allowDownload ? `<a class="ol-pdf-action ol-pdf-download" href="${esc(url)}" download>${icon('download', 16)} Download</a>` : ''}</div>`
+        + '</div>';
+    }
     return `<div class="ol-card ol-pdf" data-src="${esc(url)}">`
       + `<div class="ol-pdf-head"><span class="ol-pdf-icon">${icon('file', 20)}</span><span><strong>${esc(title)}</strong>${d.description ? `<small>${esc(d.description)}</small>` : ''}</span><span class="ol-pdf-count"></span></div>`
       + `<div class="ol-pdf-pages" style="height:${d.height}px"><p class="ol-pdf-status">Loading PDF…</p></div>`
@@ -124,6 +133,7 @@ export default {
 .ol-root .ol-pdf-icon{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:10px;background:color-mix(in srgb,var(--ol-surface-fg) 10%,transparent);flex-shrink:0}
 .ol-root .ol-pdf-count{font-size:.8em;opacity:.7;white-space:nowrap}
 .ol-root .ol-pdf-pages{overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:8px;border-radius:calc(var(--ol-surface-radius)*.6);background:color-mix(in srgb,var(--ol-surface-fg) 8%,transparent);-webkit-overflow-scrolling:touch}
+.ol-root .ol-pdf-frame{display:block;width:100%;border:0;border-radius:calc(var(--ol-surface-radius)*.6);background:#fff}
 .ol-root .ol-pdf-page{background:#fff;width:100%;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.18)}
 .ol-root .ol-pdf-page canvas{display:block;width:100%;height:auto}
 .ol-root .ol-pdf-status{margin:auto;opacity:.75;font-size:.9em;text-align:center;padding:0 12px}
