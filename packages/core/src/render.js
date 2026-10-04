@@ -11,6 +11,7 @@ import { designCss, resolveDesign } from './design.js';
 import { socialHref, socialIcon, socials } from './socials.js';
 import { esc, safeUrl, miniMarkdown } from './util/html.js';
 import { verifiedSvg } from './icons.js';
+import { flattenBlocks } from './tree.js';
 
 const BASE_CSS = `
 .ol-root{position:relative;min-height:100%;font-family:var(--ol-body-font);font-size:var(--ol-body-size);color:var(--ol-text-color);-webkit-font-smoothing:antialiased;isolation:isolate}
@@ -112,7 +113,9 @@ export function renderPage(page, opts = {}) {
   const usedTypes = new Set();
   const usedAnims = new Set();
 
-  const blocksHtml = (page.blocks || [])
+  // Renders a list of blocks. Containers (collections) get their rendered
+  // children in ctx.children, plus ctx.container for children to adapt their look.
+  const renderBlocks = (blocks, depth, container) => (blocks || [])
     .map((block) => {
       const mod = blockTypes.get(block.type);
       if (!mod || !block.enabled) return '';
@@ -121,17 +124,25 @@ export function renderPage(page, opts = {}) {
       usedTypes.add(mod.type);
       const anim = block.options?.animation && block.options.animation !== 'none' ? block.options.animation : '';
       if (anim) usedAnims.add(anim);
+      const ctx = { blockId: block.id, design: d, page, mode, depth, container };
+      if (mod.container) {
+        const me = { type: mod.type, id: block.id, layout: block.data?.layout };
+        ctx.children = (block.children || [])
+          .map((child) => ({ block: child, html: renderBlocks([child], depth + 1, me) }))
+          .filter((c) => c.html);
+      }
       let inner;
       try {
-        inner = mod.render(block.data || {}, { blockId: block.id, design: d, page, mode });
+        inner = mod.render(block.data || {}, ctx);
       } catch (err) {
         console.error(`[otrelink] block "${block.type}" failed to render`, err);
         return '';
       }
-      const cls = ['ol-block', `ol-b-${mod.type}`, 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled'].filter(Boolean).join(' ');
+      const cls = ['ol-block', `ol-b-${mod.type}`, depth === 0 && 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled'].filter(Boolean).join(' ');
       return `<div class="${cls}" data-block-id="${esc(block.id)}" data-block-type="${esc(mod.type)}">${inner}</div>`;
     })
     .join('');
+  const blocksHtml = renderBlocks(page.blocks, 0, null);
 
   const wp = wallpapers.resolve(d.wallpaper.type);
   const footer = page.settings?.hideFooter
@@ -191,9 +202,10 @@ export function hydratePage(container, page, opts = {}) {
   });
 
   // Per-block browser behavior.
+  const byId = new Map(flattenBlocks(page.blocks).map((b) => [b.id, b]));
   for (const el of container.querySelectorAll('[data-block-id]')) {
     const mod = blockTypes.get(el.dataset.blockType);
-    const block = page.blocks.find((b) => b.id === el.dataset.blockId);
+    const block = byId.get(el.dataset.blockId);
     if (mod?.hydrate && block) {
       try { mod.hydrate(el, block.data, { blockId: block.id, mode: opts.mode }); } catch (err) { console.error(err); }
     }

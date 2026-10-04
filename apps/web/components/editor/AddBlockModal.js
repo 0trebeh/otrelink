@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 import { blockTypes, icon } from '@otrelink/core';
 import { Modal, Input, CoreIcon } from '../ui';
 
-export default function AddBlockModal({ open, onClose, onAdd }) {
+export default function AddBlockModal({ open, onClose, onAdd, title }) {
   const [q, setQ] = useState('');
   const groups = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -19,7 +19,7 @@ export default function AddBlockModal({ open, onClose, onAdd }) {
   }, [q]);
 
   return (
-    <Modal open={open} onClose={onClose} title="Add a block" wide>
+    <Modal open={open} onClose={onClose} title={title || 'Add a block'} wide>
       <div className="relative mb-5">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search blocks" className="pl-9" autoFocus />

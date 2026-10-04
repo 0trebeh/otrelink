@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { blockTypes, socials } from '@otrelink/core';
+import { blockTypes, socials, findBlock } from '@otrelink/core';
 import { api } from '@/lib/client';
 import { Panel, cx } from '@/components/ui';
 
@@ -108,7 +108,7 @@ export default function AnalyticsSection({ ed }) {
   const blockRows = useMemo(() => {
     if (!data) return [];
     return Object.entries(data.blocks).map(([id, count]) => {
-      const b = page.blocks.find((x) => x.id === id);
+      const b = findBlock(page.blocks, id);
       const d = b?.data || {};
       return { key: id, count, label: b ? d.title || d.label || d.text || blockTypes.get(b.type)?.label || b.type : 'Deleted block' };
     }).sort((a, b) => b.count - a.count).slice(0, 10);

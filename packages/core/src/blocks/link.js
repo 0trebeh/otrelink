@@ -1,4 +1,4 @@
-import { button, iconOptions } from './_shared.js';
+import { button, iconOptions, linkCard } from './_shared.js';
 import { esc, safeUrl } from '../util/html.js';
 
 export default {
@@ -25,6 +25,11 @@ export default {
   ],
   summary: (d) => d.url,
   render(d, ctx) {
+    // Inside a Collection with Grid / Carousel / Showcase: card with cover image.
+    const parentLayout = ctx.container?.layout;
+    if (parentLayout && parentLayout !== 'list') {
+      return linkCard({ url: d.url, title: d.title, subtitle: d.subtitle, image: d.thumbnail }, parentLayout === 'showcase' ? 'show' : 'card', ctx);
+    }
     if (d.layout === 'featured' && d.thumbnail) {
       const url = safeUrl(d.url);
       return `<a class="ol-featured" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-ol-track="${esc(ctx.blockId)}">`

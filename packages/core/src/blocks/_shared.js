@@ -32,3 +32,20 @@ export function frame(src, { ratio = '16 / 9', height = 0, title = 'Embedded con
   const style = height ? `height:${height}px` : `aspect-ratio:${ratio}`;
   return `<div class="ol-frame" style="${style}"><iframe src="${esc(src)}" title="${esc(title)}" loading="lazy" allow="${esc(allow)}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>`;
 }
+
+/**
+ * Link shown as a card with a cover image. Used when a Link block lives inside
+ * a Collection with the Grid / Carousel ("card") or Showcase ("show") layout.
+ */
+export function linkCard({ url, title, subtitle, image }, variant, ctx) {
+  const href = safeUrl(url);
+  const img = safeUrl(image);
+  const media = img
+    ? `<span class="ol-col-media"><img src="${esc(img)}" alt="" loading="lazy"></span>`
+    : `<span class="ol-col-media ol-col-noimg" aria-hidden="true">${esc((title || '?').trim().charAt(0).toUpperCase())}</span>`;
+  const text = `<span class="ol-col-text"><strong>${esc(title)}</strong>${subtitle ? `<small>${esc(subtitle)}</small>` : ''}</span>`;
+  const cls = variant === 'show' ? 'ol-col-show' : 'ol-col-card';
+  return href
+    ? `<a class="${cls}" href="${esc(href)}" target="_blank" rel="noopener noreferrer" data-ol-track="${esc(ctx.blockId)}">${media}${text}</a>`
+    : `<div class="${cls}">${media}${text}</div>`;
+}

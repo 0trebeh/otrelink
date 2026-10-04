@@ -133,6 +133,7 @@ export default function DocsPage() {
               </div>
             </div>
           ))}
+          <P><b>Collections</b> can hold any block, including other collections (up to 4 levels). Drag a block onto a collection&apos;s area to put it inside, drag it out to take it out, or use <i>Move to…</i> in the block. In Grid, Carousel and Showcase layouts, links are shown as image cards (their thumbnail is the cover).</P>
           <P>Text blocks and FAQ answers support light formatting: <C>**bold**</C>, <C>*italic*</C>, <C>~~strike~~</C> and <C>[link text](https://…)</C>.</P>
 
           {/* ── Customizing ── */}

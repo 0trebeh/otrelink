@@ -14,7 +14,11 @@ export const toPublicPage = (p) => {
     id: p.id,
     slug: p.slug,
     ...clean,
-    // Hide disabled blocks from the public payload entirely.
-    blocks: clean.blocks.filter((b) => b.enabled),
+    // Hide disabled blocks (at any depth) from the public payload entirely.
+    blocks: onlyEnabled(clean.blocks),
   };
 };
+
+function onlyEnabled(blocks) {
+  return blocks.filter((b) => b.enabled).map((b) => (b.children ? { ...b, children: onlyEnabled(b.children) } : b));
+}

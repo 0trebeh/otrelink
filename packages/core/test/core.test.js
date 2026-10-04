@@ -106,3 +106,53 @@ test('docs: documented class names exist in the rendered output', () => {
     if (cls && cls !== 'ol-gate') assert.ok(all.includes(cls), e.selector);
   }
 });
+
+import {
+  moveBlock, canMoveInto, findBlock, parentIdOf, flattenBlocks, isContainerType, MAX_DEPTH, cloneBlock,
+} from '../src/index.js';
+
+test('collections hold any block, including other collections', () => {
+  const inner = newBlock('collection', { title: 'Inner', layout: 'grid' });
+  const outer = newBlock('collection', { title: 'Outer' });
+  outer.children = [newBlock('video', { url: 'https://youtu.be/dQw4w9WgXcQ' }), inner, newBlock('text', { text: 'hi' })];
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'demo' }), blocks: [outer] });
+  assert.equal(page.blocks[0].children.length, 3);
+  assert.equal(page.blocks[0].children[1].children.length, 2); // default links of the inner collection
+  const { html } = renderPage(page);
+  assert.ok(html.includes('ol-b-video') && html.includes('Inner') && html.includes('ol-col-card')); // links as cards inside a grid
+});
+
+test('old collections (data.items) become link blocks', () => {
+  const page = sanitizePage({ blocks: [{ id: 'c', type: 'collection', data: { title: 'Old', items: [{ id: 'x1', title: 'A', url: 'https://a.com', image: '' }, { id: 'x2', title: 'B', url: 'https://b.com' }] } }] });
+  const kids = page.blocks[0].children;
+  assert.deepEqual(kids.map((k) => [k.type, k.data.title, k.data.url]), [['link', 'A', 'https://a.com/'], ['link', 'B', 'https://b.com/']]);
+  assert.equal(page.blocks[0].data.items, undefined);
+});
+
+test('nesting depth is limited and children are dropped from non-containers', () => {
+  let deep = newBlock('collection');
+  for (let i = 0; i < MAX_DEPTH + 3; i++) { const c = newBlock('collection'); c.children = [deep]; deep = c; }
+  const page = sanitizePage({ blocks: [deep, { ...newBlock('link', { title: 'x', url: 'https://x.com' }), children: [newBlock('text')] }] });
+  let depth = 0;
+  for (let b = page.blocks[0]; b?.children?.length; b = b.children.find((c) => c.type === 'collection')) depth++;
+  assert.ok(depth <= MAX_DEPTH - 1);
+  assert.equal(page.blocks[1].children, undefined);
+});
+
+test('moving blocks in and out of collections', () => {
+  const a = newBlock('link', { title: 'A', url: 'https://a.com' });
+  const col = newBlock('collection');
+  let blocks = [a, col];
+  blocks = moveBlock(blocks, a.id, col.id, 0, isContainerType);
+  assert.equal(parentIdOf(blocks, a.id), col.id);
+  assert.equal(blocks.length, 1);
+  blocks = moveBlock(blocks, a.id, null, 0, isContainerType);
+  assert.equal(parentIdOf(blocks, a.id), null);
+  // a collection can't go inside itself or into a link
+  assert.equal(canMoveInto(blocks, col.id, col.id, isContainerType), false);
+  assert.equal(canMoveInto(blocks, col.id, a.id, isContainerType), false);
+  // duplicate gives new ids to every descendant
+  const copy = cloneBlock(findBlock(blocks, col.id));
+  const ids = new Set(flattenBlocks(blocks).map((b) => b.id));
+  assert.ok(flattenBlocks([copy]).every((b) => !ids.has(b.id)));
+});

@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, ChevronDown, Copy, Trash2, BarChart3, CalendarClock, Sparkles } from 'lucide-react';
+import { GripVertical, ChevronDown, Copy, Trash2, BarChart3, CalendarClock, Sparkles, FolderInput } from 'lucide-react';
 import { blockTypes, commonBlockFields, icon, validateFields } from '@otrelink/core';
 import { CoreIcon, IconButton, Toggle, cx } from '../ui';
 import FieldList from '../fields/FieldList';
@@ -12,7 +12,13 @@ function titleOf(block, mod) {
   return d.title || d.text || d.label || d.name || d.question || mod?.label || block.type;
 }
 
-export default function BlockCard({ block, expanded, onToggleExpand, onChange, onOptions, onEnabled, onDuplicate, onDelete, clicks }) {
+/** Human title of a block (used in menus and the drag preview). */
+export const blockTitle = (block) => titleOf(block, blockTypes.get(block?.type));
+
+export default function BlockCard({
+  block, depth = 0, expanded, dimmed, onToggleExpand, onChange, onOptions, onEnabled, onDuplicate, onDelete, clicks,
+  childrenSlot, moveTargets, onMove,
+}) {
   const mod = blockTypes.get(block.type);
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   const [showMore, setShowMore] = useState(false);
@@ -24,7 +30,13 @@ export default function BlockCard({ block, expanded, onToggleExpand, onChange, o
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={cx('rounded-3xl bg-panel border transition-shadow', isDragging ? 'shadow-xl z-10 relative border-accent' : 'border-line/80', !block.enabled && 'opacity-70')}
+      className={cx(
+        'bg-panel border transition-shadow',
+        depth === 0 ? 'rounded-3xl' : 'rounded-2xl',
+        childrenSlot && 'border-accent/30',
+        isDragging || dimmed ? 'opacity-40 border-dashed border-accent' : 'border-line/80',
+        !block.enabled && !isDragging && 'opacity-70',
+      )}
     >
       <div className="flex items-center gap-2 p-3 pl-1.5">
         <button ref={setActivatorNodeRef} {...attributes} {...listeners} className="p-1.5 text-muted hover:text-ink cursor-grab active:cursor-grabbing touch-none" aria-label="Drag to reorder">
@@ -69,13 +81,48 @@ export default function BlockCard({ block, expanded, onToggleExpand, onChange, o
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-1 mt-4 pt-3 border-t border-line/70">
+          <div className="flex flex-wrap items-center justify-end gap-1 mt-4 pt-3 border-t border-line/70">
+            {moveTargets && <MoveTo block={block} targets={moveTargets} onMove={onMove} />}
             <button type="button" onClick={onDuplicate} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink px-3 h-8 rounded-full hover:bg-soft cursor-pointer"><Copy size={14} /> Duplicate</button>
             <button type="button" onClick={onDelete} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-danger px-3 h-8 rounded-full hover:bg-danger/10 cursor-pointer"><Trash2 size={14} /> Delete</button>
           </div>
         </div>
       )}
+
+      {childrenSlot && (
+        <div className={cx('border-t border-line/70 bg-soft/60 px-2.5 sm:px-3 py-3', depth === 0 ? 'rounded-b-3xl' : 'rounded-b-2xl')}>
+          {childrenSlot}
+        </div>
+      )}
     </div>
+  );
+}
+
+/** "Move to" menu: an alternative to drag & drop. */
+function MoveTo({ block, targets, onMove }) {
+  const [open, setOpen] = useState(false);
+  const list = open ? targets() : [];
+  return (
+    <span className="relative mr-auto">
+      <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex items-center gap-1.5 text-[13px] font-medium text-muted hover:text-ink px-3 h-8 rounded-full hover:bg-soft cursor-pointer" aria-expanded={open}>
+        <FolderInput size={14} /> Move to…
+      </button>
+      {open && (
+        <span className="absolute left-0 bottom-9 z-20 w-60 max-h-64 overflow-auto rounded-2xl bg-panel border border-line shadow-xl p-1.5 flex flex-col">
+          {list.map((t) => (
+            <button
+              key={t.id ?? 'root'}
+              type="button"
+              onClick={() => { setOpen(false); onMove(t.id); }}
+              className="text-left text-[13px] px-3 py-2 rounded-xl hover:bg-soft cursor-pointer truncate"
+            >
+              {t.id ? `Inside “${t.label}”` : t.label}
+            </button>
+          ))}
+          {list.length === 1 && <span className="text-xs text-muted px-3 py-2">Add a Collection to group blocks.</span>}
+        </span>
+      )}
+    </span>
   );
 }
 
