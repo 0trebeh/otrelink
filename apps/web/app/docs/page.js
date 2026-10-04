@@ -26,6 +26,7 @@ const toc = [
   { id: 'css-recipes', label: 'Recipes', sub: true },
   { id: 'css-tips', label: 'Tips & limits', sub: true },
   { id: 'bookings', label: 'Bookings & agenda' },
+  { id: 'surveys', label: 'Surveys' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
@@ -62,6 +63,14 @@ function Table({ head, rows }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+function Warning({ title = 'Important', children }) {
+  return (
+    <div role="note" className="rounded-2xl border border-amber-300 bg-amber-50 text-amber-950 text-[14px] leading-6 px-4 py-3 mb-6 max-w-[68ch]">
+      <p className="font-semibold mb-1">⚠️ {title}</p>
+      {children}
     </div>
   );
 }
@@ -231,9 +240,37 @@ export default function DocsPage() {
             ]}
           />
           <P>The <i>Agenda</i> section of the dashboard lists upcoming, pending, past and cancelled bookings. From there you can confirm, reschedule or cancel, and contact the visitor by email, phone or WhatsApp. A badge shows how many bookings are waiting for confirmation.</P>
-          <P><b>Notifications:</b> in Agenda, press <i>Turn on</i> to get an alert on this device for every new booking and for reminders. Install the dashboard as an app for the best result. On iPhone/iPad it only works after adding the app to the Home Screen (iOS 16.4+).</P>
+          <P><b>Notifications:</b> in Agenda, press <i>Turn on</i> to get an alert on this device for every new booking and for reminders. Install the dashboard as an app for the best result.</P>
           <P><b>Calendar:</b> copy the private calendar link from Agenda and subscribe to it from Google Calendar, Apple Calendar or Outlook. If the link leaks, press <i>Reset link</i>.</P>
-          <P>Visitors can add the appointment to their calendar (with an alarm) after booking, and receive emails when the server has email configured. Booking only works on the live page, not in the preview or in exported sites (there it links to your live page).</P>
+          <P>Visitors can add the appointment to their calendar (with an alarm) after booking, and receive emails when the server has email configured.</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>On iPhone/iPad you have to add the app to the Home Screen (iOS 16.4 or later) before turning on notifications.</li>
+              <li>You can't book in the editor preview or in exported sites: there the block links to your live page.</li>
+            </ul>
+          </Warning>
+
+          <H2 id="surveys">Surveys</H2>
+          <P>Add a <i>Survey</i> block (Contact category). It shows a button; when visitors tap it, a form with your questions opens right on your page. Write each question, pick its answer type and mark it as required if needed.</P>
+          <Table
+            head={['Answer type', 'What visitors see']}
+            rows={[
+              ['Short answer · Paragraph', 'A one-line or a multi-line text box.'],
+              ['One choice · Checkboxes · Dropdown', 'Your options (one per line in the Options box). Checkboxes allow several.'],
+              ['Rating', '1 to 5 stars.'],
+              ['Scale', 'A 0–10 scale (“How likely are you to recommend…”).'],
+              ['Yes / No', 'Two buttons.'],
+              ['Email · Number · Date', 'A field that only accepts that kind of value.'],
+            ]}
+          />
+          <P>Answers appear in the <i>Responses</i> section of the dashboard: a <b>Summary</b> per question (bars with percentages, average rating, latest text answers) and every <b>Individual</b> response. Use <i>Download CSV</i> to open them in Excel or Google Sheets. Turn on <i>Notify me of new responses</i> in the block to get a push notification for each one.</P>
+          <P><i>One response per device</i> hides the form after someone answers. It stops accidental double answers, but it is not a strict limit (clearing the browser data allows answering again).</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>You can't send answers from the editor preview or from exported sites: there the block links to your live page.</li>
+              <li>If you edit or delete a question, old responses keep the question text they were answered with.</li>
+            </ul>
+          </Warning>
 
           <H2 id="sharing">Sharing &amp; analytics</H2>
           <P>In <i>Settings</i> you can copy your link, download a QR code, change your username, add an SEO title, description and sharing image, hide the page, hide the footer, or show a sensitive-content warning.</P>

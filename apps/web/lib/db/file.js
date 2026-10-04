@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -110,6 +110,29 @@ export async function createFileDriver() {
         state.bookings[i] = next;
         await persist();
         return clone(next);
+      },
+    },
+    // Survey responses (newest first in lists).
+    responses: {
+      create: async (r) => {
+        const doc = { id: crypto.randomUUID(), createdAt: now(), ...r };
+        state.responses.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.responses.find((r) => r.id === id)),
+      list: async ({ pageId, blockId, limit = 500 } = {}) => clone(state.responses
+        .filter((r) => r.pageId === pageId && (!blockId || r.blockId === blockId))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, limit)),
+      count: async ({ pageId, blockId }) => state.responses.filter((r) => r.pageId === pageId && (!blockId || r.blockId === blockId)).length,
+      remove: async (id) => {
+        state.responses = state.responses.filter((r) => r.id !== id);
+        await persist();
+      },
+      removeMany: async ({ pageId, blockId }) => {
+        state.responses = state.responses.filter((r) => !(r.pageId === pageId && (!blockId || r.blockId === blockId)));
+        await persist();
       },
     },
     push: {

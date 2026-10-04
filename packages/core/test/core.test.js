@@ -193,3 +193,48 @@ test('booking: ics has the event and alarms', () => {
   const ics = icsCalendar([{ uid: 'x@o', start: '2026-10-05T13:00:00Z', end: '2026-10-05T14:00:00Z', title: 'Cut, wash', alarms: [60] }]);
   assert.ok(ics.includes('DTSTART:20261005T130000Z') && ics.includes('SUMMARY:Cut\\, wash') && ics.includes('TRIGGER:-PT60M'));
 });
+
+// ── Survey ───────────────────────────────────────────────────────────────
+import { validateAnswers, responsesCsv, summarizeResponses } from '../src/index.js';
+
+const QS = [
+  { id: 'a', label: 'Name', type: 'short', required: true },
+  { id: 'b', label: 'Where', type: 'single', options: 'Instagram\nTikTok', required: false },
+  { id: 'c', label: 'Topics', type: 'multiple', options: 'Art\nMusic\nTech' },
+  { id: 'd', label: 'Rate', type: 'rating', required: true },
+  { id: 'e', label: 'Email', type: 'email' },
+];
+
+test('survey: answers are validated against the questions', () => {
+  const ok = validateAnswers(QS, { a: ' Ana ', b: 'TikTok', c: ['Tech', 'Art', 'Tech'], d: '4', e: '', x: 'ignored' });
+  assert.deepEqual(ok.errors, []);
+  assert.deepEqual(ok.answers.map((a) => a.value), ['Ana', 'TikTok', ['Art', 'Tech'], 4, '']);
+  const bad = validateAnswers(QS, { a: '', b: 'Facebook', c: ['Cooking'], d: 9, e: 'nope' });
+  assert.deepEqual(bad.errors.map((e) => e.id), ['a', 'b', 'c', 'd', 'e']);
+});
+
+test('survey: csv and summary', () => {
+  const responses = [
+    { createdAt: '2026-10-02T10:00:00Z', answers: validateAnswers(QS, { a: '=cmd', b: 'TikTok', c: ['Art'], d: 5 }).answers },
+    { createdAt: '2026-10-01T10:00:00Z', answers: validateAnswers(QS, { a: 'Luis, "L"', b: 'Instagram', c: ['Art', 'Music'], d: 3 }).answers },
+  ];
+  const csv = responsesCsv(QS, responses);
+  assert.ok(csv.startsWith('﻿Date,Name,Where,Topics,Rate,Email'));
+  assert.ok(csv.includes("'=cmd") && csv.includes('"Luis, ""L"""') && csv.includes('"Art, Music"') && csv.includes('5/5'));
+  const sum = summarizeResponses(QS, responses);
+  assert.deepEqual(sum.find((s) => s.id === 'c').counts, { Art: 2, Music: 1, Tech: 0 });
+  assert.equal(sum.find((s) => s.id === 'd').average, 4);
+});
+
+test('survey: renders every question type', () => {
+  const page = createDefaultPage({ slug: 'demo' });
+  const b = newBlock('survey');
+  b.data.questions = ['short', 'long', 'single', 'multiple', 'dropdown', 'rating', 'scale', 'yesno', 'email', 'number', 'date']
+    .map((type, i) => ({ id: `q${i}`, label: `Q<${type}>`, type, options: 'One\nTwo', hint: '', required: i === 0 }));
+  page.blocks = [b];
+  const { html } = renderPage(sanitizePage(page), { mode: 'live' });
+  for (const t of ['short', 'long', 'rating', 'scale', 'date']) assert.ok(html.includes(`data-type="${t}"`), t);
+  assert.ok(html.includes('Q&lt;short&gt;') && !html.includes('Q<short>'));
+  const exp = renderPage(sanitizePage(page), { mode: 'export', liveUrl: 'https://x.io/demo' }).html;
+  assert.ok(exp.includes('https://x.io/demo') && !exp.includes('<form'));
+});

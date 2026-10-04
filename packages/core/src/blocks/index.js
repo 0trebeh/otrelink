@@ -38,6 +38,7 @@ import share from './share.js';
 import pdf from './pdf.js';
 import collection from './collection.js';
 import booking from './booking.js';
+import survey from './survey.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
@@ -52,6 +53,7 @@ export const blockTypes = createRegistry('blockTypes', [
   map,
   contact,
   booking,
+  survey,
   vcard,
   faq,
   countdown,

@@ -166,7 +166,7 @@ const b64ToBytes = (b64) => {
   return Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 };
 
-function NotificationsCard() {
+export function NotificationsCard() {
   const [state, setState] = useState('loading'); // loading | unsupported | ios | no-key | no-sw | denied | off | on
   const [key, setKey] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -220,7 +220,7 @@ function NotificationsCard() {
     'no-key': 'Push notifications are not set up on the server yet (VAPID keys).',
     'no-sw': 'Notifications work in the installed app / production build (npm run build && npm start).',
     denied: 'Notifications are blocked for this site. Allow them in your browser settings and reload.',
-    off: 'Get an alert for every new booking and reminders before each appointment.',
+    off: 'Get an alert for every new booking or survey response, and reminders before each appointment.',
     on: 'This device gets alerts for new bookings and reminders.',
   }[state];
 

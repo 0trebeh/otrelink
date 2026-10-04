@@ -119,7 +119,7 @@ export default {
 .ol-root .ol-book-form textarea{min-height:70px;resize:vertical}
 .ol-root .ol-book-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .ol-root .ol-book-summary{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent);font-size:.9em}
-.ol-root .ol-book-submit,.ol-root .ol-book-cal{border:0;border-radius:999px;min-height:46px;font-weight:700;background:var(--ol-btn-bg);color:var(--ol-btn-fg)!important;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.ol-root .ol-book-submit,.ol-root .ol-book-cal{border:0;border-radius:999px;min-height:46px;font-weight:700;background:var(--ol-surface-fg);color:var(--ol-surface)!important;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .ol-root .ol-book-cal{background:color-mix(in srgb,var(--ol-surface-fg) 9%,transparent);color:var(--ol-surface-fg)!important}
 .ol-root .ol-book-submit[disabled]{opacity:.5;cursor:default}
 .ol-root .ol-book-back{align-self:center;border:0;background:transparent;padding:0;font-size:.85em;opacity:.75;text-decoration:underline}

@@ -164,6 +164,15 @@ Variables de entorno (en `apps/web`):
 
 Notas: las reservas se guardan en UTC y un índice único (`slotKey`) evita reservas dobles. Push solo funciona en el build de producción (el service worker no se registra en `dev`); en iOS hay que instalar la app en la pantalla de inicio (16.4+).
 
+## 📝 Encuestas
+
+Bloque **Survey** (categoría Contact): un botón que despliega un formulario con tus preguntas. Tipos de respuesta: texto corto, párrafo, una opción, varias opciones (checkboxes), desplegable, estrellas 1–5, escala 0–10, sí/no, email, número y fecha. Cada pregunta puede ser obligatoria.
+
+- Las respuestas se validan en el servidor contra las preguntas actuales y se guardan en la colección `survey_responses` (con el texto de la pregunta, así no se pierden si la editas).
+- Sección **Responses** del dashboard: resumen por pregunta (barras, promedio, últimas respuestas), respuestas individuales, **Download CSV** y borrar.
+- Notificación push al dueño en cada respuesta (opción del bloque). Opción “una respuesta por dispositivo” (localStorage).
+- En la vista previa y en sitios exportados no se puede enviar: el bloque enlaza a la página en vivo.
+
 ## 🛰️ API
 
 | Método | Ruta | Auth | Descripción |
@@ -187,6 +196,9 @@ Notas: las reservas se guardan en UTC y un índice único (`slotKey`) evita rese
 | GET | `/api/calendar/:token` | — | Feed `.ics` |
 | POST | `/api/push/subscribe` · `unsubscribe` · `test` | ✔ | Notificaciones push |
 | GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes |
+| POST | `/api/public/survey` | — | Enviar respuestas de una encuesta (CORS, rate limit) |
+| GET · DELETE | `/api/responses?pageId&blockId` · `&format=csv` | ✔ | Conteos · listar · CSV · borrar todas |
+| DELETE | `/api/responses/:id` | ✔ | Borrar una respuesta |
 
 ---
 

@@ -31,5 +31,6 @@ export const DELETE = handler(async (_req, { params }) => {
   const { db, page } = await requireOwnedPage((await params).id);
   await db.pages.remove(page.id);
   await db.events.removeForPage(page.id);
+  await db.responses.removeMany({ pageId: page.id });
   return json({ ok: true });
 });

@@ -21,6 +21,7 @@ export async function createMongoDriver() {
   const assets = db.collection('assets');
   const bookings = db.collection('bookings');
   const pushSubs = db.collection('push_subscriptions');
+  const responses = db.collection('survey_responses');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
 
@@ -40,6 +41,7 @@ export async function createMongoDriver() {
     [pushSubs, { endpoint: 1 }, { unique: true }],
     [pushSubs, { userId: 1 }, {}],
     [users, { calendarToken: 1 }, { sparse: true }],
+    [responses, { pageId: 1, blockId: 1, createdAt: -1 }, {}],
   ];
   const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
   results.forEach((r, i) => {
@@ -117,6 +119,19 @@ export async function createMongoDriver() {
           .catch((err) => { if (err?.code === 11000) throw Object.assign(new Error('slot_taken'), { code: 'slot_taken' }); throw err; });
         return out(res);
       },
+    },
+    responses: {
+      create: async (r) => {
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...r };
+        await responses.insertOne(doc);
+        return out(doc);
+      },
+      findById: async (id) => out(await responses.findOne({ _id: id })),
+      list: async ({ pageId, blockId, limit = 500 } = {}) =>
+        (await responses.find({ pageId, ...(blockId ? { blockId } : {}) }).sort({ createdAt: -1 }).limit(limit).toArray()).map(out),
+      count: async ({ pageId, blockId }) => responses.countDocuments({ pageId, ...(blockId ? { blockId } : {}) }),
+      remove: async (id) => { await responses.deleteOne({ _id: id }); },
+      removeMany: async ({ pageId, blockId }) => { await responses.deleteMany({ pageId, ...(blockId ? { blockId } : {}) }); },
     },
     push: {
       save: async (userId, sub) => {
