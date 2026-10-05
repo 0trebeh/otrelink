@@ -138,6 +138,22 @@ export const fieldTypes = {
       return Number.isNaN(d.getTime()) ? '' : d.toISOString();
     },
   },
+  // How an image is framed: focus point (x, y in %), zoom (100–300 %) and fit.
+  // `image` names the sibling field with the picture (used by the dashboard preview);
+  // `fits` lists the allowed fits (cover | contain | natural).
+  imageAdjust: {
+    default: { x: 50, y: 50, zoom: 100, fit: 'cover' },
+    sanitize: (v, f) => {
+      const n = (x, min, max, d) => { const k = Math.round(Number(x)); return Number.isFinite(k) ? clamp(k, min, max) : d; };
+      const fits = f.fits || ['cover', 'contain'];
+      return {
+        x: n(v?.x, 0, 100, 50),
+        y: n(v?.y, 0, 100, 50),
+        zoom: n(v?.zoom, 100, 300, 100),
+        fit: fits.includes(v?.fit) ? v.fit : fits[0],
+      };
+    },
+  },
   // A repeatable group of sub-fields, e.g. accordion items or gallery images.
   list: {
     default: [],

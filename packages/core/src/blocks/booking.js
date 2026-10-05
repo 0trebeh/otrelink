@@ -39,9 +39,12 @@ export default {
     { key: 'description', type: 'text', label: 'Description (optional)', placeholder: 'Pick a time that works for you' },
     { key: 'services', type: 'list', label: 'Services', itemLabel: 'service', max: 20, fields: [
       { key: 'name', type: 'text', label: 'Name', required: true, max: 80 },
-      { key: 'duration', type: 'select', label: 'Duration (minutes)', default: '30', options: DURATIONS },
+      { key: 'description', type: 'textarea', label: 'Description (optional)', max: 300, placeholder: 'What is included, what to bring…' },
+      { key: 'duration', type: 'select', label: 'Duration (optional)', default: '30',
+        options: [{ value: '', label: 'Not set' }, ...DURATIONS.map((m) => ({ value: m, label: `${m} min` }))],
+        help: 'Not set: the duration is not shown and each appointment takes the “Start times every” time (30 min by default).' },
       { key: 'price', type: 'text', label: 'Price (optional)', max: 30, placeholder: '$40' },
-    ], default: [{ id: 's1', name: 'Consultation', duration: '30', price: '' }] },
+    ], default: [{ id: 's1', name: 'Consultation', description: '', duration: '30', price: '' }] },
     { key: 'hours', type: 'list', label: 'Available hours', itemLabel: 'time range', max: 40,
       help: 'Add several ranges for the same day for breaks (e.g. 9:00–13:00 and 14:00–18:00).', fields: [
         { key: 'day', type: 'select', label: 'Day', default: 'mon', options: WEEKDAYS },
@@ -123,6 +126,13 @@ export default {
 .ol-root .ol-book-services{display:flex;flex-direction:column;gap:6px}
 .ol-root .ol-book-service{display:flex;justify-content:space-between;gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:12px;border:1.5px solid color-mix(in srgb,var(--ol-surface-fg) 15%,transparent);background:transparent}
 .ol-root .ol-book-service small{opacity:.7}
+.ol-root .ol-book-service-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ol-root .ol-book-service-desc{font-size:.8em;line-height:1.35;white-space:pre-line}
+.ol-root .ol-book-service-meta{flex:none;white-space:nowrap}
+.ol-root .ol-book-one{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px}
+.ol-root .ol-book-one small{opacity:.7}
+.ol-root .ol-book-one .ol-book-service-desc{flex-basis:100%;margin:0;opacity:.8}
+.ol-root .ol-book-service[aria-pressed="true"] small{opacity:.85}
 .ol-root .ol-book-days{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .ol-root .ol-book-days::-webkit-scrollbar{display:none}
 .ol-root .ol-book-day{flex:0 0 58px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0;border-radius:12px;border:1.5px solid color-mix(in srgb,var(--ol-surface-fg) 15%,transparent);background:transparent}
@@ -293,12 +303,20 @@ function bookingApp(doc, box, data) {
     if (st.mine.length) box.append(mineView());
     if (!services.length) { box.append(h('p', { class: 'ol-book-note' }, 'No services available yet.')); return; }
 
+    if (services.length === 1 && (services[0].description || services[0].price)) {
+      // A single service is picked automatically: still show what it is.
+      const one = services[0];
+      box.append(h('div', { class: 'ol-book-one' }, h('strong', {}, one.name),
+        h('small', { class: 'ol-book-service-meta' }, [one.duration && `${one.duration} min`, one.price].filter(Boolean).join(' · ')),
+        one.description && h('p', { class: 'ol-book-service-desc' }, one.description)));
+    }
     if (services.length > 1) {
       box.append(h('p', { class: 'ol-book-step' }, 'Service'));
       box.append(h('div', { class: 'ol-book-services' }, services.map((s) => h('button', {
         type: 'button', class: 'ol-book-service', 'aria-pressed': String(st.service === s.id),
         on: { click: () => { st.service = s.id; st.slot = null; if (st.day) loadSlots(); else draw(); } },
-      }, h('span', {}, s.name), h('small', {}, [`${s.duration} min`, s.price].filter(Boolean).join(' · '))))));
+      }, h('span', { class: 'ol-book-service-info' }, h('span', { class: 'ol-book-service-name' }, s.name), s.description && h('small', { class: 'ol-book-service-desc' }, s.description)),
+      h('small', { class: 'ol-book-service-meta' }, [s.duration && `${s.duration} min`, s.price].filter(Boolean).join(' · '))))));
       if (!st.service) return;
     }
 

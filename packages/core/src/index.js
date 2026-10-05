@@ -24,6 +24,7 @@ export * from './design.js';
 export * from './blocks/index.js';
 export * from './tree.js';
 export * from './booking.js';
+export * from './util/image.js';
 export * from './survey.js';
 export * from './page.js';
 export * from './render.js';

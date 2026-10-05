@@ -1,3 +1,4 @@
+import { imgStyle } from '../util/image.js';
 import { button, iconOptions, linkCard } from './_shared.js';
 import { esc, safeUrl } from '../util/html.js';
 
@@ -20,6 +21,7 @@ export default {
       { value: 'classic', label: 'Classic' }, { value: 'featured', label: 'Featured' },
     ] },
     { key: 'thumbnail', type: 'image', label: 'Thumbnail', help: 'Shown on the left (classic) or as a cover (featured).' },
+    { key: 'thumbnailAdjust', type: 'imageAdjust', label: 'Adjust thumbnail', image: 'thumbnail', frame: 'square', showIf: { key: 'thumbnail', truthy: true } },
     { key: 'icon', type: 'select', label: 'Icon', default: '', options: iconOptions, showIf: { key: 'thumbnail', equals: '' } },
     { key: 'newTab', type: 'toggle', label: 'Open in new tab', default: true },
   ],
@@ -28,14 +30,14 @@ export default {
     // Inside a Collection with Grid / Carousel / Showcase: card with cover image.
     const parentLayout = ctx.container?.layout;
     if (parentLayout && parentLayout !== 'list') {
-      return linkCard({ url: d.url, title: d.title, subtitle: d.subtitle, image: d.thumbnail }, parentLayout === 'showcase' ? 'show' : 'card', ctx);
+      return linkCard({ url: d.url, title: d.title, subtitle: d.subtitle, image: d.thumbnail, adjust: d.thumbnailAdjust }, parentLayout === 'showcase' ? 'show' : 'card', ctx);
     }
     if (d.layout === 'featured' && d.thumbnail) {
       const url = safeUrl(d.url);
       return `<a class="ol-featured" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-ol-track="${esc(ctx.blockId)}">`
-        + `<img src="${esc(d.thumbnail)}" alt="" loading="lazy"><span class="ol-featured-text"><strong>${esc(d.title)}</strong>${d.subtitle ? `<small>${esc(d.subtitle)}</small>` : ''}</span></a>`;
+        + `<img src="${esc(d.thumbnail)}" alt="" loading="lazy"${imgStyle(d.thumbnailAdjust) ? ` style="${imgStyle(d.thumbnailAdjust)}"` : ''}><span class="ol-featured-text"><strong>${esc(d.title)}</strong>${d.subtitle ? `<small>${esc(d.subtitle)}</small>` : ''}</span></a>`;
     }
-    return button({ href: d.url, label: d.title, sub: d.subtitle, thumb: d.thumbnail, iconName: d.icon, newTab: d.newTab, ctx });
+    return button({ href: d.url, label: d.title, sub: d.subtitle, thumb: d.thumbnail, thumbAdjust: d.thumbnailAdjust, iconName: d.icon, newTab: d.newTab, ctx });
   },
   css: `.ol-root .ol-featured{display:block;position:relative;border-radius:var(--ol-btn-radius);overflow:hidden;aspect-ratio:16/9;color:#fff;text-decoration:none;transition:transform .2s}
 .ol-root .ol-featured:hover{transform:translateY(-2px)}

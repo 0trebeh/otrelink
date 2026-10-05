@@ -77,6 +77,11 @@ const toMin = (hhmm) => { const [h, m] = String(hhmm || '0:0').split(':').map(Nu
 const tzOf = (data) => (isValidTimeZone(data.timezone) ? data.timezone : 'UTC');
 
 /** The service chosen (by id) or the first one. */
+/** Minutes an appointment takes. Services without a duration use the "Start times every" step (or 30 min). */
+export function serviceMinutes(data, service) {
+  return Math.max(5, Number(service?.duration) || Number(data?.slotStep) || 30);
+}
+
 export function pickService(data, serviceId) {
   return (data.services || []).find((s) => s.id === serviceId) || (data.services || [])[0] || null;
 }
@@ -107,7 +112,7 @@ export function computeSlots({ data, serviceId, date, bookings = [], now = new D
   const tz = tzOf(data);
   const service = pickService(data, serviceId);
   if (!service || !/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return [];
-  const duration = Math.max(5, Number(service.duration) || 30);
+  const duration = serviceMinutes(data, service);
   const step = data.slotStep === 'service' || !Number(data.slotStep) ? duration : Number(data.slotStep);
   const buffer = Number(data.buffer) || 0;
   const today = zonedDateStr(now, tz);

@@ -21,6 +21,7 @@ export const profileFields = [
   { key: 'title', type: 'text', label: 'Title', max: 60, default: '' },
   { key: 'bio', type: 'textarea', label: 'Bio', max: 300, default: '' },
   { key: 'avatar', type: 'image', label: 'Profile picture', default: '' },
+  { key: 'avatarAdjust', type: 'imageAdjust', label: 'Adjust picture', image: 'avatar', frame: 'circle', fits: ['cover', 'contain', 'natural'], showIf: { key: 'avatar', truthy: true } },
   { key: 'verified', type: 'toggle', label: 'Show verified badge', default: false },
 ];
 

@@ -6,7 +6,7 @@ export const pageStructure = `div.ol-root.ol-layout-{classic|hero|left}.ol-enter
 ├─ div.ol-bg                         ← wallpaper layer (fixed, behind everything)
 ├─ main.ol-main                      ← centered content column
 │  ├─ header.ol-profile
-│  │  ├─ img.ol-avatar.ol-avatar-{circle|rounded|square}
+│  │  ├─ img.ol-avatar.ol-avatar-{circle|rounded|square}   (span.ol-avatar.ol-zoom > img when zoomed)
 │  │  ├─ h1.ol-title                 ← (+ svg verified badge)
 │  │  ├─ p.ol-bio
 │  │  └─ nav.ol-socials.ol-socials-top.ol-socials-{plain|filled|outline}
@@ -46,6 +46,8 @@ export const cssModifiers = [
   { selector: '.ol-root.ol-layout-classic | -hero | -left', description: 'Header layout chosen in Style → Header. Note: no space after .ol-root.' },
   { selector: '.ol-root[data-mode="preview"]', description: 'Only in the dashboard preview. [data-mode="live"] = public page, [data-mode="export"] = downloaded website.' },
   { selector: '.ol-avatar-circle | -rounded | -square', description: 'Avatar shape.' },
+  { selector: '.ol-zoom', description: 'Frame around a zoomed image (Adjust → Zoom). It takes the image classes (e.g. span.ol-avatar.ol-zoom > img).' },
+  { selector: '.ol-avatar-natural', description: 'Profile picture with Adjust → Original shape (height follows the image).' },
   { selector: '.ol-socials-plain | -filled | -outline', description: 'Social icons style.' },
   { selector: '.ol-btn.has-media', description: 'Button that has a thumbnail or an icon.' },
   { selector: '.ol-anim-{pulse|shake|wobble|bounce|glow}', description: 'Block with an attention animation.' },

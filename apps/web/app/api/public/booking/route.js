@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { serviceMinutes } from '@otrelink/core';
 import { getDb } from '@/lib/db';
 import { pushToUser } from '@/lib/notify';
 import {
@@ -40,7 +41,7 @@ export const POST = handler(async (req) => {
   const slots = await freeSlots(db, { data, blockId: block.id, serviceId: service.id, date: zonedDateStr(start, data.timezone) });
   if (!slots.includes(iso)) return fail(409, 'slot_taken');
 
-  const duration = Number(service.duration) || 30;
+  const duration = serviceMinutes(data, service);
   let booking;
   try {
     booking = await db.bookings.create({

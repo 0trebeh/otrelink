@@ -2,6 +2,7 @@
 // Used by the public page (vanilla) and by the dashboard live preview, so
 // both always look exactly the same.
 
+import { adjustedImg } from './util/image.js';
 import { blockTypes } from './blocks/index.js';
 import { buttonStyles, buttonHovers } from './buttons/index.js';
 import { wallpapers } from './wallpapers/index.js';
@@ -20,6 +21,8 @@ const BASE_CSS = `
 .ol-root .ol-main{max-width:var(--ol-max-width);margin:0 auto;padding:var(--ol-pad-top) 16px 40px;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
 .ol-root .ol-profile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:24px}
 .ol-root .ol-avatar{width:var(--ol-avatar-size);height:var(--ol-avatar-size);object-fit:cover;border:var(--ol-avatar-bw) solid var(--ol-avatar-bc);margin-bottom:8px;flex-shrink:0;display:grid;place-items:center;font-size:calc(var(--ol-avatar-size)*.4);font-weight:700;background:color-mix(in srgb,var(--ol-title-color) 12%,transparent);color:var(--ol-title-color);font-family:var(--ol-title-font)}
+.ol-root img.ol-avatar-natural{height:auto}
+.ol-root .ol-zoom{overflow:hidden}.ol-root .ol-zoom>img{display:block;width:100%;height:100%}
 .ol-root .ol-avatar-circle{border-radius:50%}.ol-root .ol-avatar-rounded{border-radius:22%}.ol-root .ol-avatar-square{border-radius:4px}
 .ol-root .ol-title{margin:0;font-family:var(--ol-title-font);font-size:var(--ol-title-size);font-weight:var(--ol-title-weight);color:var(--ol-title-color);line-height:1.2;display:inline-flex;align-items:center;gap:6px;overflow-wrap:anywhere}
 .ol-root .ol-title svg{color:#3b82f6;font-size:.8em;flex-shrink:0}
@@ -88,8 +91,9 @@ function renderProfile(page, d) {
   if (d.avatarShape !== 'hidden') {
     const shape = `ol-avatar ol-avatar-${d.avatarShape}`;
     const src = safeUrl(p.avatar);
+    const adj = p.avatarAdjust;
     avatar = src
-      ? `<img class="${shape}" src="${esc(src)}" alt="${esc(p.title)}">`
+      ? adjustedImg({ src, alt: p.title, cls: `${shape}${adj?.fit === 'natural' ? ' ol-avatar-natural' : ''}`, adj })
       : `<div class="${shape}" aria-hidden="true">${esc((p.title || '?').replace(/^@/, '').charAt(0).toUpperCase())}</div>`;
   }
   const badge = p.verified ? verifiedSvg : '';

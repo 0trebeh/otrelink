@@ -1,5 +1,6 @@
 // Helpers shared by block renderers.
 import { esc, safeUrl } from '../util/html.js';
+import { adjustedImg, imgStyle } from '../util/image.js';
 import { icon } from '../icons.js';
 import { socialIcon, socials } from '../socials.js';
 
@@ -7,10 +8,10 @@ import { socialIcon, socials } from '../socials.js';
  * Standard button used by link-like blocks. Gets the page's button style.
  * Elements with data-ol-track are counted as clicks in analytics.
  */
-export function button({ href, label, sub = '', thumb = '', iconName = '', newTab = true, ctx, download = '' }) {
+export function button({ href, label, sub = '', thumb = '', thumbAdjust, iconName = '', newTab = true, ctx, download = '' }) {
   const url = safeUrl(href);
   const media = thumb
-    ? `<img class="ol-btn-thumb" src="${esc(thumb)}" alt="" loading="lazy">`
+    ? adjustedImg({ src: thumb, cls: 'ol-btn-thumb', adj: thumbAdjust, attrs: 'loading="lazy"' })
     : iconName
       ? `<span class="ol-btn-icon">${socials.has(iconName) ? socialIcon(iconName, 20) : icon(iconName, 20)}</span>`
       : '';
@@ -37,11 +38,11 @@ export function frame(src, { ratio = '16 / 9', height = 0, title = 'Embedded con
  * Link shown as a card with a cover image. Used when a Link block lives inside
  * a Collection with the Grid / Carousel ("card") or Showcase ("show") layout.
  */
-export function linkCard({ url, title, subtitle, image }, variant, ctx) {
+export function linkCard({ url, title, subtitle, image, adjust }, variant, ctx) {
   const href = safeUrl(url);
   const img = safeUrl(image);
   const media = img
-    ? `<span class="ol-col-media"><img src="${esc(img)}" alt="" loading="lazy"></span>`
+    ? `<span class="ol-col-media"><img src="${esc(img)}" alt="" loading="lazy"${imgStyle(adjust) ? ` style="${imgStyle(adjust)}"` : ''}></span>`
     : `<span class="ol-col-media ol-col-noimg" aria-hidden="true">${esc((title || '?').trim().charAt(0).toUpperCase())}</span>`;
   const text = `<span class="ol-col-text"><strong>${esc(title)}</strong>${subtitle ? `<small>${esc(subtitle)}</small>` : ''}</span>`;
   const cls = variant === 'show' ? 'ol-col-show' : 'ol-col-card';

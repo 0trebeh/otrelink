@@ -21,7 +21,7 @@ export default function FieldList({ fields, values = {}, onChange, compact }) {
               {f.required && <span className="text-accent"> *</span>}
               {inline && f.help && <span className="block font-normal text-xs text-muted mt-0.5">{f.help}</span>}
             </label>
-            <Input id={id} field={f} value={values[f.key]} onChange={(v) => onChange(f.key, v)} />
+            <Input id={id} field={f} value={values[f.key]} values={values} onChange={(v) => onChange(f.key, v)} />
             {!inline && f.help && <p className="text-xs text-muted mt-1">{f.help}</p>}
           </div>
         );

@@ -163,6 +163,7 @@ export default function DocsPage() {
               ['Profile', `Picture, title, bio, verified badge and social icons (${socials.list().length} platforms).`],
             ]}
           />
+          <P><b>Adjusting images.</b> The profile picture, the wallpaper image, the Image block (with a shape other than Original) and link thumbnails have an <i>Adjust</i> control under the image. Click or drag on the preview to choose the part that stays visible, use <i>Zoom</i> to get closer, and pick <i>Fill</i> (fills the shape and crops), <i>Whole image</i> (no crop) or, for the profile picture, <i>Original shape</i> (keeps its proportions).</P>
 
           {/* ── Custom CSS ── */}
           <H2 id="custom-css">Custom CSS</H2>

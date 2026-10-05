@@ -10,6 +10,7 @@ import FileField from './FileField';
 import ListField from './ListField';
 import FontField from './FontField';
 import ChoiceField from './ChoiceField';
+import ImageAdjustField from './ImageAdjustField';
 
 const toLocal = (iso) => {
   if (!iso) return '';
@@ -38,6 +39,7 @@ export const fieldInputs = {
     </Select>
   ),
   choice: ChoiceField,
+  imageAdjust: ImageAdjustField,
   font: FontField,
   color: ColorField,
   image: ImageField,

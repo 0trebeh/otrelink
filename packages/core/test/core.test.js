@@ -258,3 +258,22 @@ test('reviews: renders a button + card, and links to the live page in exports', 
   assert.ok(exp.includes('https://x.io/demo') && !exp.includes('ol-rev"'));
   assert.ok(starsHtml(4.5).includes('width:90%'));
 });
+
+test('image adjustments: sanitized and applied to avatar, thumbnails, image block and wallpaper', () => {
+  const page = createDefaultPage({ slug: 'demo' });
+  page.profile.avatar = 'https://x.io/a.jpg';
+  page.profile.avatarAdjust = { x: 30, y: 200, zoom: 150, fit: 'cover' };
+  page.blocks = [
+    newBlock('link', { title: 'L', url: 'https://x.io', thumbnail: 'https://x.io/t.jpg', thumbnailAdjust: { x: 10, y: 90, zoom: 100, fit: 'contain' } }),
+    newBlock('image', { image: 'https://x.io/i.jpg', ratio: '1 / 1', adjust: { x: 50, y: 20, zoom: 200, fit: 'cover' } }),
+  ];
+  page.design.wallpaper = { type: 'image', image: 'https://x.io/bg.jpg', adjust: { x: 40, y: 60, zoom: 120, fit: 'cover' } };
+  const clean = sanitizePage(page);
+  assert.deepEqual(clean.profile.avatarAdjust, { x: 30, y: 100, zoom: 150, fit: 'cover' });
+  const { html, css } = renderPage(clean, { mode: 'live' });
+  assert.ok(html.includes('<span class="ol-avatar ol-avatar-circle ol-zoom"><img src="https://x.io/a.jpg"'));
+  assert.ok(html.includes('transform:scale(1.5);transform-origin:30% 100%'));
+  assert.ok(html.includes('class="ol-btn-thumb" src="https://x.io/t.jpg"') && html.includes('object-fit:contain;object-position:10% 90%'));
+  assert.ok(html.includes('<span class="ol-image-frame" style="aspect-ratio:1 / 1">'));
+  assert.ok(css.includes('40% 60%/cover') && css.includes('scale(1.2)'));
+});
