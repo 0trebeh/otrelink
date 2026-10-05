@@ -50,6 +50,10 @@ const BASE_CSS = `
 .ol-root .ol-card{background:var(--ol-surface);color:var(--ol-surface-fg);border-radius:var(--ol-surface-radius);padding:14px 16px}
 .ol-root .ol-frame{width:100%;border-radius:var(--ol-surface-radius);overflow:hidden;background:color-mix(in srgb,var(--ol-text-color) 8%,transparent)}
 .ol-root .ol-frame iframe{width:100%;height:100%;border:0;display:block}
+.ol-root .ol-toggle>summary{list-style:none}.ol-root .ol-toggle>summary::-webkit-details-marker{display:none}
+.ol-root .ol-toggle-chevron{transition:transform .2s}.ol-root .ol-toggle[open]>summary .ol-toggle-chevron{transform:rotate(180deg)}
+.ol-root .ol-toggle-body{margin-top:8px;animation:ol-toggle-in .2s ease}
+@keyframes ol-toggle-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .ol-root .ol-embed-title{margin:0 0 8px;font-weight:600;text-align:center}
 .ol-root .ol-footer{margin-top:auto;padding-top:40px;text-align:center;font-size:12px}
 .ol-root .ol-footer a{color:var(--ol-text-color);opacity:.7;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:color-mix(in srgb,var(--ol-text-color) 8%,transparent);font-weight:600}

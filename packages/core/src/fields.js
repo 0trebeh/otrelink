@@ -138,6 +138,13 @@ export const fieldTypes = {
       return Number.isNaN(d.getTime()) ? '' : d.toISOString();
     },
   },
+  // Raw embed HTML (an <iframe> or a provider snippet). It is never inserted
+  // into the page as-is: the Embed block rebuilds plain iframes and runs any
+  // other code inside a sandboxed iframe.
+  embed: {
+    default: '',
+    sanitize: (v, f) => str(v).replace(/\u0000/g, '').trim().slice(0, f.max ?? 20000),
+  },
   // How an image is framed: focus point (x, y in %), zoom (100–300 %) and fit.
   // `image` names the sibling field with the picture (used by the dashboard preview);
   // `fits` lists the allowed fits (cover | contain | natural).

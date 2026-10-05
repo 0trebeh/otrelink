@@ -40,6 +40,7 @@ import collection from './collection.js';
 import booking from './booking.js';
 import survey from './survey.js';
 import reviews from './reviews.js';
+import embed from './embed.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
@@ -50,6 +51,7 @@ export const blockTypes = createRegistry('blockTypes', [
   gallery,
   pdf,
   video,
+  embed,
   music,
   map,
   contact,

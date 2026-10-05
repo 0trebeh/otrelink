@@ -277,3 +277,22 @@ test('image adjustments: sanitized and applied to avatar, thumbnails, image bloc
   assert.ok(html.includes('<span class="ol-image-frame" style="aspect-ratio:1 / 1">'));
   assert.ok(css.includes('40% 60%/cover') && css.includes('scale(1.2)'));
 });
+
+test('embed: plain iframes are rebuilt, other code is sandboxed, both can be a button', async () => {
+  const { parseEmbed } = await import('../src/blocks/embed.js');
+  assert.equal(parseEmbed('<iframe src="javascript:alert(1)"></iframe>'), null);
+  const yt = parseEmbed('<iframe width="560" height="315" src="https://www.youtube.com/embed/x?a=1&amp;b=2" title="YT" allow="autoplay; encrypted-media" onload="evil()"></iframe>');
+  assert.deepEqual(yt, { kind: 'iframe', src: 'https://www.youtube.com/embed/x?a=1&b=2', allow: 'autoplay; encrypted-media', title: 'YT', width: 560, height: 315 });
+
+  const page = createDefaultPage({ slug: 'demo' });
+  page.blocks = [
+    newBlock('embed', { code: '<iframe width="560" height="315" src="https://www.youtube.com/embed/x" onload="evil()"></iframe>' }),
+    newBlock('embed', { code: '<div id="w"></div><script src="https://widget.example/w.js"></script>', display: 'button', buttonLabel: 'Book a call' }),
+    newBlock('map', { address: 'Caracas', display: 'button' }),
+  ];
+  const { html } = renderPage(sanitizePage(page), { mode: 'live' });
+  assert.ok(html.includes('aspect-ratio:560 / 315') && !html.includes('evil'));
+  assert.ok(html.includes('sandbox="allow-scripts') && !html.includes('allow-same-origin') && !html.includes('<script src="https://widget'));
+  assert.ok(html.includes('srcdoc="&lt;!doctype html&gt;'));
+  assert.ok(html.includes('<details class="ol-toggle"') && html.includes('Book a call') && html.includes('See on the map'));
+});

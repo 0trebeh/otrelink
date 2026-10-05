@@ -145,6 +145,8 @@ export default function DocsPage() {
             </div>
           ))}
           <P><b>Collections</b> can hold any block, including other collections (up to 4 levels). Drag a block onto a collection&apos;s area to put it inside, drag it out to take it out, or use <i>Move to…</i> in the block. In Grid, Carousel and Showcase layouts, links are shown as image cards (their thumbnail is the cover).</P>
+          <P><b>Embed</b> takes the embed code from almost any service (YouTube, Spotify, Calendly, Google Forms, Typeform, widgets…) or just an https link. Choose <i>Always visible</i> or <i>Button that opens it</i>; <b>Map</b> has the same option. Leave the height at 0 to use the size from the code (videos keep their proportions) or to fit the content automatically.</P>
+          <Note>For safety, an embed with scripts runs in an isolated frame: it can’t read your page or your visitors’ data. A few widgets that need cookies or storage may not work there; if the service offers a plain <C>&lt;iframe&gt;</C> code, use that one.</Note>
           <P>Text blocks and FAQ answers support light formatting: <C>**bold**</C>, <C>*italic*</C>, <C>~~strike~~</C> and <C>[link text](https://…)</C>.</P>
 
           {/* ── Customizing ── */}

@@ -22,6 +22,18 @@ export function button({ href, label, sub = '', thumb = '', thumbAdjust, iconNam
   return `<a class="ol-btn${media ? ' has-media' : ''}" href="${esc(url)}"${target}${dl} data-ol-track="${esc(ctx.blockId)}">${inner}</a>`;
 }
 
+/**
+ * A button that opens/closes content (details/summary). Used by blocks with a
+ * "Button that opens it" display (Embed, Map…). The content is rendered once.
+ */
+export function toggleButton({ ctx, iconName, label, sub = '', body, open = false, cls = '' }) {
+  return `<details class="ol-toggle${cls ? ` ${cls}` : ''}"${open ? ' open' : ''}>`
+    + `<summary class="ol-btn has-media" data-ol-track="${esc(ctx.blockId)}"><span class="ol-btn-icon">${icon(iconName, 20)}</span>`
+    + `<span class="ol-btn-label"><span class="ol-btn-title">${esc(label)}</span>${sub ? `<span class="ol-btn-sub">${esc(sub)}</span>` : ''}</span>`
+    + `<span class="ol-btn-icon ol-toggle-chevron">${icon('chevron', 18)}</span></summary>`
+    + `<div class="ol-toggle-body">${body}</div></details>`;
+}
+
 /** Options for an "icon" select: none + generic icons + social platforms. */
 export const iconOptions = () => [
   { value: '', label: 'None' },

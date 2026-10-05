@@ -24,6 +24,7 @@ export const fieldInputs = {
   email: ({ value, onChange, field, id }) => <Input id={id} type="email" value={value ?? ''} placeholder={field.placeholder || 'you@example.com'} onChange={(e) => onChange(e.target.value)} />,
   tel: ({ value, onChange, field, id }) => <Input id={id} type="tel" value={value ?? ''} placeholder={field.placeholder || '+1 555 123 4567'} onChange={(e) => onChange(e.target.value)} />,
   textarea: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} maxLength={field.max} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} />,
+  embed: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} maxLength={field.max ?? 20000} placeholder={field.placeholder} spellCheck={false} className="font-mono text-xs min-h-28" onChange={(e) => onChange(e.target.value)} />,
   code: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} placeholder={field.placeholder} spellCheck={false} className="font-mono text-xs min-h-40" onChange={(e) => onChange(e.target.value)} />,
   number: ({ value, onChange, field, id }) => <Input id={id} type="number" value={value ?? 0} min={field.min} max={field.max} onChange={(e) => onChange(Number(e.target.value))} />,
   range: ({ value, onChange, field, id }) => (
