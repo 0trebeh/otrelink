@@ -39,6 +39,7 @@ import pdf from './pdf.js';
 import collection from './collection.js';
 import booking from './booking.js';
 import survey from './survey.js';
+import reviews from './reviews.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
@@ -54,6 +55,7 @@ export const blockTypes = createRegistry('blockTypes', [
   contact,
   booking,
   survey,
+  reviews,
   vcard,
   faq,
   countdown,

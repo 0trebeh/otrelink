@@ -22,6 +22,7 @@ export async function createMongoDriver() {
   const bookings = db.collection('bookings');
   const pushSubs = db.collection('push_subscriptions');
   const responses = db.collection('survey_responses');
+  const reviews = db.collection('reviews');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
 
@@ -42,6 +43,7 @@ export async function createMongoDriver() {
     [pushSubs, { userId: 1 }, {}],
     [users, { calendarToken: 1 }, { sparse: true }],
     [responses, { pageId: 1, blockId: 1, createdAt: -1 }, {}],
+    [reviews, { pageId: 1, blockId: 1, status: 1, createdAt: -1 }, {}],
   ];
   const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
   results.forEach((r, i) => {
@@ -132,6 +134,31 @@ export async function createMongoDriver() {
       count: async ({ pageId, blockId }) => responses.countDocuments({ pageId, ...(blockId ? { blockId } : {}) }),
       remove: async (id) => { await responses.deleteOne({ _id: id }); },
       removeMany: async ({ pageId, blockId }) => { await responses.deleteMany({ pageId, ...(blockId ? { blockId } : {}) }); },
+    },
+    reviews: {
+      create: async (r) => {
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), reply: '', ...r };
+        await reviews.insertOne(doc);
+        return out(doc);
+      },
+      findById: async (id) => out(await reviews.findOne({ _id: id })),
+      list: async ({ pageId, blockId, statuses, before, limit = 50 } = {}) => {
+        const q = { pageId };
+        if (blockId) q.blockId = blockId;
+        if (statuses) q.status = { $in: statuses };
+        if (before) q.createdAt = { $lt: before };
+        return (await reviews.find(q).sort({ createdAt: -1 }).limit(limit).toArray()).map(out);
+      },
+      count: async ({ pageId, blockId, status }) => reviews.countDocuments({ pageId, ...(blockId ? { blockId } : {}), ...(status ? { status } : {}) }),
+      stats: async ({ pageId, blockId }) => {
+        const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        const rows = await reviews.aggregate([{ $match: { pageId, blockId, status: 'published' } }, { $group: { _id: '$rating', n: { $sum: 1 } } }]).toArray();
+        for (const r of rows) if (r._id in dist) dist[r._id] = r.n;
+        return dist;
+      },
+      update: async (id, patch) => out(await reviews.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
+      remove: async (id) => { await reviews.deleteOne({ _id: id }); },
+      removeMany: async ({ pageId }) => { await reviews.deleteMany({ pageId }); },
     },
     push: {
       save: async (userId, sub) => {

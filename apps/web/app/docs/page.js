@@ -27,6 +27,7 @@ const toc = [
   { id: 'css-tips', label: 'Tips & limits', sub: true },
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
+  { id: 'reviews', label: 'Reviews' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
@@ -272,6 +273,27 @@ export default function DocsPage() {
             <ul className="list-disc pl-5 space-y-1">
               <li>You can't send answers from the editor preview or from exported sites: there the block links to your live page.</li>
               <li>If you edit or delete a question, old responses keep the question text they were answered with.</li>
+            </ul>
+          </Warning>
+
+          <H2 id="reviews">Reviews</H2>
+          <P>Add a <i>Reviews</i> block (Contact category). The button shows your average rating (e.g. ★ 4.8 · 23 reviews). When visitors open it they see the summary, every published review with its stars, comment and date, and a <i>Write a review</i> button to leave their own: 1 to 5 stars, a comment and, if they want, their name.</P>
+          <Table
+            head={['Option', 'What it does']}
+            rows={[
+              ['Accept new reviews', 'Turn it off to keep showing reviews without accepting new ones.'],
+              ['New reviews', 'Publish right away, or wait for your approval in Reviews.'],
+              ['Comment is required', 'Ask for a comment, not only stars.'],
+              ['One review per device', 'Hides the form after someone writes a review (not a strict limit: clearing the browser data allows another one).'],
+              ['Notify me of new reviews', 'Push notification for each new review.'],
+              ['Reviews shown at first', 'How many reviews load at once; visitors can tap “Show more reviews”.'],
+            ]}
+          />
+          <P>In the <i>Reviews</i> section of the dashboard you see every review with its status. You can <b>approve</b> or <b>show</b>, <b>hide</b> (it stays saved but nobody sees it), <b>delete</b>, and <b>reply</b>: your reply appears under the review on your page. A badge shows how many reviews are waiting for approval. Hidden and pending reviews don’t count in the average.</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>You can’t write reviews from the editor preview or from exported sites: there the block links to your live page.</li>
+              <li>Reviews are anonymous (no account needed), so anyone with your link can write one. Use “I approve each one” if you get spam.</li>
             </ul>
           </Warning>
 

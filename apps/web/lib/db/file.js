@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -132,6 +132,41 @@ export async function createFileDriver() {
       },
       removeMany: async ({ pageId, blockId }) => {
         state.responses = state.responses.filter((r) => !(r.pageId === pageId && (!blockId || r.blockId === blockId)));
+        await persist();
+      },
+    },
+    // Reviews (newest first in lists).
+    reviews: {
+      create: async (r) => {
+        const doc = { id: crypto.randomUUID(), createdAt: now(), reply: '', ...r };
+        state.reviews.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.reviews.find((r) => r.id === id)),
+      list: async ({ pageId, blockId, statuses, before, limit = 50 } = {}) => clone(state.reviews
+        .filter((r) => r.pageId === pageId && (!blockId || r.blockId === blockId) && (!statuses || statuses.includes(r.status)) && (!before || r.createdAt < before))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, limit)),
+      count: async ({ pageId, blockId, status }) => state.reviews.filter((r) => r.pageId === pageId && (!blockId || r.blockId === blockId) && (!status || r.status === status)).length,
+      stats: async ({ pageId, blockId }) => {
+        const dist = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        for (const r of state.reviews) if (r.pageId === pageId && r.blockId === blockId && r.status === 'published') dist[r.rating]++;
+        return dist;
+      },
+      update: async (id, patch) => {
+        const i = state.reviews.findIndex((r) => r.id === id);
+        if (i < 0) return null;
+        state.reviews[i] = { ...state.reviews[i], ...patch, updatedAt: now() };
+        await persist();
+        return clone(state.reviews[i]);
+      },
+      remove: async (id) => {
+        state.reviews = state.reviews.filter((r) => r.id !== id);
+        await persist();
+      },
+      removeMany: async ({ pageId }) => {
+        state.reviews = state.reviews.filter((r) => r.pageId !== pageId);
         await persist();
       },
     },

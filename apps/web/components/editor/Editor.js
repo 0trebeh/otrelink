@@ -21,6 +21,7 @@ export default function Editor({ initialPage, pageUrl }) {
   const [replay, setReplay] = useState(0);
   const [analytics, setAnalytics] = useState(null);
   const [pendingBookings, setPendingBookings] = useState(0);
+  const [pendingReviews, setPendingReviews] = useState(0);
   const pageRef = useRef(page);
   pageRef.current = page;
 
@@ -38,12 +39,18 @@ export default function Editor({ initialPage, pageUrl }) {
     window.scrollTo({ top: 0 });
   };
 
-  // Bookings waiting for confirmation: badge on "Agenda" and on the app icon.
+  // Bookings waiting for confirmation and reviews to approve: badges on
+  // "Agenda" / "Reviews" and on the app icon.
   const refreshPending = useCallback(() => {
-    api(`/api/bookings?pageId=${initialPage.id}&count=1`).then((r) => {
-      setPendingBookings(r.pending);
-      if ('setAppBadge' in navigator) (r.pending ? navigator.setAppBadge(r.pending) : navigator.clearAppBadge()).catch(() => {});
-    }).catch(() => {});
+    Promise.all([
+      api(`/api/bookings?pageId=${initialPage.id}&count=1`).then((r) => r.pending).catch(() => 0),
+      api(`/api/reviews?pageId=${initialPage.id}&count=1`).then((r) => r.pending).catch(() => 0),
+    ]).then(([bookings, reviews]) => {
+      setPendingBookings(bookings);
+      setPendingReviews(reviews);
+      const total = bookings + reviews;
+      if ('setAppBadge' in navigator) (total ? navigator.setAppBadge(total) : navigator.clearAppBadge()).catch(() => {});
+    });
   }, [initialPage.id]);
   useEffect(() => {
     refreshPending();
@@ -100,7 +107,7 @@ export default function Editor({ initialPage, pageUrl }) {
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, pendingBookings, refreshPending }), [page, set, pageUrl, saved.slug, analytics, dirty, pendingBookings, refreshPending]);
+  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending }), [page, set, pageUrl, saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending]);
   const Section = section.Component;
   const liveUrl = `${pageUrl}/${saved.slug}`;
 

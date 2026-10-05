@@ -173,6 +173,14 @@ Bloque **Survey** (categoría Contact): un botón que despliega un formulario co
 - Notificación push al dueño en cada respuesta (opción del bloque). Opción “una respuesta por dispositivo” (localStorage).
 - En la vista previa y en sitios exportados no se puede enviar: el bloque enlaza a la página en vivo.
 
+## ⭐ Reseñas
+
+Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 · 23 reviews). Al abrirlo se ven el resumen por estrellas, las reseñas publicadas (con “Show more”) y el botón **Write a review** (1–5 estrellas, comentario y nombre opcional).
+
+- Moderación: publicar al instante o aprobar cada una. Desde la sección **Reviews** del dashboard: aprobar, ocultar, borrar y **responder** (la respuesta se ve en la página).
+- Badge con reseñas por aprobar y notificación push en cada reseña nueva.
+- Colección `reviews`; las ocultas y pendientes no cuentan en el promedio. Rate limit de 10 reseñas/hora por IP + honeypot.
+
 ## 🛰️ API
 
 | Método | Ruta | Auth | Descripción |
@@ -199,6 +207,9 @@ Bloque **Survey** (categoría Contact): un botón que despliega un formulario co
 | POST | `/api/public/survey` | — | Enviar respuestas de una encuesta (CORS, rate limit) |
 | GET · DELETE | `/api/responses?pageId&blockId` · `&format=csv` | ✔ | Conteos · listar · CSV · borrar todas |
 | DELETE | `/api/responses/:id` | ✔ | Borrar una respuesta |
+| GET · POST | `/api/public/reviews?pageId&blockId&limit&before` | — | Reseñas publicadas + estadísticas · escribir una reseña (CORS) |
+| GET | `/api/reviews?pageId&blockId&status=` · `&count=1` | ✔ | Reseñas del dueño · pendientes por aprobar |
+| PATCH · DELETE | `/api/reviews/:id` | ✔ | `{ status }` (published/hidden) o `{ reply }` · borrar |
 
 ---
 

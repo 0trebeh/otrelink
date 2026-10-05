@@ -220,7 +220,7 @@ export function NotificationsCard() {
     'no-key': 'Push notifications are not set up on the server yet (VAPID keys).',
     'no-sw': 'Notifications work in the installed app / production build (npm run build && npm start).',
     denied: 'Notifications are blocked for this site. Allow them in your browser settings and reload.',
-    off: 'Get an alert for every new booking or survey response, and reminders before each appointment.',
+    off: 'Get an alert for every new booking, review or survey response, and reminders before each appointment.',
     on: 'This device gets alerts for new bookings and reminders.',
   }[state];
 

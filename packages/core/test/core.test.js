@@ -247,3 +247,14 @@ test('booking: private fields (meeting link) are removed from public blocks', as
   assert.equal(out[0].children[0].data.buttonLabel, 'Book');
   assert.equal(blocks[0].children[0].data.meetingUrl, 'https://meet.google.com/abc'); // original untouched
 });
+
+test('reviews: renders a button + card, and links to the live page in exports', async () => {
+  const { starsHtml } = await import('../src/blocks/reviews.js');
+  const page = createDefaultPage({ slug: 'demo' });
+  page.blocks = [newBlock('reviews', { title: 'What <clients> say' })];
+  const { html } = renderPage(sanitizePage(page), { mode: 'live' });
+  assert.ok(html.includes('class="ol-reviews"') && html.includes('class="ol-card ol-rev"') && !html.includes('<clients>'));
+  const exp = renderPage(sanitizePage(page), { mode: 'export', liveUrl: 'https://x.io/demo' }).html;
+  assert.ok(exp.includes('https://x.io/demo') && !exp.includes('ol-rev"'));
+  assert.ok(starsHtml(4.5).includes('width:90%'));
+});
