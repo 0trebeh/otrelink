@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ChevronDown, Copy, Trash2, BarChart3, CalendarClock, Sparkles, FolderInput, Palette, RotateCcw } from 'lucide-react';
-import { blockTypes, commonBlockFields, blockStyleFields, hasBlockStyle, icon, validateFields } from '@otrelink/core';
+import { blockTypes, commonBlockFields, blockStyleFields, blockStyleFieldsFor, blockStyleGroups, blockStyleOf, icon, validateFields } from '@otrelink/core';
 import { CoreIcon, IconButton, Toggle, cx } from '../ui';
 import FieldList from '../fields/FieldList';
 
@@ -23,7 +23,9 @@ export default function BlockCard({
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   const [showMore, setShowMore] = useState(false);
   const [showStyle, setShowStyle] = useState(false);
-  const styled = hasBlockStyle(block.options);
+  // Only the style options that change this kind of block (e.g. no card colors for a link).
+  const styleFields = blockStyleFieldsFor(block);
+  const styled = Boolean(blockStyleOf(block.options, blockStyleGroups(block)));
   const errors = mod ? validateFields(mod.fields, block.data) : [];
   const scheduled = block.options?.showFrom || block.options?.showUntil;
   const animated = block.options?.animation && block.options.animation !== 'none';
@@ -79,8 +81,8 @@ export default function BlockCard({
             </button>
             {showStyle && (
               <div className="mt-3 rounded-2xl bg-soft p-4">
-                <p className="text-xs text-muted mb-3">Change how this block looks. Anything left as “Same as the page” keeps your page style.</p>
-                <FieldList fields={blockStyleFields} values={block.options || {}} onChange={onOptions} compact />
+                <p className="text-xs text-muted mb-3">Change how this block looks. Anything left as “Same as the page” keeps your page style.{block.type === 'collection' ? ' The blocks inside use this style too, unless they have their own.' : ''}</p>
+                <FieldList fields={styleFields} values={block.options || {}} onChange={onOptions} compact />
                 {styled && (
                   <button type="button" onClick={() => blockStyleFields.forEach((f) => onOptions(f.key, ''))}
                     className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink cursor-pointer">

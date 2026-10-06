@@ -85,28 +85,76 @@ export const commonBlockFields = [
  */
 const pageDefault = (label = 'Same as the page') => ({ value: '', label });
 export const blockStyleFields = [
-  { key: 'stButtonStyle', type: 'select', label: 'Button style', default: '',
+  { key: 'stButtonStyle', group: 'button', type: 'select', label: 'Button style', default: '',
     options: () => [pageDefault(), ...buttonStyles.list().map((s) => ({ value: s.id, label: s.label }))] },
-  { key: 'stButtonColor', type: 'color', label: 'Button color', default: '', allowEmpty: true },
-  { key: 'stButtonTextColor', type: 'color', label: 'Button text', default: '', allowEmpty: true },
-  { key: 'stButtonBorderColor', type: 'color', label: 'Border / accent color', default: '', allowEmpty: true },
-  { key: 'stButtonShadowColor', type: 'color', label: 'Shadow color', default: '', allowEmpty: true },
-  { key: 'stGlassOpacity', type: 'select', label: 'Glass opacity', default: '', showIf: { key: 'stButtonStyle', equals: 'glass' },
+  { key: 'stButtonColor', group: 'button', type: 'color', label: 'Button color', default: '', allowEmpty: true },
+  { key: 'stButtonTextColor', group: 'button', type: 'color', label: 'Button text', default: '', allowEmpty: true },
+  { key: 'stButtonBorderColor', group: 'button', type: 'color', label: 'Border / accent color', default: '', allowEmpty: true },
+  { key: 'stButtonShadowColor', group: 'button', type: 'color', label: 'Shadow color', default: '', allowEmpty: true },
+  { key: 'stGlassOpacity', group: 'button', type: 'select', label: 'Glass opacity', default: '', showIf: { key: 'stButtonStyle', group: 'button', equals: 'glass' },
     options: [pageDefault(), ...[0, 10, 20, 30, 40, 50, 60, 70, 80].map((n) => ({ value: String(n), label: `${n}%` }))] },
-  { key: 'stGlassBlur', type: 'select', label: 'Glass blur', default: '', showIf: { key: 'stButtonStyle', equals: 'glass' },
+  { key: 'stGlassBlur', group: 'button', type: 'select', label: 'Glass blur', default: '', showIf: { key: 'stButtonStyle', group: 'button', equals: 'glass' },
     options: [pageDefault(), ...[0, 4, 8, 12, 16, 24, 32].map((n) => ({ value: String(n), label: `${n}px` }))] },
-  { key: 'stRadius', type: 'select', label: 'Corner radius', default: '',
+  { key: 'stRadius', group: 'radius', type: 'select', label: 'Corner radius', default: '',
     options: [pageDefault(), ...[0, 4, 8, 12, 16, 20, 24, 32].map((n) => ({ value: String(n), label: `${n}px` })), { value: '999', label: 'Pill' }] },
-  { key: 'stSurfaceColor', type: 'color', label: 'Card color', default: '', allowEmpty: true, help: 'Text, FAQ, countdown, booking, catalog and other card blocks.' },
-  { key: 'stSurfaceTextColor', type: 'color', label: 'Card text color', default: '', allowEmpty: true },
-  { key: 'stTextColor', type: 'color', label: 'Text color', default: '', allowEmpty: true, help: 'Headers and text outside cards.' },
+  { key: 'stSurfaceColor', group: 'card', type: 'color', label: 'Card color', default: '', allowEmpty: true, },
+  { key: 'stSurfaceTextColor', group: 'card', type: 'color', label: 'Card text color', default: '', allowEmpty: true },
+  { key: 'stTextColor', group: 'text', type: 'color', label: 'Text color', default: '', allowEmpty: true, },
 ];
+
+/**
+ * Which style options affect each block type: 'button' (buttons and the
+ * "opens on a button" toggles), 'card' (card background and text), 'text'
+ * (text outside cards) and 'radius' (corners). A function gets the block data,
+ * for blocks whose look depends on their settings. Types not listed get all.
+ */
+const showsButton = (d) => d.display === 'button';
+const STYLE_GROUPS = {
+  link: ['button', 'radius'],
+  copy: ['button', 'radius'],
+  share: ['button', 'radius'],
+  contact: ['button', 'radius'],
+  collection: ['button', 'card', 'text', 'radius'], // also styles the blocks inside
+  header: ['text'],
+  divider: ['text'],
+  text: (d) => (d.card ? ['card', 'radius'] : ['text']),
+  image: ['text', 'radius'],
+  gallery: ['text', 'radius'], // captions
+  video: ['text', 'radius'],
+  music: ['radius'],
+  banner: ['radius'],
+  embed: (d) => (showsButton(d) ? ['button', 'text', 'radius'] : ['text', 'radius']),
+  map: (d) => (showsButton(d) ? ['button', 'text', 'radius'] : ['text', 'radius']),
+  pdf: ['button', 'card', 'radius'],
+  faq: ['card', 'radius'],
+  countdown: ['card', 'radius'],
+  catalog: (d) => (showsButton(d) ? ['button', 'card', 'radius'] : ['card', 'radius']),
+  booking: ['button', 'card', 'radius'],
+  survey: ['button', 'card', 'radius'],
+  reviews: ['button', 'card', 'radius'],
+  vcard: ['button', 'card', 'radius'],
+};
+
+/** Style groups that affect a block (see STYLE_GROUPS). */
+export function blockStyleGroups(block) {
+  const g = STYLE_GROUPS[block?.type];
+  if (!g) return ['button', 'card', 'text', 'radius'];
+  return typeof g === 'function' ? g(block.data || {}) : g;
+}
+
+/** The style fields worth showing for a block. */
+export function blockStyleFieldsFor(block) {
+  const groups = blockStyleGroups(block);
+  return blockStyleFields.filter((f) => groups.includes(f.group));
+}
 
 /** True when a block has any style of its own. */
 export const hasBlockStyle = (options = {}) => blockStyleFields.some((f) => options[f.key] !== undefined && options[f.key] !== '');
 
 /** CSS variables + button style id for a block with its own style. */
-export function blockStyleOf(options = {}) {
+export function blockStyleOf(options = {}, groups = ['button', 'card', 'text', 'radius']) {
+  // Values of groups that don't affect this block (e.g. left from an older setting) are ignored.
+  options = Object.fromEntries(Object.entries(options).filter(([k]) => { const f = blockStyleFields.find((x) => x.key === k); return !f || groups.includes(f.group); }));
   if (!hasBlockStyle(options)) return null;
   const vars = [];
   const add = (name, v) => { if (v !== undefined && v !== '') vars.push(`${name}:${v}`); };

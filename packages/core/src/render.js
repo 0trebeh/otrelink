@@ -3,7 +3,7 @@
 // both always look exactly the same.
 
 import { adjustedImg } from './util/image.js';
-import { blockTypes, blockStyleOf } from './blocks/index.js';
+import { blockTypes, blockStyleOf, blockStyleGroups } from './blocks/index.js';
 import { buttonStyles, buttonHovers, scopedButtonCss } from './buttons/index.js';
 import { wallpapers } from './wallpapers/index.js';
 import { attentionAnimations, entranceAnimations } from './animations.js';
@@ -152,7 +152,7 @@ export function renderPage(page, opts = {}) {
         return '';
       }
       // A block's own style: CSS variables on its wrapper (+ a class for its button style).
-      const own = blockStyleOf(block.options);
+      const own = blockStyleOf(block.options, blockStyleGroups(block));
       if (own?.buttonStyle) usedBlockButtons.add(`${own.buttonStyle}:${depth}`);
       const cls = ['ol-block', `ol-b-${mod.type}`, depth === 0 && 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled',
         own && 'ol-styled', own?.buttonStyle && `ol-bs-${own.buttonStyle}`].filter(Boolean).join(' ');

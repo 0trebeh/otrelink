@@ -434,3 +434,17 @@ test('copy block and content protection', async () => {
   assert.ok(r.html.includes('ol-noselect ol-nomenu') && r.css.includes('.ol-root.ol-noselect{'));
   assert.ok(!renderPage(sanitizePage(createDefaultPage({ slug: 'y', title: 'Y' }))).html.includes('ol-noselect'));
 });
+
+test('block style shows only the options that affect the block', async () => {
+  const { blockStyleFieldsFor, blockStyleOf, blockStyleGroups } = await import('../src/index.js');
+  const keys = (b) => blockStyleFieldsFor(b).map((f) => f.key);
+  assert.ok(!keys({ type: 'link' }).includes('stSurfaceColor'));
+  assert.ok(!keys({ type: 'text', data: {} }).includes('stButtonStyle'));
+  assert.ok(keys({ type: 'text', data: { card: true } }).includes('stSurfaceColor'));
+  assert.ok(keys({ type: 'catalog', data: { display: 'button' } }).includes('stButtonStyle'));
+  assert.ok(!keys({ type: 'catalog', data: { display: 'always' } }).includes('stButtonStyle'));
+  assert.deepEqual(keys({ type: 'header' }), ['stTextColor']);
+  // Leftover values of other groups are ignored when rendering.
+  const link = { type: 'link', options: { stSurfaceColor: '#ff0000' } };
+  assert.equal(blockStyleOf(link.options, blockStyleGroups(link)), null);
+});
