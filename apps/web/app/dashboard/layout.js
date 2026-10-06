@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import VerifyGate from '@/components/VerifyGate';
+import { DashboardTheme } from '@/components/ThemeToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export default async function DashboardLayout({ children }) {
   if (!user.emailVerified) {
     const db = await getDb();
     const full = await db.users.findById(user.id);
-    return <VerifyGate email={user.email} pendingSlug={full?.pendingSlug || ''} />;
+    return <><DashboardTheme /><VerifyGate email={user.email} pendingSlug={full?.pendingSlug || ''} /></>;
   }
-  return children;
+  return <><DashboardTheme />{children}</>;
 }

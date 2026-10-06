@@ -1,4 +1,5 @@
 'use client';
+import ThemeToggle from './ThemeToggle';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -52,6 +53,7 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
             <Sparkles size={14} /> {user.plan.label}
           </Link>
           <InstallButton />
+          <ThemeToggle />
           <Link href="/docs" className="h-8 px-3 inline-flex items-center rounded-full text-[13px] font-semibold hover:bg-panel">Docs</Link>
           <Button size="sm" variant="ghost" onClick={logout}><LogOut size={15} /> Log out</Button>
         </div>

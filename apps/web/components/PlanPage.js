@@ -1,4 +1,5 @@
 'use client';
+import ThemeToggle from './ThemeToggle';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -71,6 +72,7 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
       <header className="flex items-center gap-3 h-16 px-4 sm:px-8">
         <Link href="/dashboard" className="inline-grid place-items-center size-9 rounded-full hover:bg-panel" aria-label="Back to my pages"><ArrowLeft size={19} /></Link>
         <Logo />
+        <ThemeToggle className="ml-auto" />
       </header>
       <main className="max-w-5xl mx-auto px-4 sm:px-8 pb-16">
         <h1 className="font-display text-4xl font-extrabold tracking-tight mt-4">Plans</h1>

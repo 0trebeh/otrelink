@@ -41,6 +41,45 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 
 input[type="range"] { accent-color: var(--color-accent); }
 
+/* ── Dashboard dark mode (components/ThemeToggle.js, saved on this browser) ──
+   Only the dashboard changes: the page you edit and its preview keep their colors. */
+html[data-theme="dark"] {
+  --color-canvas: #0f0f13;
+  --color-panel: #18181e;
+  --color-ink: #ececf1;
+  --color-muted: #9b9bac;
+  --color-line: #2c2c35;
+  --color-soft: #202027;
+  --color-accent: #8b4dff;
+  --color-accent-ink: #c3a3ff;
+  --color-accent-soft: #2a1f42;
+  --color-teal: #22b8a6;
+  --color-danger: #ff5c74;
+  scrollbar-color: #3a3a45 var(--color-canvas);
+}
+/* Native controls (inputs, selects, date pickers, scrollbars) in dark too. */
+html[data-theme="dark"] body { color-scheme: dark; }
+/* "Ink" surfaces (active pills, dark buttons, badges) turn light: their text turns dark. */
+html[data-theme="dark"] .bg-ink.text-white,
+html[data-theme="dark"] .bg-ink .text-white { color: var(--color-canvas); }
+html[data-theme="dark"] .hover\:bg-black:hover { background-color: #ffffff; }
+/* Primary buttons hover: keep white text readable. */
+html[data-theme="dark"] .hover\:bg-accent-ink:hover { background-color: #7433f0; }
+/* Warning colors. */
+html[data-theme="dark"] .bg-amber-50 { background-color: rgb(245 158 11 / .12); }
+html[data-theme="dark"] .bg-amber-100 { background-color: rgb(245 158 11 / .18); }
+html[data-theme="dark"] .border-amber-200,
+html[data-theme="dark"] .border-amber-300 { border-color: rgb(245 158 11 / .35); }
+html[data-theme="dark"] .text-amber-700,
+html[data-theme="dark"] .text-amber-800,
+html[data-theme="dark"] .text-amber-950 { color: #fbbf24; }
+/* The phone frame of the preview stays dark; a thin edge keeps it visible. */
+html[data-theme="dark"] .phone-bezel { outline: 1px solid #34343f; }
+html[data-theme="dark"] .dot-canvas {
+  background-color: #141419;
+  background-image: radial-gradient(#2c2c36 1px, transparent 1.2px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

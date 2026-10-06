@@ -55,8 +55,8 @@ export default function Preview({ page, replayKey = 0, className, scale = 1 }) {
 
   return (
     <div className={cx('shrink-0', className)} style={{ width: 340 * scale, height: 700 * scale }}>
-      <div className="relative rounded-[44px] bg-ink p-2.5 shadow-[0_30px_60px_-20px_rgba(23,23,31,.45)] origin-top-left" style={{ width: 340, height: 700, transform: `scale(${scale})` }}>
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-ink z-10" aria-hidden="true" />
+      <div className="phone-bezel relative rounded-[44px] bg-[#17171f] p-2.5 shadow-[0_30px_60px_-20px_rgba(23,23,31,.45)] origin-top-left" style={{ width: 340, height: 700, transform: `scale(${scale})` }}>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-[#17171f] z-10" aria-hidden="true" />
         <iframe
           ref={frameRef}
           title="Page preview"

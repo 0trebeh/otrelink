@@ -19,8 +19,10 @@ export const viewport = { width: 'device-width', initialScale: 1, themeColor: '#
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Dashboard dark mode (saved on this browser): set it before the first paint to avoid a flash. */}
+        <script dangerouslySetInnerHTML={{ __html: "try{if(location.pathname.indexOf('/dashboard')===0&&localStorage.getItem('ol-dashboard-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}" }} />
         {/* Keep the real colors: no recoloring by dark-mode extensions (Dark Reader). */}
         <meta name="darkreader-lock" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

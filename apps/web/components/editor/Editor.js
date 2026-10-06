@@ -1,4 +1,5 @@
 'use client';
+import ThemeToggle from '../ThemeToggle';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Undo2, Redo2, ExternalLink, Eye, X, Loader2, Check, RotateCcw, BookOpen, Lock } from 'lucide-react';
@@ -129,6 +130,7 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
           </div>
           <IconButton label="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo}><Undo2 size={18} /></IconButton>
           <IconButton label="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={!canRedo}><Redo2 size={18} /></IconButton>
+          <ThemeToggle className="size-9" />
           <a href={`/docs#${tab === 'style' ? 'custom-css' : 'getting-started'}`} target="_blank" rel="noreferrer" className="hidden sm:inline-grid place-items-center size-9 rounded-full text-muted hover:text-ink hover:bg-panel" aria-label="Docs" title="Docs"><BookOpen size={18} /></a>
           <a href={liveUrl} target="_blank" rel="noreferrer" className="hidden sm:inline-flex items-center gap-1.5 h-10 px-4 rounded-full text-sm font-semibold border border-line bg-panel hover:border-ink/30">
             <ExternalLink size={15} /> View page

@@ -15,7 +15,12 @@ export default function ChoiceField({ value, onChange, field }) {
           aria-pressed={value === o.value}
           className={cx('rounded-2xl border p-2.5 text-xs font-medium cursor-pointer transition-colors flex flex-col items-center gap-2', value === o.value ? 'border-accent bg-accent-soft text-accent-ink' : 'border-line hover:border-ink/30')}
         >
-          {o.preview && <span className="block w-full h-6 rounded-lg" style={{ ...o.preview, borderRadius: o.preview.borderRadius ?? 8 }} />}
+          {/* Light backdrop: the previews use fixed colors, so they stay visible in dark mode. */}
+          {o.preview && (
+            <span className="block w-full rounded-[10px] bg-[#f3f3f6] p-1">
+              <span className="block w-full h-6 rounded-lg" style={{ ...o.preview, borderRadius: o.preview.borderRadius ?? 8 }} />
+            </span>
+          )}
           {o.label}
         </button>
       ))}

@@ -45,14 +45,14 @@ function TrendChart({ series }) {
         }}>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={P.l} x2={W - P.r} y1={y(t)} y2={y(t)} stroke="#e6e7eb" />
-            <text x={P.l - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="#6a6a78">{fmt(t)}</text>
+            <line x1={P.l} x2={W - P.r} y1={y(t)} y2={y(t)} style={{ stroke: 'var(--color-line)' }} />
+            <text x={P.l - 8} y={y(t) + 4} textAnchor="end" fontSize="11" style={{ fill: 'var(--color-muted)' }}>{fmt(t)}</text>
           </g>
         ))}
         {series.map((d, i) => (i % labelEvery === 0 ? (
-          <text key={d.date} x={x(i)} y={H - 6} textAnchor="middle" fontSize="11" fill="#6a6a78">{new Date(d.date + 'T00:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })}</text>
+          <text key={d.date} x={x(i)} y={H - 6} textAnchor="middle" fontSize="11" style={{ fill: 'var(--color-muted)' }}>{new Date(d.date + 'T00:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })}</text>
         ) : null))}
-        {h && <line x1={x(hover)} x2={x(hover)} y1={P.t} y2={H - P.b} stroke="#17171f" strokeOpacity=".25" />}
+        {h && <line x1={x(hover)} x2={x(hover)} y1={P.t} y2={H - P.b} style={{ stroke: 'var(--color-ink)' }} strokeOpacity=".25" />}
         <path d={path('views')} fill="none" stroke={VIEWS} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         <path d={path('clicks')} fill="none" stroke={CLICKS} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {h && <>
