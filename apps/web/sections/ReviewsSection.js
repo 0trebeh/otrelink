@@ -167,7 +167,7 @@ function ReviewCard({ r, onPatch, onRemove }) {
             <span className={cx('text-[11px] font-semibold px-2 py-0.5 rounded-full', s.cls)}>{s.label}</span>
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-xs text-muted">
-            <Stars value={r.rating} size={14} /> <span>{when(r.createdAt)}{r.country ? ` · ${r.country}` : ''}</span>
+            <Stars value={r.rating} size={14} /> <span>{when(r.createdAt)}{r.editedAt ? ' · edited by the author' : ''}{r.country ? ` · ${r.country}` : ''}</span>
           </div>
           {r.comment ? <p className="text-sm mt-2 whitespace-pre-line break-words">{r.comment}</p> : <p className="text-sm mt-2 text-muted italic">No comment</p>}
 

@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { pushToUser } from '@/lib/notify';
-import { loadReviewsBlock, reviewStats, toPublicReview } from '@/lib/reviews';
+import {
+  loadReviewsBlock, reviewStats, toPublicReview, toAuthorReview, newEditToken, tokenMatches, cleanReviewInput,
+} from '@/lib/reviews';
 import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
 
 // Public reviews of a Reviews block (newest first).
-//   GET ?pageId=…&blockId=…&limit=5&before=<createdAt>
+//   GET ?pageId=…&blockId=…&limit=5&before=<createdAt>[&mine=<id>~<token>]
+//   `mine` returns the visitor's own review (any status) when the token matches.
 export const GET = handler(async (req) => {
   rateLimit(req, 'reviews-read', 120, 60 * 1000);
   const headers = corsHeaders(req);
@@ -16,7 +19,14 @@ export const GET = handler(async (req) => {
   const limit = Math.min(Math.max(Number(q.get('limit')) || 5, 1), 30);
   const before = /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(q.get('before') || '') ? q.get('before') : undefined;
   const list = await db.reviews.list({ pageId: ctx.page.id, blockId: ctx.block.id, statuses: ['published'], before, limit: limit + 1 });
+  let mine;
+  const [mineId, mineToken] = String(q.get('mine') || '').split('~');
+  if (mineId && mineToken) {
+    const r = await db.reviews.findById(mineId.slice(0, 64));
+    mine = r && r.pageId === ctx.page.id && r.blockId === ctx.block.id && tokenMatches(r, mineToken) ? toAuthorReview(r) : null;
+  }
   return NextResponse.json({
+    ...(mine !== undefined ? { mine } : {}),
     stats: await reviewStats(db, ctx.page.id, ctx.block.id),
     reviews: list.slice(0, limit).map(toPublicReview),
     hasMore: list.length > limit,
@@ -40,15 +50,14 @@ export const POST = handler(async (req) => {
   const { page, block, data } = ctx;
   if (!data.allowNew) return fail(403, 'closed');
 
-  const rating = Number(body.rating);
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) return fail(400, 'invalid_rating');
-  const comment = String(body.comment ?? '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 1000);
-  if (data.requireComment && !comment) return fail(400, 'comment_required');
-  const name = String(body.name ?? '').replace(/\s+/g, ' ').trim().slice(0, 60);
+  const input = cleanReviewInput(body, data);
+  if (input.error) return fail(400, input.error);
+  const { rating, comment, name } = input.fields;
 
   const review = await db.reviews.create({
     userId: page.userId, pageId: page.id, blockId: block.id, rating, comment, name,
     status: data.moderation === 'manual' ? 'pending' : 'published',
+    editToken: newEditToken(),
     country: (req.headers.get('cf-ipcountry') || req.headers.get('x-vercel-ip-country') || '').slice(0, 2).toUpperCase(),
   });
 
@@ -62,7 +71,8 @@ export const POST = handler(async (req) => {
   }
 
   return NextResponse.json({
-    review: { ...toPublicReview(review), status: review.status },
+    review: toAuthorReview(review),
+    token: review.editToken, // only sent here, to the browser that wrote it
     stats: review.status === 'published' ? await reviewStats(db, page.id, block.id) : undefined,
   }, { status: 201, headers });
 });

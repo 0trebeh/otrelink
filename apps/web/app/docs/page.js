@@ -293,6 +293,7 @@ export default function DocsPage() {
             ]}
           />
           <P>In the <i>Reviews</i> section of the dashboard you see every review with its status. You can <b>approve</b> or <b>show</b>, <b>hide</b> (it stays saved but nobody sees it), <b>delete</b>, and <b>reply</b>: your reply appears under the review on your page. A badge shows how many reviews are waiting for approval. Hidden and pending reviews don’t count in the average.</P>
+          <P>Clients can <b>edit or delete their own review</b> from your page: when they open the reviews on the same browser they wrote it with, they see <i>Your review</i> with <i>Edit</i> and <i>Delete</i>. Edited reviews show “edited”. With <i>I approve each one</i>, an edited review waits for your approval again; a review you hid stays hidden.</P>
           <Warning>
             <ul className="list-disc pl-5 space-y-1">
               <li>You can’t write reviews from the editor preview or from exported sites: there the block links to your live page.</li>

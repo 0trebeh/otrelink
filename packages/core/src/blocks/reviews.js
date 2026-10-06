@@ -32,6 +32,7 @@ export default {
     { selector: '.ol-rev-item', description: 'One review' },
     { selector: '.ol-rev-reply', description: 'Your public reply under a review' },
     { selector: '.ol-rev-more', description: '“Show more” button' },
+    { selector: '.ol-rev-mine', description: 'The visitor’s own review with Edit / Delete (.is-published, .is-pending, .is-hidden)' },
   ],
   fields: [
     { key: 'buttonLabel', type: 'text', label: 'Button text', default: 'Reviews' },
@@ -120,6 +121,15 @@ export default {
 .ol-root .ol-rev-text{margin:0;font-size:.92em;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}
 .ol-root .ol-rev-reply{margin:2px 0 0;padding:10px 12px;border-radius:12px;font-size:.86em;background:color-mix(in srgb,var(--ol-surface-fg) 6%,transparent);white-space:pre-line;overflow-wrap:anywhere}
 .ol-root .ol-rev-reply strong{display:block;font-size:.85em;margin-bottom:2px;opacity:.8}
+.ol-root .ol-rev-step{margin:0;font-size:.8em;font-weight:700;opacity:.7}
+.ol-root .ol-rev-mine{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:14px;background:color-mix(in srgb,var(--ol-surface-fg) 5%,transparent);border:1.5px solid color-mix(in srgb,var(--ol-surface-fg) 12%,transparent)}
+.ol-root .ol-rev-mine.is-pending,.ol-root .ol-rev-mine.is-hidden{border-style:dashed}
+.ol-root .ol-rev-actions,.ol-root .ol-rev-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.ol-root .ol-rev-confirm{font-size:.88em;font-weight:600}
+.ol-root .ol-rev-edit,.ol-root .ol-rev-delete{border:1.5px solid color-mix(in srgb,var(--ol-surface-fg) 18%,transparent);background:transparent;border-radius:999px;padding:6px 16px;font-size:.85em;font-weight:600}
+.ol-root .ol-rev-delete{color:#dc2626!important;border-color:color-mix(in srgb,#dc2626 35%,transparent)}
+.ol-root .ol-rev-delete-yes{border:0;border-radius:999px;padding:7px 14px;background:#dc2626;color:#fff!important;font-weight:700}
+.ol-root .ol-rev-delete-yes[disabled]{opacity:.6}
 .ol-root .ol-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}`,
 };
 
@@ -130,9 +140,19 @@ function reviewsApp(doc, details, box, data) {
   const blockId = box.dataset.block;
   const preview = box.dataset.mode === 'preview';
   const owner = box.dataset.owner || 'the owner';
+  // This browser's review: { id, token }. The secret token lets only this
+  // browser edit or delete it. (Older pages stored just a timestamp.)
   const storeKey = `ol-review:${pageId}:${blockId}`;
-  const reviewed = () => { try { return Boolean(localStorage.getItem(storeKey)); } catch { return false; } };
-  const st = { stats: null, reviews: [], hasMore: false, loaded: false, loading: false, error: '', writing: false, sending: false, formError: '', sent: '' };
+  const readStore = () => { try { return localStorage.getItem(storeKey); } catch { return null; } };
+  const reviewed = () => Boolean(readStore());
+  const myKey = () => { try { const v = JSON.parse(readStore()); return v?.id && v?.token ? v : null; } catch { return null; } };
+  const saveMine = (id, token) => { try { localStorage.setItem(storeKey, JSON.stringify({ id, token })); } catch { /* ignore */ } };
+  const forgetMine = () => { try { localStorage.removeItem(storeKey); } catch { /* ignore */ } };
+  const st = {
+    stats: null, reviews: [], hasMore: false, loaded: false, loading: false, error: '',
+    writing: false, editing: false, sending: false, formError: '', sent: '',
+    mine: null, confirmDelete: false, deleting: false, mineError: '',
+  };
 
   const h = (tag, attrs = {}, ...kids) => {
     const n = doc.createElement(tag);
@@ -146,6 +166,15 @@ function reviewsApp(doc, details, box, data) {
   };
   const fmtDate = (iso) => new Date(iso).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
   const plural = (n) => `${n} review${n === 1 ? '' : 's'}`;
+  const post = async (path, body) => {
+    // text/plain keeps it a "simple" CORS request (no preflight).
+    const res = await fetch(`${api}${path}`, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(body) });
+    return { res, json: await res.json().catch(() => ({})) };
+  };
+  const errorText = (code) => ({
+    too_many_requests: 'Too many attempts. Try again later.', closed: 'This page is not accepting new reviews.',
+    comment_required: 'Write a short comment.', not_found: 'This review no longer exists.',
+  }[code] || 'Something went wrong. Try again.');
 
   function setSubtitle() {
     if (data.description) return;
@@ -165,17 +194,29 @@ function reviewsApp(doc, details, box, data) {
     try {
       const q = new URLSearchParams({ pageId, blockId, limit: String(data.perPage || 5) });
       if (more && st.reviews.length) q.set('before', st.reviews[st.reviews.length - 1].createdAt);
+      const key = !more && !preview && myKey();
+      if (key) q.set('mine', `${key.id}~${key.token}`);
       const res = await fetch(`${api}/api/public/reviews?${q}`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error === 'not_found' && preview ? 'Save the page to see the reviews here.' : 'Could not load the reviews.');
       st.stats = json.stats;
       st.reviews = more ? [...st.reviews, ...json.reviews] : json.reviews;
       st.hasMore = json.hasMore;
+      if (key) {
+        st.mine = json.mine || null;
+        if (!json.mine) forgetMine(); // deleted by the page owner
+      }
       st.loaded = true;
       setSubtitle();
     } catch (err) { st.error = err.message; }
     st.loading = false;
     if (details.open || more) draw();
+  }
+
+  /** Put the latest version of the visitor's review into the public list (or take it out). */
+  function syncList(review) {
+    const rest = st.reviews.filter((r) => r.id !== review?.id);
+    st.reviews = review?.status === 'published' ? [review, ...rest].sort((a, b) => b.createdAt.localeCompare(a.createdAt)) : rest;
   }
 
   async function submit(form) {
@@ -186,28 +227,44 @@ function reviewsApp(doc, details, box, data) {
     if (data.requireComment && !comment) { st.formError = 'Write a short comment.'; return draw(); }
     if (preview) { st.formError = 'Sending is disabled in the dashboard preview.'; return draw(); }
     st.sending = true; st.formError = ''; draw();
+    const fields = { rating, comment, name: String(fd.get('name') || '') };
     try {
-      const res = await fetch(`${api}/api/public/reviews`, {
-        method: 'POST', headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ pageId, blockId, rating, comment, name: String(fd.get('name') || ''), website: String(fd.get('website') || '') }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error({ too_many_requests: 'Too many attempts. Try again later.', closed: 'This page is not accepting new reviews.', comment_required: 'Write a short comment.' }[json.error] || 'Could not send your review. Try again.');
-      }
-      try { localStorage.setItem(storeKey, String(Date.now())); } catch { /* ignore */ }
-      st.writing = false;
-      formEl = null;
-      if (json.review.status === 'published') {
-        st.reviews = [json.review, ...st.reviews];
+      if (st.editing) {
+        const key = myKey();
+        const { res, json } = await post('/api/public/reviews/edit', { action: 'update', pageId, blockId, id: key?.id, token: key?.token, ...fields });
+        if (!res.ok) throw new Error(errorText(json.error));
+        st.mine = json.review;
+        syncList(json.review);
         st.stats = json.stats || st.stats;
-        setSubtitle();
-        st.sent = 'Thanks! Your review is published.';
+        st.sent = json.review.status === 'pending' ? 'Saved. Your changes will appear once they are approved.' : 'Your review was updated.';
       } else {
-        st.sent = 'Thanks! Your review will appear once it is approved.';
+        const { res, json } = await post('/api/public/reviews', { pageId, blockId, ...fields, website: String(fd.get('website') || '') });
+        if (!res.ok) throw new Error(errorText(json.error));
+        saveMine(json.review.id, json.token);
+        st.mine = json.review;
+        syncList(json.review);
+        st.stats = json.stats || st.stats;
+        st.sent = json.review.status === 'published' ? 'Thanks! Your review is published.' : 'Thanks! Your review will appear once it is approved.';
       }
+      setSubtitle();
+      st.writing = false; st.editing = false; formEl = null;
     } catch (err) { st.formError = err.message; }
     st.sending = false; draw();
+  }
+
+  async function removeMine() {
+    const key = myKey();
+    st.deleting = true; st.mineError = ''; draw();
+    try {
+      const { res, json } = await post('/api/public/reviews/edit', { action: 'delete', pageId, blockId, id: key?.id, token: key?.token });
+      if (!res.ok && res.status !== 404) throw new Error(errorText(json.error));
+      forgetMine();
+      st.reviews = st.reviews.filter((r) => r.id !== key?.id);
+      st.mine = null; st.confirmDelete = false;
+      if (json.stats) { st.stats = json.stats; setSubtitle(); }
+      st.sent = 'Your review was deleted.';
+    } catch (err) { st.mineError = err.message; }
+    st.deleting = false; draw();
   }
 
   function summaryView() {
@@ -224,34 +281,59 @@ function reviewsApp(doc, details, box, data) {
   // The form is built once and reused, so typed text survives re-draws.
   let formEl = null;
   function formView() {
+    const submitLabel = st.editing ? 'Save changes' : 'Publish review';
     if (formEl) {
       const errEl = formEl.querySelector('.ol-rev-error');
       errEl.textContent = st.formError; errEl.hidden = !st.formError;
       const btn = formEl.querySelector('.ol-rev-submit');
-      btn.disabled = st.sending; btn.textContent = st.sending ? 'Sending…' : 'Publish review';
+      btn.disabled = st.sending; btn.textContent = st.sending ? 'Sending…' : submitLabel;
       return formEl;
     }
     const uid = `olr-${blockId}`;
+    const init = st.editing && st.mine ? st.mine : {};
     const form = h('form', { class: 'ol-rev-form', novalidate: true, on: {
       submit: (e) => { e.preventDefault(); submit(e.target); },
       change: () => { if (st.formError) { st.formError = ''; formView(); } },
     } },
+      st.editing && h('p', { class: 'ol-rev-step' }, 'Edit your review'),
       h('label', { class: 'ol-rev-lbl', id: `${uid}-l` }, 'Your rating'),
       h('div', { class: 'ol-rev-pick', role: 'radiogroup', 'aria-labelledby': `${uid}-l` }, [5, 4, 3, 2, 1].map((n) => [
-        h('input', { type: 'radio', name: 'rating', value: String(n), id: `${uid}-${n}` }),
+        h('input', { type: 'radio', name: 'rating', value: String(n), id: `${uid}-${n}`, checked: init.rating === n }),
         h('label', { for: `${uid}-${n}`, title: `${n} of 5`, html: `<span class="ol-sr">${n} of 5</span>${star(30)}` }),
       ])),
       h('label', { class: 'ol-rev-lbl', for: `${uid}-c` }, data.requireComment ? 'Your comment' : 'Your comment (optional)'),
-      h('textarea', { id: `${uid}-c`, name: 'comment', maxlength: '1000', placeholder: 'How was your experience?' }),
+      h('textarea', { id: `${uid}-c`, name: 'comment', maxlength: '1000', placeholder: 'How was your experience?' }, init.comment || ''),
       h('label', { class: 'ol-rev-lbl', for: `${uid}-n` }, 'Your name (optional)'),
-      h('input', { id: `${uid}-n`, name: 'name', maxlength: '60', autocomplete: 'name', placeholder: 'Shown with your review' }),
+      h('input', { id: `${uid}-n`, name: 'name', maxlength: '60', autocomplete: 'name', placeholder: 'Shown with your review', value: init.name || '' }),
       h('input', { name: 'website', class: 'ol-rev-hp', tabindex: '-1', autocomplete: 'off', 'aria-hidden': 'true' }),
       h('p', { class: 'ol-rev-error', role: 'alert', hidden: !st.formError }, st.formError),
-      h('button', { type: 'submit', class: 'ol-rev-submit' }, 'Publish review'),
-      h('button', { type: 'button', class: 'ol-rev-cancel', on: { click: () => { st.writing = false; st.formError = ''; formEl = null; draw(); } } }, 'Cancel'),
+      h('button', { type: 'submit', class: 'ol-rev-submit' }, submitLabel),
+      h('button', { type: 'button', class: 'ol-rev-cancel', on: { click: () => { st.writing = false; st.editing = false; st.formError = ''; formEl = null; draw(); } } }, 'Cancel'),
     );
     formEl = form;
     return formView();
+  }
+
+  const statusNote = { pending: 'Waiting for approval: not visible on the page yet.', hidden: 'Hidden by the page owner: not visible on the page.' };
+
+  /** The visitor's own review, with Edit / Delete. */
+  function mineView() {
+    const r = st.mine;
+    return h('div', { class: `ol-rev-mine is-${r.status}` },
+      h('p', { class: 'ol-rev-step' }, 'Your review'),
+      h('div', { class: 'ol-rev-meta' }, h('span', { html: starsHtml(r.rating, 15) }), h('span', {}, `${fmtDate(r.createdAt)}${r.editedAt ? ' · edited' : ''}`)),
+      r.comment && h('p', { class: 'ol-rev-text' }, r.comment),
+      statusNote[r.status] && h('p', { class: 'ol-rev-note' }, statusNote[r.status]),
+      r.reply && h('div', { class: 'ol-rev-reply' }, h('strong', {}, `Reply from ${owner}`), r.reply),
+      st.confirmDelete
+        ? h('div', { class: 'ol-rev-confirm', role: 'group', 'aria-label': 'Delete review' },
+          h('span', {}, 'Delete your review?'),
+          h('button', { type: 'button', class: 'ol-rev-delete-yes', disabled: st.deleting, on: { click: removeMine } }, st.deleting ? 'Deleting…' : 'Yes, delete'),
+          h('button', { type: 'button', class: 'ol-rev-cancel', on: { click: () => { st.confirmDelete = false; st.mineError = ''; draw(); } } }, 'Keep it'))
+        : h('div', { class: 'ol-rev-actions' },
+          h('button', { type: 'button', class: 'ol-rev-edit', on: { click: () => { st.editing = true; st.writing = false; st.sent = ''; formEl = null; draw(); box.querySelector('.ol-rev-form textarea')?.focus({ preventScroll: true }); } } }, 'Edit'),
+          h('button', { type: 'button', class: 'ol-rev-delete', on: { click: () => { st.confirmDelete = true; st.sent = ''; draw(); } } }, 'Delete')),
+      st.mineError && h('p', { class: 'ol-rev-error', role: 'alert' }, st.mineError));
   }
 
   function itemView(r) {
@@ -261,7 +343,7 @@ function reviewsApp(doc, details, box, data) {
         h('span', { class: 'ol-rev-avatar', 'aria-hidden': 'true' }, name.trim().charAt(0).toUpperCase() || '?'),
         h('div', { class: 'ol-rev-who' },
           h('strong', {}, name),
-          h('div', { class: 'ol-rev-meta' }, h('span', { html: starsHtml(r.rating, 13) }), h('span', {}, fmtDate(r.createdAt))))),
+          h('div', { class: 'ol-rev-meta' }, h('span', { html: starsHtml(r.rating, 13) }), h('span', {}, `${fmtDate(r.createdAt)}${r.editedAt ? ' · edited' : ''}`)))),
       r.comment && h('p', { class: 'ol-rev-text' }, r.comment),
       r.reply && h('div', { class: 'ol-rev-reply' }, h('strong', {}, `Reply from ${owner}`), r.reply));
   }
@@ -272,10 +354,13 @@ function reviewsApp(doc, details, box, data) {
     if (!st.loaded) { box.append(h('p', { class: st.error ? 'ol-rev-error' : 'ol-rev-note' }, st.error || 'Loading reviews…')); return; }
     box.append(summaryView());
     if (st.sent) box.append(h('p', { class: 'ol-rev-ok', role: 'status' }, st.sent));
-    const canWrite = data.allowNew && !(data.oneReview && !preview && reviewed());
+    if (st.editing) box.append(formView());
+    else if (st.mine) box.append(mineView());
+    const canWrite = data.allowNew && !st.editing && !(data.oneReview && !preview && reviewed());
     if (st.writing) box.append(formView());
-    else if (canWrite) box.append(h('button', { type: 'button', class: 'ol-rev-write', on: { click: () => { st.writing = true; st.sent = ''; draw(); box.querySelector('.ol-rev-pick input')?.focus({ preventScroll: true }); } } }, 'Write a review'));
-    if (st.reviews.length) box.append(h('ul', { class: 'ol-rev-list' }, st.reviews.map(itemView)));
+    else if (canWrite) box.append(h('button', { type: 'button', class: 'ol-rev-write', on: { click: () => { st.writing = true; st.sent = ''; formEl = null; draw(); box.querySelector('.ol-rev-pick input')?.focus({ preventScroll: true }); } } }, 'Write a review'));
+    const others = st.reviews.filter((r) => r.id !== st.mine?.id);
+    if (others.length) box.append(h('ul', { class: 'ol-rev-list' }, others.map(itemView)));
     if (st.error) box.append(h('p', { class: 'ol-rev-error' }, st.error));
     if (st.hasMore) box.append(h('button', { type: 'button', class: 'ol-rev-more', disabled: st.loading, on: { click: () => load(true) } }, st.loading ? 'Loading…' : 'Show more reviews'));
   }
