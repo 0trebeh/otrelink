@@ -22,7 +22,16 @@ const nextConfig = {
     return [
       { source: '/:path*', headers: security },
       // Uploaded files (PDFs, images) can be shown inside the public pages, so they are excluded.
-      { source: '/((?!api/assets/).*)', headers: noFraming },
+      // The dashboard's phone preview frame may only be framed by the dashboard itself.
+      { source: '/((?!api/assets/|preview-frame\\.html).*)', headers: noFraming },
+      {
+        source: '/preview-frame.html',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" },
+          { key: 'Cache-Control', value: 'no-cache' },
+        ],
+      },
       {
         source: '/sw.js',
         headers: [
