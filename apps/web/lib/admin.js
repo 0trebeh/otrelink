@@ -1,7 +1,7 @@
 // Admin API helpers. The admin dashboard (separate app: Otrelink-Admin) calls
 // /api/admin/* from its server with:  Authorization: Bearer <ADMIN_API_KEY>
 import crypto from 'node:crypto';
-import { resolvePlan } from '@otrelink/core';
+import { resolvePlan, PLAN_FEATURES } from '@otrelink/core';
 import { config } from './config.js';
 import { HttpError, clientIp } from './http.js';
 
@@ -29,6 +29,8 @@ export function toAdminUser(u, extra = {}) {
     id: u.id, email: u.email, name: u.name || '', createdAt: u.createdAt,
     plan: u.plan || null, // null = account from before plans (works as Pro)
     effectivePlan: { id: p.id, label: p.label, maxPages: p.maxPages, features: p.features },
+    // Every feature a Business plan can turn on or off (the admin app shows a switch for each).
+    featureLabels: Object.fromEntries(Object.entries(PLAN_FEATURES).map(([k, f]) => [k, f.label])),
     limits: u.limits || null,
     banned: Boolean(u.banned), bannedAt: u.bannedAt || null, bannedReason: u.bannedReason || '',
     note: u.note || '',

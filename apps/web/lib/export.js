@@ -72,6 +72,7 @@ function indexHtml(page, { html, fontsHref }) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="${scheme}">
+<meta name="darkreader-lock">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <meta property="og:title" content="${esc(title)}">

@@ -212,6 +212,12 @@ export function applyColorScheme(doc, scheme) {
     doc.head?.prepend(meta);
   }
   meta.content = value;
+  // Dark-mode extensions (Dark Reader) skip pages with this tag.
+  if (!doc.querySelector('meta[name="darkreader-lock"]')) {
+    const lock = doc.createElement('meta');
+    lock.name = 'darkreader-lock';
+    doc.head?.append(lock);
+  }
 }
 
 /**

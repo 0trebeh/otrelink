@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { mountPage } from '@otrelink/core';
 import { cx } from './ui';
 
-const SHELL = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="only light">
+const SHELL = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="only light"><meta name="darkreader-lock">
 <style>html{color-scheme:only light}html,body{margin:0;height:100%}body{overflow-y:auto;scrollbar-width:none}body::-webkit-scrollbar{display:none}#root{min-height:100%}</style>
 </head><body><div id="root"></div></body></html>`;
 
