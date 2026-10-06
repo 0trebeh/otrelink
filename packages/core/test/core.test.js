@@ -370,3 +370,26 @@ test('design: color scheme follows the dashboard colors', async () => {
   assert.equal(colorSchemeOf({ surfaceTextColor: '#f5f5f5' }), 'dark');
   assert.ok(designCss(resolveDesign({})).includes('color-scheme:'));
 });
+
+// ── Catalog ─────────────────────────────────────────────────────────────
+test('catalog: prices, discount, stock, WhatsApp order and plan lock', async () => {
+  const { blockTypes, sanitizeBlock, resolvePlan, allowsBlock } = await import('../src/index.js');
+  const { formatMoney, salePrice } = await import('../src/blocks/catalog.js');
+  assert.equal(formatMoney(1234.5, { currency: '$' }), '$1,234.50');
+  assert.equal(formatMoney(1234.5, { currency: '€', currencyPosition: 'after', numberFormat: 'comma' }), '1.234,50 €');
+  assert.equal(formatMoney(40, { currency: 'Bs.' }), 'Bs. 40');
+  assert.equal(salePrice({ price: 50, discount: 20 }), 40);
+  const b = sanitizeBlock({ id: 'c', type: 'catalog', data: { display: 'always', whatsapp: '+58 412-555', products: [
+    { name: 'Mug <x>', price: 50, discount: 20, stock: '3' },
+    { name: 'Shirt', price: 10, stock: '0', url: 'shop.com/shirt' },
+    { name: 'Hat', price: 0, stock: '' },
+  ] } });
+  const html = blockTypes.get('catalog').render(b.data, { blockId: 'c' });
+  assert.ok(html.includes('Mug &lt;x&gt;') && html.includes('$40') && html.includes('<s class="ol-cat-old">$50</s>') && html.includes('-20%'));
+  assert.ok(html.includes('Only 3 left') && html.includes('Sold out') && html.includes('https://wa.me/58412555?text='));
+  assert.ok(html.includes('aria-disabled="true"') && !html.includes('href="https://shop.com/shirt"'));
+  assert.equal(allowsBlock(resolvePlan({ plan: 'free' }), 'catalog'), false);
+  assert.equal(allowsBlock(resolvePlan({ plan: 'pro' }), 'catalog'), true);
+  const btn = blockTypes.get('catalog').render(sanitizeBlock({ id: 'd', type: 'catalog', data: {} }).data, { blockId: 'd' });
+  assert.ok(btn.startsWith('<details class="ol-toggle ol-cat-toggle"'));
+});

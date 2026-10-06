@@ -27,7 +27,7 @@ export const fieldInputs = {
   textarea: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} maxLength={field.max} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} />,
   embed: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} maxLength={field.max ?? 20000} placeholder={field.placeholder} spellCheck={false} className="font-mono text-xs min-h-28" onChange={(e) => onChange(e.target.value)} />,
   code: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} placeholder={field.placeholder} spellCheck={false} className="font-mono text-xs min-h-40" onChange={(e) => onChange(e.target.value)} />,
-  number: ({ value, onChange, field, id }) => <Input id={id} type="number" value={value ?? 0} min={field.min} max={field.max} onChange={(e) => onChange(Number(e.target.value))} />,
+  number: ({ value, onChange, field, id }) => <Input id={id} type="number" value={value ?? 0} min={field.min} max={field.max} step={field.step} onChange={(e) => onChange(Number(e.target.value))} />,
   range: ({ value, onChange, field, id }) => (
     <div className="flex items-center gap-3">
       <input id={id} type="range" className="flex-1" min={field.min} max={field.max} step={field.step || 1} value={value ?? 0} onChange={(e) => onChange(Number(e.target.value))} />

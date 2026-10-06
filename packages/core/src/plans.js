@@ -15,6 +15,7 @@ export const PLAN_FEATURES = {
   booking: { label: 'Booking & agenda', blocks: ['booking'], sections: ['agenda'] },
   reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'] },
   survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'] },
+  catalog: { label: 'Product catalog', blocks: ['catalog'] },
   mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'] },
 };
 

@@ -42,6 +42,7 @@ import booking from './booking.js';
 import survey from './survey.js';
 import reviews from './reviews.js';
 import embed from './embed.js';
+import catalog from './catalog.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
@@ -57,6 +58,7 @@ export const blockTypes = createRegistry('blockTypes', [
   music,
   map,
   contact,
+  catalog,
   booking,
   survey,
   reviews,

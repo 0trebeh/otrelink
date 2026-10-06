@@ -28,6 +28,7 @@ const toc = [
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
+  { id: 'catalog', label: 'Catalog' },
   { id: 'plans', label: 'Plans' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
@@ -305,12 +306,27 @@ export default function DocsPage() {
             </ul>
           </Warning>
 
+          <H2 id="catalog">Catalog</H2>
+          <P>Add a <i>Catalog</i> block (Content category, Pro plan) to show your products. By default it is a button that opens the catalog on your page; choose <i>Always visible</i> to show the products directly. Pick a grid (2 per row) or a list.</P>
+          <Table
+            head={['Product option', 'What it does']}
+            rows={[
+              ['Name, image, description', 'What visitors see. Adjust the image focus and zoom like any other image.'],
+              ['Price', 'Shown with your currency and number format (1,234.50 or 1.234,50). Leave it at 0 to hide the price.'],
+              ['Discount', 'Shows the new price, the old one crossed out and a “-20%” label.'],
+              ['Stock', 'Empty: not shown. 0: “Sold out” and the buy button turns off. A low number shows “Only N left” (you choose from which number).'],
+              ['Label', 'A small tag on the image, like “New” or “Best seller”.'],
+              ['Link', 'Your product or checkout page (Buy button).'],
+            ]}
+          />
+          <P><b>Order via WhatsApp:</b> add your number and every product without its own link gets an <i>Order</i> button that opens WhatsApp with the message already written (you can change it; <C>{'{product}'}</C> and <C>{'{price}'}</C> are filled in). Clicks on Buy and Order buttons count in Analytics.</P>
+
           <H2 id="plans">Plans</H2>
           <Table
             head={['Plan', 'What it includes']}
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
-              ['Pro · $10/month', 'Up to 10 pages, Embeds, Booking & agenda, Reviews, Surveys and photo or video backgrounds.'],
+              ['Pro · $10/month', 'Up to 10 pages, Embeds, Booking & agenda, Reviews, Surveys, the product Catalog and photo or video backgrounds.'],
               ['Business', 'Custom number of pages and features, set up with the Otrelink team.'],
             ]}
           />
