@@ -17,6 +17,7 @@ import { flattenBlocks } from './tree.js';
 const BASE_CSS = `
 .ol-root{position:relative;min-height:100%;font-family:var(--ol-body-font);font-size:var(--ol-body-size);color:var(--ol-text-color);-webkit-font-smoothing:antialiased;isolation:isolate}
 .ol-root *,.ol-root *::before,.ol-root *::after{box-sizing:border-box}
+.ol-root iframe{color-scheme:light}
 .ol-root .ol-bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
 .ol-root .ol-main{max-width:var(--ol-max-width);margin:0 auto;padding:var(--ol-pad-top) 16px 40px;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
 .ol-root .ol-profile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:24px}

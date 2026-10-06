@@ -50,8 +50,10 @@ export function parseEmbed(code) {
 /** The sandboxed document for embed snippets. It reports its height to the page. */
 function sandboxDoc(html, id) {
   const key = JSON.stringify(String(id)).replace(/</g, '\\u003c');
+  // color-scheme + darkreader-lock: the browser's dark mode (and Dark Reader) leave the widget's own colors alone.
   return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-    + '<base target="_blank"><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}body>*{max-width:100%}</style></head><body>'
+    + '<meta name="color-scheme" content="only light"><meta name="darkreader-lock">'
+    + '<base target="_blank"><style>html{color-scheme:only light}html,body{margin:0;padding:0;background:transparent;overflow:hidden}body>*{max-width:100%}</style></head><body>'
     + html
     + `<script>(function(){var k=${key},l=0;function s(){var h=Math.ceil(document.documentElement.getBoundingClientRect().height);if(h&&h!==l){l=h;parent.postMessage({olEmbed:k,h:h},'*')}}`
     + 'if(window.ResizeObserver)new ResizeObserver(s).observe(document.documentElement);addEventListener("load",s);setInterval(s,1000);s()})()</script></body></html>';
