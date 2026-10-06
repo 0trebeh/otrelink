@@ -140,8 +140,13 @@ export default function Editor({ initialPage, pageUrl }) {
         {/* Desktop nav */}
         <nav className="hidden lg:block sticky top-16 self-start h-[calc(100vh-4rem)] p-4" aria-label="Editor sections">
           <ul className="space-y-1">
-            {sections.map((s) => (
+            {sections.map((s, i) => (
               <li key={s.id}>
+                {s.group && s.group !== sections[i - 1]?.group && (
+                  s.group === 'Settings'
+                    ? <hr className="border-line my-3 mx-3" />
+                    : <p className={cx('px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted/70', i > 0 && 'pt-4')}>{s.group}</p>
+                )}
                 <button
                   type="button"
                   onClick={() => go(s.id)}

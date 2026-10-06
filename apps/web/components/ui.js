@@ -72,13 +72,19 @@ export function Panel({ title, description, actions, children, className }) {
 
 export function Modal({ open, onClose, title, children, wide }) {
   const ref = useRef(null);
+  // Keep the latest onClose without re-running the effect: callers usually pass a
+  // new function on every render, and re-running it stole focus from inputs.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e) => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', onKey);
-    ref.current?.focus();
+    // Focus the first field (or the dialog) once, when it opens.
+    const first = ref.current?.querySelector('input, textarea, select');
+    (first || ref.current)?.focus();
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/40 backdrop-blur-[2px] p-0 sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
