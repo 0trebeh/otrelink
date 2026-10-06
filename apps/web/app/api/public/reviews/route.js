@@ -5,6 +5,8 @@ import {
   loadReviewsBlock, reviewStats, toPublicReview, toAuthorReview, newEditToken, tokenMatches, cleanReviewInput,
 } from '@/lib/reviews';
 import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
+import { ownerPlan } from '@/lib/plans';
+import { allowsBlock } from '@otrelink/core';
 
 // Public reviews of a Reviews block (newest first).
 //   GET ?pageId=…&blockId=…&limit=5&before=<createdAt>[&mine=<id>~<token>]
@@ -48,6 +50,9 @@ export const POST = handler(async (req) => {
   const ctx = await loadReviewsBlock(db, body.pageId, body.blockId);
   if (!ctx) return fail(404, 'not_found');
   const { page, block, data } = ctx;
+  const plan = await ownerPlan(db, page);
+  if (!plan) return fail(404, 'not_found');
+  if (!allowsBlock(plan, 'reviews')) return fail(403, 'plan_required');
   if (!data.allowNew) return fail(403, 'closed');
 
   const input = cleanReviewInput(body, data);

@@ -18,6 +18,18 @@ export const config = {
   // Optional emails to visitors (https://resend.com)
   resendApiKey: process.env.RESEND_API_KEY || '',
   emailFrom: process.env.EMAIL_FROM || '',
+  // Plans & payments
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+  stripePriceId: process.env.STRIPE_PRICE_ID || '', // monthly Pro price (price_…)
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '', // whsec_…
+  paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
+  paypalClientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
+  paypalPlanId: process.env.PAYPAL_PLAN_ID || '', // monthly Pro plan (P-…)
+  paypalWebhookId: process.env.PAYPAL_WEBHOOK_ID || '',
+  paypalMode: process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox',
+  businessContactEmail: process.env.BUSINESS_CONTACT_EMAIL || '',
+  // Key the admin dashboard (Otrelink-Admin) uses to call /api/admin/*
+  adminApiKey: process.env.ADMIN_API_KEY || '',
 };
 
 if (process.env.NODE_ENV === 'production') {

@@ -181,6 +181,37 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 - Badge con reseñas por aprobar y notificación push en cada reseña nueva.
 - Colección `reviews`; las ocultas y pendientes no cuentan en el promedio. Rate limit de 10 reseñas/hora por IP + honeypot.
 
+## 💳 Planes y pagos
+
+| Plan | Qué incluye |
+|---|---|
+| **Free** | 1 página. Sin Embed, Booking, Reviews, Survey ni fondos de foto/video. |
+| **Pro** · $10/mes | 10 páginas y todo lo anterior. |
+| **Business** | Personalizado: páginas y funciones que asignas en **Otrelink-Admin**. |
+
+- Lo que permite cada plan está en `packages/core/src/plans.js` (`PLAN_FEATURES`, `PLANS`).
+- Las cuentas creadas antes de los planes (sin campo `plan`) funcionan como Pro hasta que las cambies en el admin.
+- El servidor hace cumplir los límites: páginas por plan, no deja añadir bloques o fondos bloqueados, y en la página pública oculta lo que el plan del dueño no incluye (tras bajar de plan, nada se borra).
+- Página de planes: `/dashboard/plan`.
+
+### Stripe
+1. Crea el producto **Otrelink Pro** con un precio mensual de $10 → `STRIPE_PRICE_ID` (`price_…`).
+2. `STRIPE_SECRET_KEY` (`sk_…`).
+3. Webhook → `https://TU-APP/api/billing/stripe/webhook` con los eventos `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` → `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
+4. Activa el **Customer portal** en Stripe (Settings → Billing → Customer portal) para que puedan cambiar tarjeta o cancelar.
+
+### PayPal
+1. En developer.paypal.com crea una app (sandbox primero) → `PAYPAL_CLIENT_ID` y `PAYPAL_CLIENT_SECRET`.
+2. Crea un producto y un plan mensual de $10 → `PAYPAL_PLAN_ID` (`P-…`).
+3. Webhook → `https://TU-APP/api/billing/paypal/webhook` con los eventos `BILLING.SUBSCRIPTION.*` y `PAYMENT.SALE.COMPLETED` → `PAYPAL_WEBHOOK_ID`.
+4. `PAYPAL_MODE=sandbox` para probar, `live` en producción.
+
+Si cancelan, conservan Pro hasta el final del periodo pagado; el cron (`/api/cron/reminders`) los pasa luego a su plan anterior. `BUSINESS_CONTACT_EMAIL` es el correo del botón "Contact us".
+
+## 🛡️ Administración (Otrelink-Admin)
+
+Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de esta app, protegida con `ADMIN_API_KEY` (24+ caracteres; vacío = API apagada). Ver su README.
+
 ## 🛰️ API
 
 | Método | Ruta | Auth | Descripción |
@@ -203,7 +234,12 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 | GET · POST | `/api/bookings/calendar` | ✔ | Link privado del calendario · regenerarlo |
 | GET | `/api/calendar/:token` | — | Feed `.ics` |
 | POST | `/api/push/subscribe` · `unsubscribe` · `test` | ✔ | Notificaciones push |
-| GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes |
+| GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes y bajar de plan suscripciones terminadas |
+| POST | `/api/billing/stripe/checkout` · `portal` | ✔ | Pagar Pro con tarjeta · gestionar suscripción |
+| POST | `/api/billing/paypal/checkout` · `cancel` | ✔ | Pagar Pro con PayPal · cancelar |
+| POST | `/api/billing/stripe/webhook` · `/api/billing/paypal/webhook` | firma | Avisos de Stripe / PayPal |
+| GET | `/api/admin/stats` · `/api/admin/users` | `ADMIN_API_KEY` | Admin: estadísticas · usuarios |
+| GET · PATCH · DELETE | `/api/admin/users/:id` | `ADMIN_API_KEY` | Admin: ver, cambiar plan/límites, banear, borrar |
 | POST | `/api/public/survey` | — | Enviar respuestas de una encuesta (CORS, rate limit) |
 | GET · DELETE | `/api/responses?pageId&blockId` · `&format=csv` | ✔ | Conteos · listar · CSV · borrar todas |
 | DELETE | `/api/responses/:id` | ✔ | Borrar una respuesta |

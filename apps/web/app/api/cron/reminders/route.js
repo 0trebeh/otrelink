@@ -9,6 +9,7 @@ import { config } from '@/lib/config';
 import { pushToUser } from '@/lib/notify';
 import { whenText, emailVisitor } from '@/lib/bookings';
 import { handler, json, error } from '@/lib/http';
+import { downgradeEnded } from '@/lib/billing';
 
 const LONGEST = Math.max(...Object.values(REMINDER_PRESETS).flatMap((p) => p.minutes), 0);
 
@@ -54,7 +55,9 @@ async function run(req) {
     await db.bookings.update(b.id, { remindersSent: [...done, ...due] });
     sent++;
   }
-  return json({ ok: true, checked: upcoming.length, reminded: sent, at: new Date(now).toISOString() });
+  // Cancelled subscriptions whose paid period ended go back to their previous plan.
+  const downgraded = await downgradeEnded(db, new Date(now)).catch((err) => { console.error('[otrelink] downgrade failed:', err); return 0; });
+  return json({ ok: true, checked: upcoming.length, reminded: sent, downgraded, at: new Date(now).toISOString() });
 }
 
 export const GET = handler(run);

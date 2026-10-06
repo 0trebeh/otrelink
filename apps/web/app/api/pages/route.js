@@ -1,6 +1,5 @@
 import { createDefaultPage, sanitizePage, sanitizeSlug } from '@otrelink/core';
 import { getDb } from '@/lib/db';
-import { config } from '@/lib/config';
 import { toDashboardPage } from '@/lib/pages';
 import { handler, json, error, readJson, requireUser } from '@/lib/http';
 
@@ -19,7 +18,8 @@ export const POST = handler(async (req) => {
   const slug = sanitizeSlug(body.slug);
   if (!slug) return error(400, 'invalid_slug');
   const db = await getDb();
-  if ((await db.pages.countByUser(user.id)) >= config.pagesPerUser) return error(403, 'page_limit');
+  // Pages allowed by the plan (Free: 1, Pro: 10, Business: set by the admin).
+  if ((await db.pages.countByUser(user.id)) >= user.plan.maxPages) return error(403, 'page_limit', { limit: user.plan.maxPages, plan: user.plan.id });
   try {
     const content = sanitizePage(createDefaultPage({ slug, title: body.title }));
     const page = await db.pages.create({ userId: user.id, slug, ...content });

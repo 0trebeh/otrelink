@@ -1,13 +1,15 @@
 'use client';
-import { useMemo } from 'react';
-import { wallpapers, defaultsFor, contrastRatio, wallpaperBaseColor } from '@otrelink/core';
+import { useMemo, useState } from 'react';
+import { wallpapers, defaultsFor, contrastRatio, wallpaperBaseColor, allowsWallpaper } from '@otrelink/core';
+import { ProChip, UpgradeNote } from '@/components/PlanLock';
 import { Button } from '@/components/ui';
 import { Panel, cx } from '@/components/ui';
 import FieldList from '@/components/fields/FieldList';
 import { tileCss } from './tiles';
 
 export default function WallpaperSection({ ed }) {
-  const { page, set } = ed;
+  const { page, set, plan } = ed;
+  const [lockedPick, setLockedPick] = useState('');
   const current = page.design.wallpaper;
   const mod = wallpapers.resolve(current.type);
 
@@ -34,6 +36,7 @@ export default function WallpaperSection({ ed }) {
           <Button size="sm" variant="dark" onClick={fixText}>Fix text color</Button>
         </div>
       )}
+      {lockedPick && <UpgradeNote>{lockedPick} backgrounds are part of the Pro plan.</UpgradeNote>}
       <Panel title="Wallpaper" description="The background behind your page.">
         <style>{css}</style>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
@@ -41,13 +44,18 @@ export default function WallpaperSection({ ed }) {
             <button
               key={w.id}
               type="button"
-              onClick={() => w.id !== current.type && setWallpaper({ type: w.id, ...defaultsFor(w.fields) })}
+              onClick={() => {
+                if (plan && !allowsWallpaper(plan, w.id)) { setLockedPick(w.label); return; }
+                setLockedPick('');
+                if (w.id !== current.type) setWallpaper({ type: w.id, ...defaultsFor(w.fields) });
+              }}
               aria-pressed={w.id === current.type}
               className="cursor-pointer text-center"
             >
               <span className={cx(`wp-${w.id} relative block aspect-[3/4] rounded-2xl overflow-hidden border-2`, w.id === current.type ? 'border-accent' : 'border-line/60 hover:border-ink/25')}>
                 <span className="tile-bg absolute inset-0 overflow-hidden" />
                 {w.id === 'video' && <span className="absolute inset-0 grid place-items-center text-white text-xl">▶</span>}
+                {plan && !allowsWallpaper(plan, w.id) && <ProChip className="absolute top-1.5 right-1.5" />}
               </span>
               <span className="block text-xs font-medium mt-1.5">{w.label}</span>
             </button>

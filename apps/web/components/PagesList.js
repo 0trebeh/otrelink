@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, ExternalLink, LogOut, Loader2 } from 'lucide-react';
+import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock } from 'lucide-react';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Input, Modal, Logo } from './ui';
 import Preview from './Preview';
@@ -37,6 +37,9 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
         <Logo />
         <div className="flex items-center gap-3">
           <span className="hidden sm:block text-sm text-muted">{user.email}</span>
+          <Link href="/dashboard/plan" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold bg-panel border border-line hover:border-ink/30">
+            <Sparkles size={14} /> {user.plan.label}
+          </Link>
           <InstallButton />
           <Link href="/docs" className="h-8 px-3 inline-flex items-center rounded-full text-[13px] font-semibold hover:bg-panel">Docs</Link>
           <Button size="sm" variant="ghost" onClick={logout}><LogOut size={15} /> Log out</Button>
@@ -46,9 +49,15 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-4xl font-extrabold tracking-tight">Your pages</h1>
-            <p className="text-muted mt-1">{pages.length} of {limit} pages</p>
+            <p className="text-muted mt-1">{pages.length} of {limit} page{limit === 1 ? '' : 's'} · {user.plan.label} plan</p>
           </div>
-          {pages.length < limit && <Button variant="primary" onClick={() => setCreating(true)}><Plus size={17} /> New page</Button>}
+          {pages.length < limit
+            ? <Button variant="primary" onClick={() => setCreating(true)}><Plus size={17} /> New page</Button>
+            : (
+              <Link href="/dashboard/plan" className="inline-flex items-center gap-2 h-10 px-4 rounded-full text-sm font-semibold bg-panel border border-line hover:border-ink/30">
+                <Lock size={15} /> {user.plan.id === 'free' ? 'Upgrade to create more pages' : 'Page limit reached'}
+              </Link>
+            )}
         </div>
 
         {pages.length === 0 ? (

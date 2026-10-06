@@ -29,6 +29,12 @@ const MESSAGES = {
   file_too_large: 'That file is too large.',
   unsupported_type: 'That file type is not supported here.',
   unauthorized: 'Your session expired. Log in again.',
+  plan_required: 'Your plan doesn’t include this. See Plans to upgrade.',
+  account_banned: 'This account is suspended. Contact support if you think this is a mistake.',
+  already_subscribed: 'You already have an active subscription.',
+  stripe_not_configured: 'Card payments are not available yet.',
+  paypal_not_configured: 'PayPal is not available yet.',
+  payment_provider_error: 'The payment service didn’t respond. Try again in a minute.',
 };
 
 export function errorMessage(err) {
@@ -37,6 +43,7 @@ export function errorMessage(err) {
     return `Too many attempts. Try again in ${min} minute${min === 1 ? '' : 's'}.`;
   }
   if (err?.code === 'file_too_large' && err.data?.max) return `That file is too large. The limit is ${Math.round(err.data.max / 1048576)} MB.`;
+  if (err?.code === 'page_limit') return `Your plan allows ${err.data?.limit ?? 1} page${err.data?.limit === 1 ? '' : 's'}. See Plans to create more.`;
   if (err?.code === 'internal_error') return 'The server had a problem. Try again in a moment.';
   return MESSAGES[err?.code] || 'Something went wrong. Try again.';
 }

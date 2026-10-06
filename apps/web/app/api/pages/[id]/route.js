@@ -1,4 +1,4 @@
-import { sanitizePage, sanitizeSlug } from '@otrelink/core';
+import { sanitizePage, sanitizeSlug, countLockedBlocks, allowsWallpaper, featureForWallpaper } from '@otrelink/core';
 import { toDashboardPage } from '@/lib/pages';
 import { handler, json, error, readJson, requireOwnedPage } from '@/lib/http';
 
@@ -9,9 +9,20 @@ export const GET = handler(async (_req, { params }) => {
 
 // Save the whole page (the dashboard edits a draft and saves it in one go).
 export const PUT = handler(async (req, { params }) => {
-  const { db, page } = await requireOwnedPage((await params).id);
+  const { db, page, user } = await requireOwnedPage((await params).id);
   const body = await readJson(req);
   const patch = sanitizePage({ ...page, ...body });
+
+  // Plan limits: you can keep (and edit) what you already have after a
+  // downgrade, but you can't add more locked blocks or switch to a locked background.
+  const plan = user.plan;
+  if (countLockedBlocks(patch.blocks, plan) > countLockedBlocks(sanitizePage(page).blocks, plan)) {
+    return error(403, 'plan_required', { feature: 'blocks' });
+  }
+  const wp = patch.design?.wallpaper?.type;
+  if (wp !== page.design?.wallpaper?.type && !allowsWallpaper(plan, wp)) {
+    return error(403, 'plan_required', { feature: featureForWallpaper(wp) });
+  }
 
   if (body.slug !== undefined && body.slug !== page.slug) {
     const slug = sanitizeSlug(body.slug);

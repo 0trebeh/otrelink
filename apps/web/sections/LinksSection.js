@@ -180,6 +180,7 @@ export default function LinksSection({ ed }) {
         open={adding !== false}
         onClose={() => setAdding(false)}
         onAdd={add}
+        plan={ed.plan}
         title={adding ? `Add to “${blockTitle(findBlock(page.blocks, adding) || {})}”` : undefined}
       />
     </div>

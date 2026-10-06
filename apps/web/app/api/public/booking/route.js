@@ -7,6 +7,8 @@ import {
   newCancelToken, tokenMatches, blockDataFor,
 } from '@/lib/bookings';
 import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
+import { ownerPlan } from '@/lib/plans';
+import { allowsBlock } from '@otrelink/core';
 
 const clean = (v, max) => String(v ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, max);
 
@@ -31,6 +33,9 @@ export const POST = handler(async (req) => {
   const ctx = await loadBookingBlock(db, body.pageId, body.blockId);
   if (!ctx || !ctx.page.settings?.published) return fail(404, 'not_found');
   const { page, block, data } = ctx;
+  const plan = await ownerPlan(db, page);
+  if (!plan) return fail(404, 'not_found');
+  if (!allowsBlock(plan, 'booking')) return fail(403, 'plan_required');
 
   const service = pickService(data, body.serviceId);
   const start = new Date(body.start);

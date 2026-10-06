@@ -1,7 +1,9 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Undo2, Redo2, ExternalLink, Eye, X, Loader2, Check, RotateCcw, BookOpen } from 'lucide-react';
+import { ArrowLeft, Undo2, Redo2, ExternalLink, Eye, X, Loader2, Check, RotateCcw, BookOpen, Lock } from 'lucide-react';
+import { allowsSection, featureForSection } from '@otrelink/core';
+import { LockedSection } from '../PlanLock';
 import { api, errorMessage } from '@/lib/client';
 import { sections } from '@/sections';
 import { Button, IconButton, cx } from '../ui';
@@ -11,7 +13,7 @@ import { useHistory } from './useHistory';
 const contentOf = (p) => JSON.stringify({ s: p.slug, a: p.profile, b: p.socials, c: p.blocks, d: p.design, e: p.settings });
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
-export default function Editor({ initialPage, pageUrl }) {
+export default function Editor({ initialPage, pageUrl, plan }) {
   const { page, set, undo, redo, reset, canUndo, canRedo } = useHistory(initialPage);
   const [saved, setSaved] = useState(() => ({ json: contentOf(initialPage), slug: initialPage.slug }));
   const [saving, setSaving] = useState(false);
@@ -107,8 +109,9 @@ export default function Editor({ initialPage, pageUrl }) {
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending }), [page, set, pageUrl, saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending]);
+  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending, plan }), [page, set, pageUrl, saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending, plan]);
   const Section = section.Component;
+  const sectionLocked = (id) => !allowsSection(plan, id);
   const liveUrl = `${pageUrl}/${saved.slug}`;
 
   return (
@@ -154,7 +157,8 @@ export default function Editor({ initialPage, pageUrl }) {
                   className={cx('w-full flex items-center gap-2.5 h-10 px-3 rounded-xl text-sm font-medium cursor-pointer transition-colors', tab === s.id ? 'bg-panel text-ink shadow-sm' : 'text-muted hover:text-ink hover:bg-panel/60')}
                 >
                   <s.icon size={17} /> {s.label}
-                  {s.badge && ed[s.badge] > 0 && <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-accent text-white text-[11px] font-bold grid place-items-center">{ed[s.badge]}</span>}
+                  {sectionLocked(s.id) && <Lock size={13} className="ml-auto text-muted/70" aria-label="Pro" />}
+                  {s.badge && !sectionLocked(s.id) && ed[s.badge] > 0 && <span className="ml-auto min-w-5 h-5 px-1.5 rounded-full bg-accent text-white text-[11px] font-bold grid place-items-center">{ed[s.badge]}</span>}
                 </button>
               </li>
             ))}
@@ -164,7 +168,7 @@ export default function Editor({ initialPage, pageUrl }) {
         {/* Section content */}
         <main className="px-3 sm:px-6 py-6 pb-32 lg:pb-12">
           <div className={cx('mx-auto', section.wide ? 'max-w-4xl' : 'max-w-2xl')}>
-            <Section ed={ed} />
+            {sectionLocked(section.id) ? <LockedSection feature={featureForSection(section.id)} plan={plan} /> : <Section ed={ed} />}
           </div>
         </main>
 
@@ -184,7 +188,7 @@ export default function Editor({ initialPage, pageUrl }) {
             <li key={s.id} className="shrink-0">
               <button type="button" onClick={() => go(s.id)} aria-current={tab === s.id ? 'page' : undefined}
                 className={cx('flex flex-col items-center gap-0.5 w-[68px] py-1.5 rounded-2xl text-[11px] font-medium cursor-pointer', tab === s.id ? 'bg-accent-soft text-accent-ink' : 'text-muted')}>
-                <span className="relative"><s.icon size={19} />{s.badge && ed[s.badge] > 0 && <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[10px] font-bold grid place-items-center">{ed[s.badge]}</span>}</span> {s.label}
+                <span className="relative"><s.icon size={19} />{sectionLocked(s.id) && <Lock size={10} className="absolute -top-1 -right-2" />}{s.badge && !sectionLocked(s.id) && ed[s.badge] > 0 && <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-accent text-white text-[10px] font-bold grid place-items-center">{ed[s.badge]}</span>}</span> {s.label}
               </button>
             </li>
           ))}

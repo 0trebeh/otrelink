@@ -42,6 +42,8 @@ export async function createMongoDriver() {
     [pushSubs, { endpoint: 1 }, { unique: true }],
     [pushSubs, { userId: 1 }, {}],
     [users, { calendarToken: 1 }, { sparse: true }],
+    [users, { 'billing.subscriptionId': 1 }, { sparse: true }],
+    [users, { createdAt: -1 }, {}],
     [responses, { pageId: 1, blockId: 1, createdAt: -1 }, {}],
     [reviews, { pageId: 1, blockId: 1, status: 1, createdAt: -1 }, {}],
   ];
@@ -68,6 +70,57 @@ export async function createMongoDriver() {
         const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...user };
         await users.insertOne(doc);
         return out(doc);
+      },
+      findBySubscription: async (id) => (id ? out(await users.findOne({ 'billing.subscriptionId': id })) : null),
+      // Cancelled subscriptions whose paid period is over (still on Pro).
+      listBillingEnded: async (nowIso) => (await users.find({
+        plan: 'pro', 'billing.status': 'canceled', 'billing.downgraded': { $ne: true }, 'billing.endsAt': { $lte: nowIso },
+      }).limit(500).toArray()).map(out),
+      // Admin: search + filters. plan 'pro' includes accounts from before plans (no plan field).
+      list: async ({ q = '', plan = '', status = '', skip = 0, limit = 50 } = {}) => {
+        const and = [];
+        const s = q.trim().toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (s) and.push({ $or: [{ email: { $regex: s } }, { name: { $regex: s, $options: 'i' } }] });
+        if (plan === 'pro') and.push({ $or: [{ plan: 'pro' }, { plan: { $exists: false } }] });
+        else if (plan) and.push({ plan });
+        if (status === 'banned') and.push({ banned: true });
+        else if (status === 'paying') and.push({ 'billing.status': { $in: ['active', 'past_due'] } });
+        else if (status === 'active') and.push({ banned: { $ne: true } });
+        const q2 = and.length ? { $and: and } : {};
+        const [rows, total] = await Promise.all([
+          users.find(q2, { projection: { passwordHash: 0 } }).sort({ createdAt: -1 }).skip(skip).limit(limit).toArray(),
+          users.countDocuments(q2),
+        ]);
+        return { users: rows.map(out), total };
+      },
+      stats: async (sinceIso) => {
+        const [facet] = await users.aggregate([{ $facet: {
+          plans: [{ $group: { _id: { $ifNull: ['$plan', 'pro'] }, n: { $sum: 1 } } }],
+          banned: [{ $match: { banned: true } }, { $count: 'n' }],
+          paying: [{ $match: { 'billing.status': { $in: ['active', 'past_due'] } } }, { $group: { _id: '$billing.provider', n: { $sum: 1 } } }],
+          signups: [{ $match: { createdAt: { $gte: sinceIso } } }, { $group: { _id: { $substr: ['$createdAt', 0, 10] }, n: { $sum: 1 } } }],
+          total: [{ $count: 'n' }],
+        } }]).toArray();
+        const byPlan = { free: 0, pro: 0, business: 0 };
+        for (const r of facet.plans) byPlan[r._id] = r.n;
+        const byProvider = { stripe: 0, paypal: 0 };
+        for (const r of facet.paying) byProvider[r._id] = r.n;
+        return {
+          total: facet.total[0]?.n || 0, byPlan, banned: facet.banned[0]?.n || 0,
+          paying: facet.paying.reduce((s, r) => s + r.n, 0), byProvider,
+          signups: Object.fromEntries(facet.signups.map((r) => [r._id, r.n])),
+          pages: await pages.estimatedDocumentCount(),
+        };
+      },
+      // Delete an account and everything it owns.
+      remove: async (id) => {
+        const pageIds = (await pages.find({ userId: id }, { projection: { _id: 1 } }).toArray()).map((p) => p._id);
+        await Promise.all([
+          pages.deleteMany({ userId: id }), assets.deleteMany({ userId: id }), pushSubs.deleteMany({ userId: id }),
+          events.deleteMany({ pageId: { $in: pageIds } }), bookings.deleteMany({ pageId: { $in: pageIds } }),
+          responses.deleteMany({ pageId: { $in: pageIds } }), reviews.deleteMany({ pageId: { $in: pageIds } }),
+        ]);
+        await users.deleteOne({ _id: id });
       },
     },
     pages: {

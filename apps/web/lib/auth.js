@@ -3,6 +3,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { config } from './config.js';
 import { getDb } from './db/index.js';
+import { resolvePlan } from '@otrelink/core';
 
 const COOKIE = 'ol_session';
 const key = new TextEncoder().encode(config.jwtSecret);
@@ -38,12 +39,18 @@ export async function getUser() {
     const { payload } = await jwtVerify(token, key);
     const db = await getDb();
     const user = await db.users.findById(payload.sub);
-    return user ? publicUser(user) : null;
+    // Banned accounts lose their sessions right away.
+    return user && !user.banned ? publicUser(user) : null;
   } catch {
     return null;
   }
 }
 
 export function publicUser(u) {
-  return { id: u.id, email: u.email, name: u.name || '' };
+  const p = resolvePlan(u);
+  return {
+    id: u.id, email: u.email, name: u.name || '',
+    plan: { id: p.id, label: p.label, maxPages: p.maxPages, features: p.features, custom: Boolean(p.custom) },
+    billing: u.billing ? { provider: u.billing.provider, status: u.billing.status, currentPeriodEnd: u.billing.currentPeriodEnd || null } : null,
+  };
 }

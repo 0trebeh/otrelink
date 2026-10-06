@@ -28,6 +28,7 @@ const toc = [
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
+  { id: 'plans', label: 'Plans' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
@@ -300,6 +301,17 @@ export default function DocsPage() {
               <li>Reviews are anonymous (no account needed), so anyone with your link can write one. Use “I approve each one” if you get spam.</li>
             </ul>
           </Warning>
+
+          <H2 id="plans">Plans</H2>
+          <Table
+            head={['Plan', 'What it includes']}
+            rows={[
+              ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
+              ['Pro · $10/month', 'Up to 10 pages, Embeds, Booking & agenda, Reviews, Surveys and photo or video backgrounds.'],
+              ['Business', 'Custom number of pages and features, set up with the Otrelink team.'],
+            ]}
+          />
+          <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal; you can cancel any time and keep Pro until the end of the period you paid. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>
 
           <H2 id="sharing">Sharing &amp; analytics</H2>
           <P>In <i>Settings</i> you can copy your link, download a QR code, change your username, add an SEO title, description and sharing image, hide the page, hide the footer, or show a sensitive-content warning.</P>

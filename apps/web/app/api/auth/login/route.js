@@ -10,6 +10,7 @@ export const POST = handler(async (req) => {
   const user = await db.users.findByEmail(String(email || '').trim().toLowerCase());
   const ok = user && (await bcrypt.compare(String(password || ''), user.passwordHash || ''));
   if (!ok) return error(401, 'invalid_credentials');
+  if (user.banned) return error(403, 'account_banned');
   await createSession(user);
   return json({ user: publicUser(user) });
 });

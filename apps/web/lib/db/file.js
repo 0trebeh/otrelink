@@ -40,6 +40,43 @@ export async function createFileDriver() {
         await persist();
         return clone(doc);
       },
+      findBySubscription: async (id) => clone(state.users.find((u) => id && u.billing?.subscriptionId === id)),
+      // Cancelled subscriptions whose paid period is over (still on Pro).
+      listBillingEnded: async (nowIso) => clone(state.users.filter((u) => u.plan === 'pro' && u.billing?.status === 'canceled'
+        && !u.billing.downgraded && u.billing.endsAt && u.billing.endsAt <= nowIso)),
+      // Admin: search + filters. plan 'pro' includes accounts from before plans (no plan field).
+      list: async ({ q = '', plan = '', status = '', skip = 0, limit = 50 } = {}) => {
+        const s = q.trim().toLowerCase();
+        const rows = state.users
+          .filter((u) => (!s || u.email.includes(s) || (u.name || '').toLowerCase().includes(s))
+            && (!plan || (u.plan || 'pro') === plan)
+            && (!status || (status === 'banned' ? u.banned : status === 'paying' ? ['active', 'past_due'].includes(u.billing?.status) : !u.banned)))
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        return { users: clone(rows.slice(skip, skip + limit)), total: rows.length };
+      },
+      stats: async (sinceIso) => {
+        const byPlan = { free: 0, pro: 0, business: 0 };
+        let banned = 0; let paying = 0; const byProvider = { stripe: 0, paypal: 0 }; const signups = {};
+        for (const u of state.users) {
+          byPlan[u.plan || 'pro'] = (byPlan[u.plan || 'pro'] || 0) + 1;
+          if (u.banned) banned++;
+          if (['active', 'past_due'].includes(u.billing?.status)) { paying++; byProvider[u.billing.provider] = (byProvider[u.billing.provider] || 0) + 1; }
+          if (u.createdAt >= sinceIso) { const d = u.createdAt.slice(0, 10); signups[d] = (signups[d] || 0) + 1; }
+        }
+        return { total: state.users.length, byPlan, banned, paying, byProvider, signups, pages: state.pages.length };
+      },
+      // Delete an account and everything it owns.
+      remove: async (id) => {
+        const pageIds = new Set(state.pages.filter((p) => p.userId === id).map((p) => p.id));
+        const assetIds = state.assets.filter((a) => a.userId === id).map((a) => a.id);
+        for (const a of assetIds) await fs.rm(path.join(ASSETS, a), { force: true });
+        state.users = state.users.filter((u) => u.id !== id);
+        state.pages = state.pages.filter((p) => p.userId !== id);
+        state.assets = state.assets.filter((a) => a.userId !== id);
+        state.push = state.push.filter((p) => p.userId !== id);
+        for (const k of ['events', 'bookings', 'responses', 'reviews']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
+        await persist();
+      },
     },
     pages: {
       listByUser: async (userId) => clone(state.pages.filter((p) => p.userId === userId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))),

@@ -24,6 +24,14 @@ export function handler(fn) {
   };
 }
 
+/** Run a call to Stripe/PayPal; turn their failures into a clear 502. */
+export async function provider(fn) {
+  try { return await fn(); } catch (err) {
+    console.error('[otrelink] payment provider error:', err.message);
+    throw Object.assign(new HttpError(502, 'payment_provider_error'), { cause: err });
+  }
+}
+
 export class HttpError extends Error {
   constructor(status, code) { super(code); this.status = status; this.code = code; }
 }

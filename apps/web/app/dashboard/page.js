@@ -10,5 +10,5 @@ export default async function DashboardHome() {
   const user = await getUser();
   const db = await getDb();
   const pages = (await db.pages.listByUser(user.id)).map(toDashboardPage);
-  return <PagesList user={user} pages={pages} pageUrl={config.pageUrl} limit={config.pagesPerUser} />;
+  return <PagesList user={user} pages={pages} pageUrl={config.pageUrl} limit={user.plan.maxPages} />;
 }

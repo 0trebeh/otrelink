@@ -19,7 +19,7 @@ export const POST = handler(async (req) => {
   if (await db.users.findByEmail(email)) return error(409, 'email_taken');
   if (await db.pages.findBySlug(slug)) return error(409, 'slug_taken');
 
-  const user = await db.users.create({ email, name: String(body.name || '').slice(0, 60), passwordHash: await bcrypt.hash(password, 10) });
+  const user = await db.users.create({ email, name: String(body.name || '').slice(0, 60), passwordHash: await bcrypt.hash(password, 10), plan: 'free' });
   const content = sanitizePage(createDefaultPage({ slug, title: body.name ? String(body.name) : `@${slug}` }));
   const page = await db.pages.create({ userId: user.id, slug, ...content });
 

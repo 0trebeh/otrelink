@@ -296,3 +296,20 @@ test('embed: plain iframes are rebuilt, other code is sandboxed, both can be a b
   assert.ok(html.includes('srcdoc="&lt;!doctype html&gt;'));
   assert.ok(html.includes('<details class="ol-toggle"') && html.includes('Book a call') && html.includes('See on the map'));
 });
+
+test('plans: legacy users are Pro, Free locks features, Business limits are editable', async () => {
+  const { resolvePlan, allowsBlock, allowsWallpaper, allowsSection, countLockedBlocks, stripLockedBlocks, sanitizeLimits } = await import('../src/index.js');
+  const legacy = resolvePlan({ id: 'u' });
+  assert.equal(legacy.id, 'pro'); assert.equal(legacy.maxPages, 10);
+  const free = resolvePlan({ plan: 'free' });
+  assert.equal(free.maxPages, 1);
+  assert.ok(!allowsBlock(free, 'booking') && !allowsBlock(free, 'embed') && allowsBlock(free, 'link') && allowsBlock(free, 'collection'));
+  assert.ok(!allowsWallpaper(free, 'image') && !allowsWallpaper(free, 'video') && allowsWallpaper(free, 'gradient'));
+  assert.ok(!allowsSection(free, 'agenda') && allowsSection(free, 'analytics') && allowsSection(free, 'settings'));
+  const biz = resolvePlan({ plan: 'business', limits: sanitizeLimits({ maxPages: '25', features: { booking: false, junk: true } }) });
+  assert.equal(biz.maxPages, 25); assert.ok(!allowsBlock(biz, 'booking') && allowsBlock(biz, 'reviews'));
+  const blocks = [{ type: 'link' }, { type: 'collection', children: [{ type: 'survey' }, { type: 'embed' }] }, { type: 'booking' }];
+  assert.equal(countLockedBlocks(blocks, free), 3);
+  assert.deepEqual(JSON.parse(JSON.stringify(stripLockedBlocks(blocks, free))), [{ type: 'link' }, { type: 'collection', children: [] }]);
+  assert.equal(resolvePlan(null).id, 'free');
+});

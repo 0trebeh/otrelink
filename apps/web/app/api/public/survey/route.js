@@ -3,6 +3,8 @@ import { findBlock, sanitizeBlock, validateAnswers, answerText } from '@otrelink
 import { getDb } from '@/lib/db';
 import { pushToUser } from '@/lib/notify';
 import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
+import { ownerPlan } from '@/lib/plans';
+import { allowsBlock } from '@otrelink/core';
 
 // A visitor answers a Survey block. Public (used by the link page).
 export const POST = handler(async (req) => {
@@ -22,6 +24,9 @@ export const POST = handler(async (req) => {
   const found = page && findBlock(page.blocks || [], String(body.blockId || '').slice(0, 64));
   if (!page?.settings?.published || !found || found.type !== 'survey' || !found.enabled) return fail(404, 'not_found');
   const block = sanitizeBlock(found);
+  const plan = await ownerPlan(db, page);
+  if (!plan) return fail(404, 'not_found');
+  if (!allowsBlock(plan, 'survey')) return fail(403, 'plan_required');
 
   const { answers, errors } = validateAnswers(block.data.questions, body.answers && typeof body.answers === 'object' ? body.answers : {});
   if (errors.length) return fail(422, 'invalid_answers', { errors });
