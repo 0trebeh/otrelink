@@ -26,6 +26,10 @@ export const designGroups = [
       { key: 'buttonBorderColor', type: 'color', label: 'Border / accent color', default: '#111111' },
       { key: 'buttonBorderWidth', type: 'range', label: 'Border width', min: 0, max: 4, default: 0, unit: 'px' },
       { key: 'buttonShadowColor', type: 'color', label: 'Shadow color', default: '#00000040' },
+      { key: 'buttonGlassOpacity', type: 'range', label: 'Glass opacity', min: 0, max: 100, step: 2, default: 22, unit: '%',
+        showIf: { key: 'buttonStyle', equals: 'glass' }, help: 'How much of the button color covers the glass.' },
+      { key: 'buttonGlassBlur', type: 'range', label: 'Glass blur', min: 0, max: 40, default: 14, unit: 'px',
+        showIf: { key: 'buttonStyle', equals: 'glass' }, help: 'How blurred the background looks through the button.' },
       { key: 'buttonHeight', type: 'range', label: 'Height', min: 40, max: 80, default: 56, unit: 'px' },
       { key: 'buttonHover', type: 'select', label: 'Hover effect', default: 'lift', options: () => buttonHovers.options() },
       { key: 'buttonAlign', type: 'select', label: 'Text alignment', default: 'center', options: ['center', 'left'] },
@@ -122,6 +126,15 @@ export function resolveDesign(design = {}) {
   return { ...base, ...design, wallpaper: { ...wpDefaults, ...(design.wallpaper || {}), type: wpType } };
 }
 
+/** Glass button variables (opacity in %, blur in px). The edge is a bit stronger than the fill. */
+export function glassVars(opacity, blur) {
+  const a = Math.min(100, Math.max(0, Number(opacity)));
+  const out = [];
+  if (Number.isFinite(a)) out.push(`--ol-glass-alpha:${a}%`, `--ol-glass-edge:${Math.min(100, Math.round(a * 1.6 + 10))}%`);
+  if (Number.isFinite(Number(blur))) out.push(`--ol-glass-blur:${Math.min(60, Math.max(0, Number(blur)))}px`);
+  return out.length ? out.join(';') + ';' : '';
+}
+
 /** Design -> CSS custom properties on .ol-root */
 export function designCss(d) {
   const font = (id) => fonts.resolve(id).stack;
@@ -129,6 +142,7 @@ export function designCss(d) {
     + `--ol-btn-bg:${d.buttonColor};--ol-btn-fg:${d.buttonTextColor};--ol-btn-border:${d.buttonBorderColor};`
     + `--ol-btn-bw:${d.buttonBorderWidth}px;--ol-btn-shadow:${d.buttonShadowColor};--ol-btn-radius:${d.buttonRadius >= 40 ? 999 : d.buttonRadius}px;`
     + `--ol-btn-h:${d.buttonHeight}px;--ol-btn-align:${d.buttonAlign};--ol-btn-transform:${d.buttonTransform};`
+    + glassVars(d.buttonGlassOpacity, d.buttonGlassBlur)
     + `--ol-title-font:${font(d.titleFont)};--ol-body-font:${font(d.bodyFont)};`
     + `--ol-title-color:${d.titleColor};--ol-text-color:${d.textColor};--ol-title-size:${d.titleSize}px;--ol-title-weight:${d.titleWeight};--ol-body-size:${d.bodySize}px;`
     + `--ol-avatar-size:${d.avatarSize}px;--ol-avatar-bw:${d.avatarBorderWidth}px;--ol-avatar-bc:${d.avatarBorderColor};`
@@ -182,6 +196,9 @@ export const cssVariables = [
   { name: '--ol-btn-bw', setting: 'buttonBorderWidth', description: 'Button border width.' },
   { name: '--ol-btn-shadow', setting: 'buttonShadowColor', description: 'Button shadow color.' },
   { name: '--ol-btn-radius', setting: 'buttonRadius', description: 'Button corner radius (999px = pill).' },
+  { name: '--ol-glass-alpha', setting: 'buttonGlassOpacity', description: 'Glass buttons: how much color covers the glass (%).' },
+  { name: '--ol-glass-edge', setting: 'buttonGlassOpacity', description: 'Glass buttons: border opacity (follows Glass opacity).' },
+  { name: '--ol-glass-blur', setting: 'buttonGlassBlur', description: 'Glass buttons: background blur.' },
   { name: '--ol-btn-h', setting: 'buttonHeight', description: 'Minimum button height.' },
   { name: '--ol-btn-align', setting: 'buttonAlign', description: 'Button text alignment (center | left).' },
   { name: '--ol-btn-transform', setting: 'buttonTransform', description: 'Button text case (none | uppercase | lowercase).' },

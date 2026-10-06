@@ -24,6 +24,9 @@ export const fonts = createRegistry('fonts', [
   { id: 'space-mono', label: 'Space Mono', stack: "'Space Mono', monospace", google: 'Space+Mono:wght@400;700', category: 'Mono' },
   { id: 'caveat', label: 'Caveat', stack: "'Caveat', cursive", google: 'Caveat:wght@400;700', category: 'Handwriting' },
   { id: 'pacifico', label: 'Pacifico', stack: "'Pacifico', cursive", google: 'Pacifico', category: 'Handwriting' },
+  { id: 'bangers', label: 'Bangers', stack: "'Bangers', 'Impact', sans-serif", google: 'Bangers', category: 'Display' },
+  { id: 'permanent-marker', label: 'Permanent Marker', stack: "'Permanent Marker', cursive", google: 'Permanent+Marker', category: 'Handwriting' },
+  { id: 'rubik', label: 'Rubik', stack: "'Rubik', sans-serif", google: 'Rubik:wght@400;500;700;800;900', category: 'Sans' },
   { id: 'press-start', label: 'Press Start 2P', stack: "'Press Start 2P', monospace", google: 'Press+Start+2P', category: 'Display' },
 ]);
 

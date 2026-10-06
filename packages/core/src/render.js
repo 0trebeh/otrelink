@@ -3,8 +3,8 @@
 // both always look exactly the same.
 
 import { adjustedImg } from './util/image.js';
-import { blockTypes } from './blocks/index.js';
-import { buttonStyles, buttonHovers } from './buttons/index.js';
+import { blockTypes, blockStyleOf } from './blocks/index.js';
+import { buttonStyles, buttonHovers, scopedButtonCss } from './buttons/index.js';
 import { wallpapers } from './wallpapers/index.js';
 import { attentionAnimations, entranceAnimations } from './animations.js';
 import { googleFontsHref } from './fonts.js';
@@ -121,6 +121,7 @@ export function renderPage(page, opts = {}) {
   const d = resolveDesign(page.design);
   const usedTypes = new Set();
   const usedAnims = new Set();
+  const usedBlockButtons = new Set(); // button styles used by blocks with their own style
 
   // Renders a list of blocks. Containers (collections) get their rendered
   // children in ctx.children, plus ctx.container for children to adapt their look.
@@ -147,8 +148,13 @@ export function renderPage(page, opts = {}) {
         console.error(`[otrelink] block "${block.type}" failed to render`, err);
         return '';
       }
-      const cls = ['ol-block', `ol-b-${mod.type}`, depth === 0 && 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled'].filter(Boolean).join(' ');
-      return `<div class="${cls}" data-block-id="${esc(block.id)}" data-block-type="${esc(mod.type)}">${inner}</div>`;
+      // A block's own style: CSS variables on its wrapper (+ a class for its button style).
+      const own = blockStyleOf(block.options);
+      if (own?.buttonStyle) usedBlockButtons.add(`${own.buttonStyle}:${depth}`);
+      const cls = ['ol-block', `ol-b-${mod.type}`, depth === 0 && 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled',
+        own && 'ol-styled', own?.buttonStyle && `ol-bs-${own.buttonStyle}`].filter(Boolean).join(' ');
+      const style = own?.vars ? ` style="${esc(own.vars)}"` : '';
+      return `<div class="${cls}" data-block-id="${esc(block.id)}" data-block-type="${esc(mod.type)}"${style}>${inner}</div>`;
     })
     .join('');
   const blocksHtml = renderBlocks(page.blocks, 0, null);
@@ -176,6 +182,8 @@ export function renderPage(page, opts = {}) {
     entrance ? entranceAnimations.resolve(d.entrance).css : '',
     ...[...usedTypes].map((t) => blockTypes.get(t).css || ''),
     ...[...usedAnims].map((a) => attentionAnimations.get(a)?.css || ''),
+    // Deeper blocks repeat .ol-styled so a block inside a styled collection wins over it.
+    ...[...usedBlockButtons].map((k) => { const [id, depth] = k.split(':'); return scopedButtonCss(id, `.ol-bs-${id}${'.ol-styled'.repeat(Number(depth) + 1)}`); }),
     d.customCss || '',
   ].join('\n');
 

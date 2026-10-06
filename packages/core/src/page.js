@@ -9,7 +9,7 @@
 //   settings:{ published, seoTitle, seoDescription, ogImage, hideFooter, sensitive, sensitiveMessage }
 // }
 
-import { blockTypes, commonBlockFields } from './blocks/index.js';
+import { blockTypes, commonBlockFields, blockStyleFields } from './blocks/index.js';
 import { socials } from './socials.js';
 import { themes } from './themes.js';
 import { defaultsFor, sanitizeFields } from './fields.js';
@@ -77,6 +77,14 @@ export function cloneBlock(block) {
 
 const MAX_BLOCKS = 300;
 
+/** Block options: animation, schedule and the block's own style (only non-empty style values are kept). */
+function sanitizeOptions(input = {}) {
+  const options = sanitizeFields(commonBlockFields, input);
+  const style = sanitizeFields(blockStyleFields, input);
+  for (const [k, v] of Object.entries(style)) if (v !== '') options[k] = v;
+  return options;
+}
+
 /**
  * Sanitize one block (and its children, for containers).
  * `state.count` limits the total number of blocks in a page.
@@ -86,7 +94,7 @@ export function sanitizeBlock(b, depth = 0, state = { count: 0 }) {
   state.count++;
   const id = String(b.id || '').slice(0, 40) || uid('b');
   let mod = blockTypes.get(b.type);
-  const options = sanitizeFields(commonBlockFields, b.options || {});
+  const options = sanitizeOptions(b.options);
   if (!mod) {
     // Type was removed from the registry: keep the data untouched (hidden on the page)
     // so re-adding the module brings it back.

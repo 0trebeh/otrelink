@@ -393,3 +393,33 @@ test('catalog: prices, discount, stock, WhatsApp order and plan lock', async () 
   const btn = blockTypes.get('catalog').render(sanitizeBlock({ id: 'd', type: 'catalog', data: {} }).data, { blockId: 'd' });
   assert.ok(btn.startsWith('<details class="ol-toggle ol-cat-toggle"'));
 });
+
+// ── Themes, button styles and per-block style ───────────────────────────
+test('new themes and button styles are registered', async () => {
+  const { themes, buttonStyles, applyTheme, resolveDesign, renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  for (const id of ['cel', 'punk', 'art-pop', 'dark', '3d']) assert.ok(themes.get(id), id);
+  for (const id of ['3d', 'cel', 'pop', 'punk', 'soft-ui', 'double', 'sticker', 'dashed']) assert.ok(buttonStyles.get(id), id);
+  const page = sanitizePage(createDefaultPage({ slug: 'x', title: 'X' }));
+  page.design = applyTheme(resolveDesign({}), 'punk');
+  assert.ok(renderPage(page).css.includes('clip-path:polygon'));
+});
+
+test('glass opacity and blur become CSS variables', async () => {
+  const { designCss, resolveDesign } = await import('../src/index.js');
+  const css = designCss(resolveDesign({ buttonStyle: 'glass', buttonGlassOpacity: 40, buttonGlassBlur: 6 }));
+  assert.ok(css.includes('--ol-glass-alpha:40%') && css.includes('--ol-glass-blur:6px'));
+});
+
+test('a block can have its own style', async () => {
+  const { renderPage, createDefaultPage, sanitizePage, hasBlockStyle } = await import('../src/index.js');
+  const page = sanitizePage(createDefaultPage({ slug: 'x', title: 'X' }));
+  page.blocks[0].options = { ...page.blocks[0].options, stButtonStyle: 'glass', stGlassOpacity: '50', stButtonColor: '#ff0000', stTextColor: 'bad' };
+  const clean = sanitizePage(page);
+  const o = clean.blocks[0].options;
+  assert.equal(o.stButtonColor, '#ff0000');
+  assert.equal(o.stTextColor, undefined); // invalid colors are dropped
+  assert.ok(hasBlockStyle(o) && !hasBlockStyle(clean.blocks[1]?.options || {}));
+  const { html, css } = renderPage(clean);
+  assert.ok(html.includes('ol-styled ol-bs-glass') && html.includes('--ol-btn-bg:#ff0000') && html.includes('--ol-glass-alpha:50%'));
+  assert.ok(css.includes('.ol-root .ol-bs-glass.ol-styled .ol-btn{'));
+});

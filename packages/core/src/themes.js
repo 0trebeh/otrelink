@@ -113,4 +113,64 @@ export const themes = createRegistry('themes', [
       surfaceColor: '#fff4eacc', surfaceTextColor: '#3a0f2a', headerLayout: 'classic',
     },
   },
+  {
+    id: 'cel', label: 'Cel shading',
+    // Cartoon look: flat colors, two-tone buttons with a thick ink outline.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'linear', from: '#7dd3fc', via: 'transparent', to: '#c4b5fd', angle: 180 },
+      buttonStyle: 'cel', buttonColor: '#ffd43b', buttonTextColor: '#1a1a1a', buttonBorderColor: '#1a1a1a', buttonBorderWidth: 3,
+      buttonShadowColor: '#1a1a1a', buttonRadius: 18, buttonHover: 'shift',
+      titleFont: 'rubik', bodyFont: 'rubik', titleWeight: '800', titleColor: '#1a1a1a', textColor: '#23233a', socialsColor: '#1a1a1a',
+      surfaceColor: '#ffffff', surfaceTextColor: '#1a1a1a', surfaceRadius: 18, headerLayout: 'classic',
+      avatarBorderWidth: 4, avatarBorderColor: '#1a1a1a',
+    },
+  },
+  {
+    id: 'punk', label: 'Punk',
+    // Black wall, ripped hot-pink flyers and marker titles.
+    design: {
+      wallpaper: { type: 'pattern', pattern: 'stripes', bg: '#0d0d0d', fg: '#181818', size: 26 },
+      buttonStyle: 'punk', buttonColor: '#ff2d95', buttonTextColor: '#0d0d0d', buttonBorderColor: '#f9f871', buttonRadius: 0,
+      buttonHover: 'none', buttonTransform: 'uppercase',
+      titleFont: 'permanent-marker', bodyFont: 'space-mono', titleWeight: '400', titleSize: 30, titleColor: '#f9f871', textColor: '#e5e5e5',
+      socialsColor: '#ff2d95', surfaceColor: '#1a1a1a', surfaceTextColor: '#f5f5f5', surfaceRadius: 0, headerLayout: 'classic',
+      avatarShape: 'square', avatarBorderWidth: 3, avatarBorderColor: '#f9f871',
+    },
+  },
+  {
+    id: 'art-pop', label: 'Art pop',
+    // Comic-book halftones, primary colors and bold outlines.
+    design: {
+      wallpaper: { type: 'pattern', pattern: 'dots', bg: '#ffde00', fg: '#ff3b7f', size: 16 },
+      buttonStyle: 'pop', buttonColor: '#00b4ff', buttonTextColor: '#111111', buttonBorderColor: '#111111', buttonBorderWidth: 3,
+      buttonShadowColor: '#ff2d6f', buttonRadius: 6, buttonHover: 'grow', buttonTransform: 'uppercase',
+      titleFont: 'bangers', bodyFont: 'poppins', titleWeight: '400', titleSize: 38, titleColor: '#111111', textColor: '#111111',
+      socialsColor: '#111111', surfaceColor: '#ffffff', surfaceTextColor: '#111111', surfaceRadius: 6, headerLayout: 'classic',
+      avatarBorderWidth: 4, avatarBorderColor: '#111111',
+    },
+  },
+  {
+    id: 'dark', label: 'Dark',
+    // Clean dark mode: deep grays, soft borders and a violet accent.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'radial', from: '#1f1f26', via: 'transparent', to: '#09090b', angle: 0 },
+      buttonStyle: 'fill', buttonColor: '#1c1c22', buttonTextColor: '#fafafa', buttonBorderColor: '#2f2f38', buttonBorderWidth: 1,
+      buttonShadowColor: '#00000066', buttonRadius: 14, buttonHover: 'lift',
+      titleFont: 'manrope', bodyFont: 'manrope', titleWeight: '800', titleColor: '#fafafa', textColor: '#a1a1aa', socialsColor: '#c4b5fd',
+      surfaceColor: '#17171c', surfaceTextColor: '#e4e4e7', surfaceRadius: 16, headerLayout: 'classic',
+      avatarBorderWidth: 2, avatarBorderColor: '#8b5cf6',
+    },
+  },
+  {
+    id: '3d', label: '3D',
+    // Chunky buttons with depth that press down, on a soft pastel gradient.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'linear', from: '#a5b4fc', via: '#f0abfc', to: '#fbcfe8', angle: 160 },
+      buttonStyle: '3d', buttonColor: '#6366f1', buttonTextColor: '#ffffff', buttonBorderColor: '#4338ca', buttonShadowColor: '#4338ca55',
+      buttonRadius: 18, buttonHover: 'none',
+      titleFont: 'unbounded', bodyFont: 'rubik', titleWeight: '800', titleColor: '#1e1b4b', textColor: '#312e81', socialsColor: '#1e1b4b',
+      surfaceColor: '#ffffffd9', surfaceTextColor: '#1e1b4b', surfaceRadius: 20, headerLayout: 'classic',
+      avatarBorderWidth: 4, avatarBorderColor: '#ffffff',
+    },
+  },
 ]);
