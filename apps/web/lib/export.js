@@ -8,7 +8,7 @@
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { strToU8, zipSync } from 'fflate';
-import { renderPage, esc, safeUrl, resolveDesign } from '@otrelink/core';
+import { renderPage, esc, safeUrl, resolveDesign, colorSchemeOf } from '@otrelink/core';
 import { getDb } from './db/index.js';
 import { toPublicPage } from './pages.js';
 
@@ -63,13 +63,15 @@ function indexHtml(page, { html, fontsHref }) {
   const desc = page.settings.seoDescription || page.profile.bio || '';
   const image = safeUrl(page.settings.ogImage || page.profile.avatar);
   const d = resolveDesign(page.design);
+  const scheme = colorSchemeOf(d) === 'dark' ? 'dark' : 'only light';
   const bg = (d.wallpaper.color || d.wallpaper.bg || d.wallpaper.from || '#ffffff').slice(0, 7);
   const icon = image || `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="1" y="1" width="22" height="22" rx="7" fill="#7a2cf0"/></svg>')}`;
   return `<!doctype html>
-<html lang="en">
+<html lang="en" style="color-scheme:${scheme}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="${scheme}">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <meta property="og:title" content="${esc(title)}">

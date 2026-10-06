@@ -8,7 +8,7 @@ import { buttonStyles, buttonHovers } from './buttons/index.js';
 import { wallpapers } from './wallpapers/index.js';
 import { attentionAnimations, entranceAnimations } from './animations.js';
 import { googleFontsHref } from './fonts.js';
-import { designCss, resolveDesign } from './design.js';
+import { designCss, resolveDesign, colorSchemeOf } from './design.js';
 import { socialHref, socialIcon, socials } from './socials.js';
 import { esc, safeUrl, miniMarkdown } from './util/html.js';
 import { verifiedSvg } from './icons.js';
@@ -197,6 +197,24 @@ export function mountPage(container, page, opts = {}) {
 }
 
 /**
+ * Tell the browser the page has its own colors, so its dark mode (e.g. Chrome
+ * "auto dark" on Android) never repaints it. "only light" opts out of forced
+ * darkening; a dark design declares "dark".
+ */
+export function applyColorScheme(doc, scheme) {
+  if (!doc?.documentElement) return;
+  const value = scheme === 'dark' ? 'dark' : 'only light';
+  doc.documentElement.style.colorScheme = value;
+  let meta = doc.querySelector('meta[name="color-scheme"]');
+  if (!meta) {
+    meta = doc.createElement('meta');
+    meta.name = 'color-scheme';
+    doc.head?.prepend(meta);
+  }
+  meta.content = value;
+}
+
+/**
  * Add browser behavior to an already rendered page: entrance animation
  * stagger, block behaviors (countdown, copy buttons, carousels…), the
  * sensitive-content gate and click tracking.
@@ -204,6 +222,7 @@ export function mountPage(container, page, opts = {}) {
  * @returns {() => void} cleanup function
  */
 export function hydratePage(container, page, opts = {}) {
+  applyColorScheme(container.ownerDocument, colorSchemeOf(resolveDesign(page.design)));
   // Stagger entrance animations.
   container.querySelectorAll('.ol-enter').forEach((el, i) => {
     el.style.animationDelay = `${Math.min(i, 14) * 55}ms`;

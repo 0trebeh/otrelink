@@ -13,7 +13,8 @@ export const metadata = {
   formatDetection: { telephone: false },
 };
 
-export const viewport = { width: 'device-width', initialScale: 1, themeColor: '#edeef1' };
+// The dashboard is designed in light colors: don't let the browser's dark mode repaint it.
+export const viewport = { width: 'device-width', initialScale: 1, themeColor: '#edeef1', colorScheme: 'only light' };
 
 export default function RootLayout({ children }) {
   return (

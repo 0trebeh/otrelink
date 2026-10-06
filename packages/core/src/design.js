@@ -135,6 +135,7 @@ export function designCss(d) {
     + `--ol-social-color:${d.socialsColor};--ol-social-size:${d.socialsSize}px;`
     + `--ol-surface:${d.surfaceColor};--ol-surface-fg:${d.surfaceTextColor};--ol-surface-radius:${d.surfaceRadius}px;`
     + `--ol-max-width:${d.maxWidth}px;--ol-gap:${d.gap}px;--ol-pad-top:${d.paddingTop}px;`
+    + `color-scheme:${colorSchemeOf(d) === 'dark' ? 'dark' : 'only light'};`
     + `}`;
 }
 
@@ -154,6 +155,16 @@ export function contrastRatio(a, b) {
   const la = luminance(a), lb = luminance(b);
   if (la === null || lb === null) return 21;
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/**
+ * Light or dark, from the colors chosen in the dashboard (light text on cards
+ * means a dark design). Used for the page's color-scheme so the browser's
+ * dark mode never repaints the page and form controls match the design.
+ */
+export function colorSchemeOf(d) {
+  const text = luminance(d?.surfaceTextColor) ?? luminance(d?.textColor);
+  return text !== null && text > 0.4 ? 'dark' : 'light';
 }
 
 /** Dominant color of a wallpaper (best effort), or null for images/videos. */

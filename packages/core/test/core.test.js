@@ -363,3 +363,10 @@ test('banner: renders a link with escaped text, image and button', async () => {
   const plain = mod.render(sanitizeBlock({ id: 'c', type: 'banner', data: { url: 'javascript:alert(1)', buttonLabel: 'x' } }).data, { blockId: 'c' });
   assert.ok(plain.startsWith('<div') && !plain.includes('javascript') && !plain.includes('ol-banner-btn'));
 });
+
+test('design: color scheme follows the dashboard colors', async () => {
+  const { colorSchemeOf, designCss, resolveDesign } = await import('../src/index.js');
+  assert.equal(colorSchemeOf({ surfaceTextColor: '#17171f' }), 'light');
+  assert.equal(colorSchemeOf({ surfaceTextColor: '#f5f5f5' }), 'dark');
+  assert.ok(designCss(resolveDesign({})).includes('color-scheme:'));
+});
