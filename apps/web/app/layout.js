@@ -13,8 +13,9 @@ export const metadata = {
   formatDetection: { telephone: false },
 };
 
-// The dashboard is designed in light colors: don't let the browser's dark mode repaint it.
-export const viewport = { width: 'device-width', initialScale: 1, themeColor: '#edeef1', colorScheme: 'only light' };
+// "light dark" keeps the browser's forced dark mode away from the dashboard and its
+// iframes (see globals.css); the dashboard itself always uses its light colors.
+export const viewport = { width: 'device-width', initialScale: 1, themeColor: '#edeef1', colorScheme: 'light dark' };
 
 export default function RootLayout({ children }) {
   return (

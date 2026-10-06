@@ -17,9 +17,15 @@
   --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
-/* Light only: the browser's dark mode must not repaint the dashboard. Inherited
-   by every element, including the preview <iframe>, so the frame asks for light too. */
-:root { color-scheme: only light; }
+/* Dark mode (Chrome/Edge "Auto Dark Mode for Web Contents" and the system theme).
+   • The root declares "light dark": that is what makes those browsers leave the
+     iframes (the phone preview) alone; "only light" on the root does not.
+   • <body> is "only light": the dashboard and its controls (inputs, selects,
+     date/time pickers, scrollbars) stay light and are never force-darkened.
+     Plain "light" is not enough: forced dark mode darkens elements that use it.
+   • The preview <iframe> declares "light dark" itself (components/Preview.js). */
+:root { color-scheme: light dark; scrollbar-color: #c3c4cc var(--color-canvas); }
+body { color-scheme: only light; scrollbar-color: auto; }
 
 html, body { background: var(--color-canvas); color: var(--color-ink); }
 body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
