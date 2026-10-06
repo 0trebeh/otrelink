@@ -7,7 +7,7 @@ import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
 // A visitor cancels their own appointment from the public page.
 // Body: { pageId, id, token } — the token was given only to the browser that booked.
 export const POST = handler(async (req) => {
-  rateLimit(req, 'booking-cancel', 20, 60 * 60 * 1000);
+  await rateLimit(req, 'booking-cancel', 20, 60 * 60 * 1000);
   const headers = corsHeaders(req);
   const fail = (status, code) => NextResponse.json({ error: code }, { status, headers });
   let body;

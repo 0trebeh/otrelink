@@ -32,6 +32,7 @@ export function toAdminUser(u, extra = {}) {
     limits: u.limits || null,
     banned: Boolean(u.banned), bannedAt: u.bannedAt || null, bannedReason: u.bannedReason || '',
     note: u.note || '',
+    emailVerified: u.emailVerified !== false,
     billing: b ? {
       provider: b.provider, status: b.status, subscriptionId: b.subscriptionId || '', customerId: b.customerId || '',
       currentPeriodEnd: b.currentPeriodEnd || null, cancelAtPeriodEnd: Boolean(b.cancelAtPeriodEnd), endsAt: b.endsAt || null,

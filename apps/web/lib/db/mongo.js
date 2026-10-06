@@ -23,6 +23,7 @@ export async function createMongoDriver() {
   const pushSubs = db.collection('push_subscriptions');
   const responses = db.collection('survey_responses');
   const reviews = db.collection('reviews');
+  const limits = db.collection('rate_limits');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
 
@@ -46,6 +47,9 @@ export async function createMongoDriver() {
     [users, { createdAt: -1 }, {}],
     [responses, { pageId: 1, blockId: 1, createdAt: -1 }, {}],
     [reviews, { pageId: 1, blockId: 1, status: 1, createdAt: -1 }, {}],
+    // Rate-limit counters delete themselves when their window ends.
+    [limits, { expiresAt: 1 }, { expireAfterSeconds: 0 }],
+    [users, { verifyTokenHash: 1 }, { sparse: true }],
   ];
   const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
   results.forEach((r, i) => {
@@ -72,6 +76,7 @@ export async function createMongoDriver() {
         return out(doc);
       },
       findBySubscription: async (id) => (id ? out(await users.findOne({ 'billing.subscriptionId': id })) : null),
+      findByVerifyToken: async (hash) => (hash ? out(await users.findOne({ verifyTokenHash: hash })) : null),
       // Cancelled subscriptions whose paid period is over (still on Pro).
       listBillingEnded: async (nowIso) => (await users.find({
         plan: 'pro', 'billing.status': 'canceled', 'billing.downgraded': { $ne: true }, 'billing.endsAt': { $lte: nowIso },
@@ -187,6 +192,15 @@ export async function createMongoDriver() {
       count: async ({ pageId, blockId }) => responses.countDocuments({ pageId, ...(blockId ? { blockId } : {}) }),
       remove: async (id) => { await responses.deleteOne({ _id: id }); },
       removeMany: async ({ pageId, blockId }) => { await responses.deleteMany({ pageId, ...(blockId ? { blockId } : {}) }); },
+    },
+    limits: {
+      hit: async (id, expiresAt) => {
+        const doc = await limits.findOneAndUpdate(
+          { _id: id }, { $inc: { n: 1 }, $setOnInsert: { expiresAt } }, { upsert: true, returnDocument: 'after' },
+        );
+        return doc?.n ?? 1;
+      },
+      get: async (id) => (await limits.findOne({ _id: id }))?.n || 0,
     },
     reviews: {
       create: async (r) => {

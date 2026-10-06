@@ -6,7 +6,7 @@ import { handler, json, error, requireUser, rateLimit, provider } from '@/lib/ht
 
 // Start paying for Pro with a card (Stripe Checkout).
 export const POST = handler(async (req) => {
-  rateLimit(req, 'checkout', 20, 60 * 60 * 1000);
+  await rateLimit(req, 'checkout', 20, 60 * 60 * 1000);
   const user = await requireUser();
   if (!stripeConfigured()) return error(503, 'stripe_not_configured');
   const db = await getDb();

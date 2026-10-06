@@ -14,7 +14,7 @@ const clean = (v, max) => String(v ?? '').replace(/[\r\n]+/g, ' ').trim().slice(
 
 // A visitor books an appointment. Public (used by the link page).
 export const POST = handler(async (req) => {
-  rateLimit(req, 'booking', 10, 60 * 60 * 1000);
+  await rateLimit(req, 'booking', 10, 60 * 60 * 1000);
   const headers = corsHeaders(req);
   const fail = (status, code) => NextResponse.json({ error: code }, { status, headers });
   let body;
@@ -91,7 +91,7 @@ export const POST = handler(async (req) => {
 //   ?pageId=…&ids=id,id                 (older saved data: basic info only)
 // Ids are random UUIDs and no personal data is returned.
 export const GET = handler(async (req) => {
-  rateLimit(req, 'booking-status', 60, 60 * 1000);
+  await rateLimit(req, 'booking-status', 60, 60 * 1000);
   const headers = corsHeaders(req);
   const q = new URL(req.url).searchParams;
   const pageId = String(q.get('pageId') || '');

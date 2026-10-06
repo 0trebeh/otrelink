@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Undo2, Redo2, ExternalLink, Eye, X, Loader2, Check, RotateCcw, BookOpen, Lock } from 'lucide-react';
 import { allowsSection, featureForSection } from '@otrelink/core';
 import { LockedSection } from '../PlanLock';
+import VerifyEmailBanner from '../VerifyEmailBanner';
 import { api, errorMessage } from '@/lib/client';
 import { sections } from '@/sections';
 import { Button, IconButton, cx } from '../ui';
@@ -13,7 +14,7 @@ import { useHistory } from './useHistory';
 const contentOf = (p) => JSON.stringify({ s: p.slug, a: p.profile, b: p.socials, c: p.blocks, d: p.design, e: p.settings });
 const isTyping = (el) => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
 
-export default function Editor({ initialPage, pageUrl, plan }) {
+export default function Editor({ initialPage, pageUrl, plan, account }) {
   const { page, set, undo, redo, reset, canUndo, canRedo } = useHistory(initialPage);
   const [saved, setSaved] = useState(() => ({ json: contentOf(initialPage), slug: initialPage.slug }));
   const [saving, setSaving] = useState(false);
@@ -168,6 +169,7 @@ export default function Editor({ initialPage, pageUrl, plan }) {
         {/* Section content */}
         <main className="px-3 sm:px-6 py-6 pb-32 lg:pb-12">
           <div className={cx('mx-auto', section.wide ? 'max-w-4xl' : 'max-w-2xl')}>
+            {account && !account.emailVerified && <div className="mb-5"><VerifyEmailBanner email={account.email} /></div>}
             {sectionLocked(section.id) ? <LockedSection feature={featureForSection(section.id)} plan={plan} /> : <Section ed={ed} />}
           </div>
         </main>

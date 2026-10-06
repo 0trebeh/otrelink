@@ -34,6 +34,8 @@ const MESSAGES = {
   already_subscribed: 'You already have an active subscription.',
   stripe_not_configured: 'Card payments are not available yet.',
   paypal_not_configured: 'PayPal is not available yet.',
+  email_not_configured: 'Email sending is not set up on the server.',
+  email_failed: 'The email could not be sent. Try again in a few minutes.',
   payment_provider_error: 'The payment service didn’t respond. Try again in a minute.',
 };
 

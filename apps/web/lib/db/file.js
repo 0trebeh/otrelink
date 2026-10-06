@@ -41,6 +41,7 @@ export async function createFileDriver() {
         return clone(doc);
       },
       findBySubscription: async (id) => clone(state.users.find((u) => id && u.billing?.subscriptionId === id)),
+      findByVerifyToken: async (hash) => clone(state.users.find((u) => hash && u.verifyTokenHash === hash)),
       // Cancelled subscriptions whose paid period is over (still on Pro).
       listBillingEnded: async (nowIso) => clone(state.users.filter((u) => u.plan === 'pro' && u.billing?.status === 'canceled'
         && !u.billing.downgraded && u.billing.endsAt && u.billing.endsAt <= nowIso)),
@@ -149,6 +150,20 @@ export async function createFileDriver() {
         return clone(next);
       },
     },
+    // Rate-limit counters (memory only: the file driver is for one local server).
+    limits: (() => {
+      const m = new Map();
+      const sweep = () => { const t = Date.now(); for (const [k, v] of m) if (v.exp <= t) m.delete(k); };
+      return {
+        hit: async (id, expiresAt) => {
+          if (m.size > 5000) sweep();
+          const e = m.get(id);
+          if (!e || e.exp <= Date.now()) { m.set(id, { n: 1, exp: expiresAt.getTime() }); return 1; }
+          return ++e.n;
+        },
+        get: async (id) => { const e = m.get(id); return e && e.exp > Date.now() ? e.n : 0; },
+      };
+    })(),
     // Survey responses (newest first in lists).
     responses: {
       create: async (r) => {

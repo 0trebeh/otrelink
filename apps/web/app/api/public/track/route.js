@@ -4,7 +4,7 @@ import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
 
 // Analytics beacon from the public page: { pageId, type: 'view'|'click', target?, referrer?, visitor? }
 export const POST = handler(async (req) => {
-  rateLimit(req, 'track', 120, 60 * 1000);
+  await rateLimit(req, 'track', 120, 60 * 1000);
   const headers = corsHeaders(req);
   let body;
   try { body = JSON.parse(await req.text()); } catch { throw new HttpError(400, 'invalid_json'); }

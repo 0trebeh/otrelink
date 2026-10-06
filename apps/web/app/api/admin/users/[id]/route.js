@@ -56,6 +56,7 @@ export const PATCH = handler(async (req, { params }) => {
     patch.bannedReason = patch.banned ? String(body.bannedReason ?? user.bannedReason ?? '').slice(0, 300) : '';
   } else if (body.bannedReason !== undefined) patch.bannedReason = String(body.bannedReason).slice(0, 300);
   if (body.note !== undefined) patch.note = String(body.note).slice(0, 2000);
+  if (body.emailVerified === true) Object.assign(patch, { emailVerified: true, emailVerifiedAt: new Date().toISOString(), verifyTokenHash: null, verifyExpires: null });
   if (body.cancelSubscription) {
     try {
       const billing = await cancelBilling(user);

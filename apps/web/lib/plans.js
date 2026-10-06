@@ -8,10 +8,13 @@ export const planSummary = (user) => {
   return { id: p.id, label: p.label, maxPages: p.maxPages, features: p.features, custom: Boolean(p.custom) };
 };
 
-/** Plan of a page's owner (null when the owner is missing or banned). */
+/**
+ * Plan of a page's owner. null = the page must not be shown (owner missing,
+ * banned, or a new account that hasn't confirmed its email yet).
+ */
 export async function ownerPlan(db, page) {
   const owner = page?.userId ? await db.users.findById(page.userId) : null;
-  if (!owner || owner.banned) return null;
+  if (!owner || owner.banned || owner.emailVerified === false) return null;
   return resolvePlan(owner);
 }
 

@@ -4,7 +4,7 @@ import { getUser } from '@/lib/auth';
 import { handler, json, rateLimit } from '@/lib/http';
 
 export const GET = handler(async (req) => {
-  rateLimit(req, 'slug', 120, 60 * 1000);
+  await rateLimit(req, 'slug', 120, 60 * 1000);
   const params = new URL(req.url).searchParams;
   const raw = params.get('slug') || '';
   const slug = sanitizeSlug(raw);

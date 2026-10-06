@@ -7,9 +7,19 @@ import { api, errorMessage } from '@/lib/client';
 import { Button, Input, Modal, Logo } from './ui';
 import Preview from './Preview';
 import { InstallButton, clearPwaCache } from './Pwa';
+import VerifyEmailBanner from './VerifyEmailBanner';
+import { useSearchParams } from 'next/navigation';
+
+const VERIFIED_MSG = {
+  1: { ok: true, text: 'Email confirmed. Your page is now visible.' },
+  invalid: { ok: false, text: 'That confirmation link is not valid. Send a new one below.' },
+  expired: { ok: false, text: 'That confirmation link expired. Send a new one below.' },
+  error: { ok: false, text: 'Too many attempts. Try the link again later.' },
+};
 
 export default function PagesList({ user, pages, pageUrl, limit }) {
   const router = useRouter();
+  const verifiedMsg = VERIFIED_MSG[useSearchParams().get('verified')];
   const [creating, setCreating] = useState(false);
   const [slug, setSlug] = useState('');
   const [busy, setBusy] = useState(false);
@@ -46,6 +56,8 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
         </div>
       </header>
       <main className="max-w-6xl mx-auto px-4 sm:px-8 py-8">
+        {verifiedMsg && <p role="status" className={`mb-4 rounded-2xl px-4 py-3 text-sm ${verifiedMsg.ok ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger'}`}>{verifiedMsg.text}</p>}
+        {!user.emailVerified && <div className="mb-6"><VerifyEmailBanner email={user.email} /></div>}
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-4xl font-extrabold tracking-tight">Your pages</h1>

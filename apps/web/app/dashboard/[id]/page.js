@@ -13,5 +13,5 @@ export default async function EditorPage({ params }) {
   const db = await getDb();
   const page = await db.pages.findById(id);
   if (!page || page.userId !== user.id) notFound();
-  return <Editor initialPage={toDashboardPage(page)} pageUrl={config.pageUrl} plan={user.plan} />;
+  return <Editor initialPage={toDashboardPage(page)} pageUrl={config.pageUrl} plan={user.plan} account={{ email: user.email, emailVerified: user.emailVerified }} />;
 }

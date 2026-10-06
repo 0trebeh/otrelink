@@ -8,7 +8,7 @@ import { allowsBlock } from '@otrelink/core';
 
 // A visitor answers a Survey block. Public (used by the link page).
 export const POST = handler(async (req) => {
-  rateLimit(req, 'survey', 20, 60 * 60 * 1000);
+  await rateLimit(req, 'survey', 20, 60 * 60 * 1000);
   const headers = corsHeaders(req);
   const fail = (status, code, extra = {}) => NextResponse.json({ error: code, ...extra }, { status, headers });
   const raw = await req.text();

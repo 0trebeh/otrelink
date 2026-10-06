@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 
 // Public page data for the link page app. No auth.
 export const GET = handler(async (req, { params }) => {
-  rateLimit(req, 'public', 300, 60 * 1000);
+  await rateLimit(req, 'public', 300, 60 * 1000);
   const headers = corsHeaders(req);
   const slug = sanitizeSlug((await params).slug);
   const db = await getDb();

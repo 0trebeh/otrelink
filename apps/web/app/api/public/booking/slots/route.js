@@ -5,7 +5,7 @@ import { handler, corsHeaders, rateLimit } from '@/lib/http';
 
 // Free times for a Booking block on one day. Public (used by the link page).
 export const GET = handler(async (req) => {
-  rateLimit(req, 'slots', 240, 60 * 1000);
+  await rateLimit(req, 'slots', 240, 60 * 1000);
   const headers = { ...corsHeaders(req), 'Cache-Control': 'no-store' };
   const q = new URL(req.url).searchParams;
   const db = await getDb();

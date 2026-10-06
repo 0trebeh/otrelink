@@ -18,7 +18,7 @@ const cleanName = (name) => String(name || '').replace(/[^\w.\- ()]+/g, '_').sli
 // Upload an image or PDF (multipart field "file"). Returns an absolute URL.
 export const POST = handler(async (req) => {
   const user = await requireUser();
-  rateLimit(req, 'upload', 60, 60 * 60 * 1000);
+  await rateLimit(req, 'upload', 60, 60 * 60 * 1000);
   const form = await req.formData().catch(() => null);
   const file = form?.get('file');
   if (!file || typeof file === 'string') return error(400, 'missing_file');

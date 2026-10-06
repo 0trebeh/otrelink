@@ -12,7 +12,7 @@ import { allowsBlock } from '@otrelink/core';
 //   GET ?pageId=…&blockId=…&limit=5&before=<createdAt>[&mine=<id>~<token>]
 //   `mine` returns the visitor's own review (any status) when the token matches.
 export const GET = handler(async (req) => {
-  rateLimit(req, 'reviews-read', 120, 60 * 1000);
+  await rateLimit(req, 'reviews-read', 120, 60 * 1000);
   const headers = corsHeaders(req);
   const q = new URL(req.url).searchParams;
   const db = await getDb();
@@ -37,7 +37,7 @@ export const GET = handler(async (req) => {
 
 // A visitor writes a review.
 export const POST = handler(async (req) => {
-  rateLimit(req, 'reviews-write', 10, 60 * 60 * 1000);
+  await rateLimit(req, 'reviews-write', 10, 60 * 60 * 1000);
   const headers = corsHeaders(req);
   const fail = (status, code) => NextResponse.json({ error: code }, { status, headers });
   const raw = await req.text();

@@ -6,7 +6,7 @@ import { handler, json, error, requireUser, rateLimit, provider } from '@/lib/ht
 
 // Start paying for Pro with PayPal. The user approves it on PayPal and comes back to /api/billing/paypal/return.
 export const POST = handler(async (req) => {
-  rateLimit(req, 'checkout', 20, 60 * 60 * 1000);
+  await rateLimit(req, 'checkout', 20, 60 * 60 * 1000);
   const user = await requireUser();
   if (!paypalConfigured()) return error(503, 'paypal_not_configured');
   const db = await getDb();

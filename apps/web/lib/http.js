@@ -64,10 +64,11 @@ export function corsHeaders(req) {
     : {};
 }
 
-// Very small in-memory rate limiter (per process). Good enough for a single
-// server; swap for Redis/Upstash if you scale horizontally.
-// Note: buckets live in memory, so a restart/redeploy resets them.
+// Rate limits. Counters live in the database (shared by every server and kept
+// across deploys); if the database can't be reached they fall back to memory.
+// Fixed windows: at most `limit` hits per `windowMs` for one key.
 const buckets = new Map();
+let warnedFallback = false;
 
 /** Best-effort client IP behind proxies (Render, Vercel, Cloudflare, Nginx). */
 export function clientIp(req) {
@@ -81,18 +82,47 @@ export function clientIp(req) {
   );
 }
 
-export function rateLimit(req, name, limit, windowMs) {
-  const key = `${name}:${clientIp(req)}`;
+function memoryHit(key, reset, add) {
   const now = Date.now();
   const b = buckets.get(key);
-  if (!b || b.reset < now) {
-    buckets.set(key, { count: 1, reset: now + windowMs });
-    if (buckets.size > 5000) for (const [k, v] of buckets) if (v.reset < now) buckets.delete(k);
-    return;
+  if (!b || b.reset <= now) {
+    if (!add) return 0;
+    buckets.set(key, { count: 1, reset });
+    if (buckets.size > 5000) for (const [k, v] of buckets) if (v.reset <= now) buckets.delete(k);
+    return 1;
   }
-  if (++b.count > limit) {
-    const err = new HttpError(429, 'too_many_requests');
-    err.retryAfter = Math.ceil((b.reset - now) / 1000);
-    throw err;
+  if (add) b.count++;
+  return b.count;
+}
+
+/** Count one hit (add) or just read the counter. → { count, reset } */
+async function counter(key, windowMs, add) {
+  const start = Math.floor(Date.now() / windowMs) * windowMs;
+  const reset = start + windowMs;
+  const id = `${key}:${start}`;
+  try {
+    const db = await getDb();
+    const count = add ? await db.limits.hit(id, new Date(reset)) : await db.limits.get(id);
+    return { count, reset };
+  } catch (err) {
+    if (!warnedFallback) { warnedFallback = true; console.warn('[otrelink] rate limits use memory:', err?.message); }
+    return { count: memoryHit(id, reset, add), reset };
   }
+}
+
+const tooMany = (reset) => Object.assign(new HttpError(429, 'too_many_requests'), { retryAfter: Math.max(1, Math.ceil((reset - Date.now()) / 1000)) });
+
+/**
+ * Throw 429 after `limit` calls per `windowMs`. The key is the client IP,
+ * or `keyPart` (e.g. an email) when given. Always `await` it.
+ */
+export async function rateLimit(req, name, limit, windowMs, keyPart) {
+  const { count, reset } = await counter(`${name}:${keyPart ?? clientIp(req)}`, windowMs, true);
+  if (count > limit) throw tooMany(reset);
+}
+
+/** Throw 429 if the counter is already over `limit`, without counting this call. */
+export async function checkLimit(name, keyPart, limit, windowMs) {
+  const { count, reset } = await counter(`${name}:${keyPart}`, windowMs, false);
+  if (count >= limit) throw tooMany(reset);
 }

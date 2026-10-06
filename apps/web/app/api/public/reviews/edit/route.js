@@ -8,7 +8,7 @@ import { handler, corsHeaders, rateLimit, HttpError } from '@/lib/http';
 // Body: { action: 'update' | 'delete', pageId, blockId, id, token, rating?, comment?, name? }
 // The token was given only to the browser that wrote the review.
 export const POST = handler(async (req) => {
-  rateLimit(req, 'reviews-edit', 30, 60 * 60 * 1000);
+  await rateLimit(req, 'reviews-edit', 30, 60 * 60 * 1000);
   const headers = corsHeaders(req);
   const fail = (status, code) => NextResponse.json({ error: code }, { status, headers });
   const raw = await req.text();
