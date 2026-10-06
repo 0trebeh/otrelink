@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { hashToken } from '@/lib/verify';
+import { hashToken, completeVerification } from '@/lib/verify';
 import { publicOrigin } from '@/lib/origin';
 import { rateLimit } from '@/lib/http';
 
@@ -14,6 +14,7 @@ export async function GET(req) {
   const user = await db.users.findByVerifyToken(hashToken(token));
   if (!user) return NextResponse.redirect(`${origin}/dashboard?verified=invalid`);
   if (new Date(user.verifyExpires) < new Date()) return NextResponse.redirect(`${origin}/dashboard?verified=expired`);
-  await db.users.update(user.id, { emailVerified: true, emailVerifiedAt: new Date().toISOString(), verifyTokenHash: null, verifyExpires: null });
-  return NextResponse.redirect(`${origin}/dashboard?verified=1`);
+  const { pageId, slugTaken } = await completeVerification(db, user);
+  if (pageId) return NextResponse.redirect(`${origin}/dashboard/${pageId}?verified=1`);
+  return NextResponse.redirect(`${origin}/dashboard?verified=${slugTaken ? 'slug_taken' : '1'}`);
 }

@@ -2,6 +2,7 @@
 // It is on when email sending is configured (RESEND_API_KEY + EMAIL_FROM).
 // Accounts created before this existed (no `emailVerified` field) count as verified.
 import crypto from 'node:crypto';
+import { createDefaultPage, sanitizePage } from '@otrelink/core';
 import { sendEmail, emailConfigured } from './notify.js';
 
 const HOURS = 48;
@@ -16,6 +17,28 @@ export function newVerification() {
     token,
     patch: { verifyTokenHash: hashToken(token), verifyExpires: new Date(Date.now() + HOURS * 3600e3).toISOString() },
   };
+}
+
+/**
+ * Mark the account as confirmed and create the page it chose when it signed up
+ * (pages can't be created before). → { pageId } or { pageId: null, slugTaken }
+ */
+export async function completeVerification(db, user) {
+  await db.users.update(user.id, {
+    emailVerified: true, emailVerifiedAt: new Date().toISOString(), verifyTokenHash: null, verifyExpires: null,
+    pendingSlug: null, pendingTitle: null,
+  });
+  if (!user.pendingSlug || (await db.pages.countByUser(user.id)) > 0) return { pageId: null };
+  // Someone else may have taken the username after this reservation expired.
+  if (await db.pages.findBySlug(user.pendingSlug)) return { pageId: null, slugTaken: true };
+  try {
+    const content = sanitizePage(createDefaultPage({ slug: user.pendingSlug, title: user.pendingTitle || `@${user.pendingSlug}` }));
+    const page = await db.pages.create({ userId: user.id, slug: user.pendingSlug, ...content });
+    return { pageId: page.id };
+  } catch (err) {
+    if (err.code === 'slug_taken') return { pageId: null, slugTaken: true };
+    throw err;
+  }
 }
 
 export async function sendVerificationEmail({ email, name, token, origin }) {

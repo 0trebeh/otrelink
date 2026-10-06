@@ -11,7 +11,7 @@ export const POST = handler(async (req) => {
   const dbUser = await db.users.findById(user.id);
   if (isVerified(dbUser)) return json({ ok: true, alreadyVerified: true });
   if (!verificationEnabled()) return error(503, 'email_not_configured');
-  const { token, patch } = newVerification();
+  const { token, patch } = newVerification(); // also renews the username reservation
   await db.users.update(user.id, patch);
   const sent = await sendVerificationEmail({ email: dbUser.email, name: dbUser.name, token, origin: publicOrigin(req) });
   if (!sent) return error(502, 'email_failed');

@@ -10,7 +10,7 @@ export const GET = handler(async (req) => {
   const slug = sanitizeSlug(raw);
   if (!slug || slug !== raw.toLowerCase().replace(/^@/, '')) return json({ slug, available: false, reason: 'invalid' });
   const db = await getDb();
-  const existing = await db.pages.findBySlug(slug);
+  const existing = await db.pages.findBySlug(slug) || await db.users.findByPendingSlug(slug);
   const user = await getUser();
   const mine = existing && user && existing.userId === user.id && existing.id === params.get('pageId');
   return json({ slug, available: !existing || Boolean(mine), reason: existing && !mine ? 'taken' : null });

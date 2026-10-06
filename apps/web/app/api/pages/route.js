@@ -1,11 +1,11 @@
 import { createDefaultPage, sanitizePage, sanitizeSlug } from '@otrelink/core';
 import { getDb } from '@/lib/db';
 import { toDashboardPage } from '@/lib/pages';
-import { handler, json, error, readJson, requireUser } from '@/lib/http';
+import { handler, json, error, readJson, requireVerifiedUser } from '@/lib/http';
 
 // List my pages
 export const GET = handler(async () => {
-  const user = await requireUser();
+  const user = await requireVerifiedUser();
   const db = await getDb();
   const pages = await db.pages.listByUser(user.id);
   return json({ pages: pages.map(toDashboardPage) });
@@ -13,7 +13,7 @@ export const GET = handler(async () => {
 
 // Create a page
 export const POST = handler(async (req) => {
-  const user = await requireUser();
+  const user = await requireVerifiedUser();
   const body = await readJson(req);
   const slug = sanitizeSlug(body.slug);
   if (!slug) return error(400, 'invalid_slug');

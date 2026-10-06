@@ -21,15 +21,23 @@ export const POST = handler(async (req) => {
 
   const db = await getDb();
   if (await db.users.findByEmail(email)) return error(409, 'email_taken');
-  if (await db.pages.findBySlug(slug)) return error(409, 'slug_taken');
+  // Also taken while another new account waits to confirm its email with it.
+  if (await db.pages.findBySlug(slug) || await db.users.findByPendingSlug(slug)) return error(409, 'slug_taken');
 
   // New accounts confirm their email before their page is shown (when email sending is set up).
   const verify = verificationEnabled() ? newVerification() : null;
+  const name = String(body.name || '').slice(0, 60);
   const user = await db.users.create({
-    email, name: String(body.name || '').slice(0, 60), passwordHash: await bcrypt.hash(password, 10), plan: 'free',
-    emailVerified: !verify, ...(verify ? verify.patch : {}),
+    email, name, passwordHash: await bcrypt.hash(password, 10), plan: 'free',
+    emailVerified: !verify,
+    // No page until the email is confirmed: keep the chosen username for then.
+    ...(verify ? { ...verify.patch, pendingSlug: slug, pendingTitle: name || `@${slug}` } : {}),
   });
-  if (verify) await sendVerificationEmail({ email, name: user.name, token: verify.token, origin: publicOrigin(req) });
+  if (verify) {
+    await sendVerificationEmail({ email, name, token: verify.token, origin: publicOrigin(req) });
+    await createSession(user);
+    return json({ user: publicUser({ ...user, emailVerified: false }), pageId: null, verifyEmail: true }, { status: 201 });
+  }
   const content = sanitizePage(createDefaultPage({ slug, title: body.name ? String(body.name) : `@${slug}` }));
   const page = await db.pages.create({ userId: user.id, slug, ...content });
 

@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/db';
 import { config } from '@/lib/config';
-import { handler, json, error, requireUser, rateLimit } from '@/lib/http';
+import { handler, json, error, requireVerifiedUser, rateLimit } from '@/lib/http';
 import { publicOrigin } from '@/lib/origin';
 
 // Allowed uploads: type -> max size and a "magic bytes" check of the real content.
@@ -17,7 +17,7 @@ const cleanName = (name) => String(name || '').replace(/[^\w.\- ()]+/g, '_').sli
 
 // Upload an image or PDF (multipart field "file"). Returns an absolute URL.
 export const POST = handler(async (req) => {
-  const user = await requireUser();
+  const user = await requireVerifiedUser();
   await rateLimit(req, 'upload', 60, 60 * 60 * 1000);
   const form = await req.formData().catch(() => null);
   const file = form?.get('file');

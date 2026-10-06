@@ -42,9 +42,16 @@ export async function requireUser() {
   return user;
 }
 
+/** Signed in AND email confirmed. Unconfirmed accounts can't create or edit anything. */
+export async function requireVerifiedUser() {
+  const user = await requireUser();
+  if (!user.emailVerified) throw new HttpError(403, 'email_not_verified');
+  return user;
+}
+
 /** Load a page and make sure the current user owns it. */
 export async function requireOwnedPage(id) {
-  const user = await requireUser();
+  const user = await requireVerifiedUser();
   const db = await getDb();
   const page = await db.pages.findById(id);
   if (!page || page.userId !== user.id) throw new HttpError(404, 'page_not_found');

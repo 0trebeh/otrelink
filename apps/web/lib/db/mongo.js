@@ -50,6 +50,7 @@ export async function createMongoDriver() {
     // Rate-limit counters delete themselves when their window ends.
     [limits, { expiresAt: 1 }, { expireAfterSeconds: 0 }],
     [users, { verifyTokenHash: 1 }, { sparse: true }],
+    [users, { pendingSlug: 1 }, { sparse: true }],
   ];
   const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
   results.forEach((r, i) => {
@@ -76,6 +77,8 @@ export async function createMongoDriver() {
         return out(doc);
       },
       findBySubscription: async (id) => (id ? out(await users.findOne({ 'billing.subscriptionId': id })) : null),
+      // Username reserved by an account that hasn't confirmed its email (until its link expires).
+      findByPendingSlug: async (slug) => (slug ? out(await users.findOne({ pendingSlug: slug, verifyExpires: { $gt: new Date().toISOString() } })) : null),
       findByVerifyToken: async (hash) => (hash ? out(await users.findOne({ verifyTokenHash: hash })) : null),
       // Cancelled subscriptions whose paid period is over (still on Pro).
       listBillingEnded: async (nowIso) => (await users.find({

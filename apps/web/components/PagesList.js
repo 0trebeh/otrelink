@@ -12,6 +12,7 @@ import { useSearchParams } from 'next/navigation';
 
 const VERIFIED_MSG = {
   1: { ok: true, text: 'Email confirmed. Your page is now visible.' },
+  slug_taken: { ok: true, text: 'Email confirmed. The username you chose was taken in the meantime — create your page with another one.' },
   invalid: { ok: false, text: 'That confirmation link is not valid. Send a new one below.' },
   expired: { ok: false, text: 'That confirmation link expired. Send a new one below.' },
   error: { ok: false, text: 'Too many attempts. Try the link again later.' },
