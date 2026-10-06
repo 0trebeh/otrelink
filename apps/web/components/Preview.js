@@ -3,8 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 import { mountPage } from '@otrelink/core';
 import { cx } from './ui';
 
-// The preview document (public/preview-frame.html): same origin, light only.
-const FRAME_URL = '/preview-frame.html';
+const SHELL = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="only light"><meta name="darkreader-lock">
+<style>html{color-scheme:only light;scrollbar-width:none}html,body{margin:0;height:100%}body{overflow-y:auto;scrollbar-width:none}body::-webkit-scrollbar{display:none}#root{min-height:100%}</style>
+</head><body><div id="root"></div></body></html>`;
 
 /**
  * Live phone preview. Uses the exact same renderer as the public page,
@@ -15,7 +16,7 @@ export default function Preview({ page, replayKey = 0, className, scale = 1 }) {
   const [ready, setReady] = useState(false);
   const lastReplay = useRef(replayKey);
 
-  // The frame can finish loading before React attaches onLoad (SSR/hydration).
+  // srcDoc can finish loading before React attaches onLoad (SSR/hydration).
   useEffect(() => {
     const doc = frameRef.current?.contentDocument;
     if (doc?.readyState === 'complete' && doc.getElementById('root')) setReady(true);
@@ -56,7 +57,7 @@ export default function Preview({ page, replayKey = 0, className, scale = 1 }) {
         <iframe
           ref={frameRef}
           title="Page preview"
-          src={FRAME_URL}
+          srcDoc={SHELL}
           onLoad={() => setReady(true)}
           className="block size-full rounded-[36px] bg-white"
           style={{ colorScheme: 'only light' }}
