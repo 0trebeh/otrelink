@@ -236,10 +236,13 @@ export default function DocsPage() {
           <Table
             head={['Option', 'What it does']}
             rows={[
-              ['Slot step', 'How often a start time is offered (e.g. every 30 min).'],
+              ['Weekly hours', 'Turn each day on or off and give it one or more time ranges (several ranges = breaks, e.g. 9:00–13:00 and 14:00–18:00). Use the copy button to repeat a day’s hours on other days. An end time of 00:00 means midnight.'],
+              ['Days off & special dates', 'For one date or a range of dates: Closed (no bookings), Block hours (your usual hours except some times) or Special hours (only those hours, even on a day you are normally closed). You can add a private note. Also editable from Agenda.'],
+              ['Slot step', 'How often a start time is offered (every 5 min to 2 hours, or the length of the service).'],
               ['Buffer', 'Free minutes kept after each appointment.'],
-              ['Minimum notice', 'How soon a visitor can book (e.g. not within the next 2 hours).'],
-              ['Days ahead', 'How far into the future bookings are allowed.'],
+              ['Minimum notice', 'How soon a visitor can book (from 30 minutes to 1 week ahead).'],
+              ['Days ahead', 'How far into the future bookings are allowed (up to 365 days).'],
+              ['Appointments per day', 'Optional daily limit. When a day reaches it, it shows no free times.'],
               ['Confirmation', 'Automatic, or Manual: bookings stay Pending until you confirm them in Agenda.'],
               ['Reminders', 'When you get a reminder before each appointment (e.g. 1 day and 1 hour before).'],
               ['Meeting link', 'Your recurring Zoom, Google Meet or Teams link. It is added to every appointment: in the visitor’s calendar file, in your calendar feed and in emails. Choose whether visitors get it as soon as they book or only after you confirm.'],

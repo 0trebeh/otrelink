@@ -11,6 +11,7 @@ import ListField from './ListField';
 import FontField from './FontField';
 import ChoiceField from './ChoiceField';
 import ImageAdjustField from './ImageAdjustField';
+import { WeeklyHoursField, DateRulesField } from './ScheduleFields';
 
 const toLocal = (iso) => {
   if (!iso) return '';
@@ -46,6 +47,8 @@ export const fieldInputs = {
   image: ImageField,
   file: FileField,
   list: ListField,
+  weeklyHours: WeeklyHoursField,
+  dateRules: DateRulesField,
   time: ({ value, onChange, id }) => <Input id={id} type="time" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />,
   datetime: ({ value, onChange, id }) => (
     <Input id={id} type="datetime-local" value={toLocal(value)} onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : '')} />

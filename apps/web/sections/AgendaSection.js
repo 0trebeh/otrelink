@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Bell, BellOff, CalendarDays, Check, Clock, Copy, Mail, MessageCircle, Phone, RefreshCw, X, Loader2,
 } from 'lucide-react';
-import { flattenBlocks, formatInZone } from '@otrelink/core';
+import { flattenBlocks, formatInZone, updateBlock } from '@otrelink/core';
+import { DateRulesField } from '@/components/fields/ScheduleFields';
 import { api, errorMessage } from '@/lib/client';
 import { Panel, Button, Input, cx } from '@/components/ui';
 
@@ -104,11 +105,52 @@ export default function AgendaSection({ ed }) {
         </section>
       ))}
 
+      {hasBookingBlock && <DaysOffCard ed={ed} />}
+
       <div className="grid lg:grid-cols-2 gap-5">
         <NotificationsCard />
         <CalendarFeedCard />
       </div>
     </div>
+  );
+}
+
+/** Days off & special dates of the Booking block(s), editable right from Agenda. */
+function DaysOffCard({ ed }) {
+  const blocks = flattenBlocks(ed.page.blocks).filter((b) => b.type === 'booking');
+  const [active, setActive] = useState(blocks[0]?.id);
+  const raw = blocks.find((b) => b.id === active) || blocks[0];
+  if (!raw) return null;
+  const field = { key: 'dateRules', max: 150 };
+  const onChange = (rules) => ed.set((p) => ({
+    ...p, blocks: updateBlock(p.blocks, raw.id, (b) => ({ ...b, data: { ...b.data, dateRules: rules } })),
+  }), `days-off:${raw.id}`);
+
+  return (
+    <Panel>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="font-semibold">Days off &amp; special dates</p>
+          <p className="text-sm text-muted mt-0.5">Close days, block some hours or set special hours. Appointments already booked stay.</p>
+        </div>
+        {ed.dirty && (
+          <Button size="sm" variant="primary" disabled={ed.saving} onClick={() => ed.save()}>{ed.saving ? 'Saving…' : 'Save changes'}</Button>
+        )}
+      </div>
+      {blocks.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-3" role="group" aria-label="Booking block">
+          {blocks.map((b) => (
+            <button key={b.id} type="button" onClick={() => setActive(b.id)} aria-pressed={b.id === raw.id}
+              className={cx('h-8 px-3.5 rounded-full border text-[13px] font-semibold cursor-pointer',
+                b.id === raw.id ? 'bg-accent-soft border-accent/40 text-accent-ink' : 'bg-panel border-line text-muted hover:text-ink')}>
+              {b.data?.buttonLabel || 'Booking'}
+            </button>
+          ))}
+        </div>
+      )}
+      <DateRulesField field={field} value={raw.data?.dateRules || []} values={raw.data || {}} onChange={onChange} />
+      {ed.dirty && <p className="text-xs text-amber-700 mt-3">Save to apply the changes on your page.</p>}
+    </Panel>
   );
 }
 

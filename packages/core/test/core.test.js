@@ -313,3 +313,41 @@ test('plans: legacy users are Pro, Free locks features, Business limits are edit
   assert.deepEqual(JSON.parse(JSON.stringify(stripLockedBlocks(blocks, free))), [{ type: 'link' }, { type: 'collection', children: [] }]);
   assert.equal(resolvePlan(null).id, 'free');
 });
+
+// ── Booking: special dates ─────────────────────────────────────────────
+test('booking: closed days, blocked hours and special hours', () => {
+  const rules = [
+    { id: 'a', from: '2026-10-12', to: '2026-10-12', kind: 'closed', ranges: [] },
+    { id: 'b', from: '2026-10-05', to: '2026-10-05', kind: 'block', ranges: [{ from: '10:00', to: '11:00' }] },
+    { id: 'c', from: '2026-10-10', to: '2026-10-10', kind: 'open', ranges: [{ from: '15:00', to: '17:00' }] }, // a Saturday
+  ];
+  const data = bookingData({ dateRules: rules, maxDays: 14 });
+  assert.deepEqual(computeSlots({ data, serviceId: 's1', date: '2026-10-05', now: NOW }), ['2026-10-05T13:00:00.000Z', '2026-10-05T15:00:00.000Z']);
+  assert.deepEqual(computeSlots({ data, serviceId: 's1', date: '2026-10-12', now: NOW }), []);
+  assert.deepEqual(computeSlots({ data, serviceId: 's1', date: '2026-10-10', now: NOW }), ['2026-10-10T19:00:00.000Z', '2026-10-10T20:00:00.000Z']);
+  assert.deepEqual(bookableDays(data, NOW), ['2026-10-05', '2026-10-10']);
+  // A day fully blocked is not offered.
+  const full = bookingData({ maxDays: 14, dateRules: [{ id: 'x', from: '2026-10-05', to: '2026-10-05', kind: 'block', ranges: [{ from: '09:00', to: '12:00' }] }] });
+  assert.deepEqual(bookableDays(full, NOW), ['2026-10-12']);
+});
+
+test('booking: daily limit and midnight end', () => {
+  const taken = [{ start: '2026-10-05T13:00:00.000Z', end: '2026-10-05T14:00:00.000Z' }];
+  assert.deepEqual(computeSlots({ data: bookingData({ maxPerDay: '1' }), serviceId: 's1', date: '2026-10-05', bookings: taken, now: NOW }), []);
+  const late = bookingData({ hours: [{ id: 'h', day: 'mon', from: '22:00', to: '00:00' }] });
+  assert.equal(computeSlots({ data: late, serviceId: 's1', date: '2026-10-05', now: NOW }).length, 2);
+});
+
+test('booking: date rules are sanitized and notes stay private', async () => {
+  const { sanitizeBlock, stripPrivateFields } = await import('../src/index.js');
+  const b = sanitizeBlock({ id: 'k', type: 'booking', data: { dateRules: [
+    { from: '2026-02-30', kind: 'closed' }, { from: '2026-12-26', to: '2026-12-24', kind: 'nope', note: 'Family' },
+    { from: '2026-11-02', kind: 'block', ranges: [{ from: '12:00', to: '13:00' }, { from: 'x', to: '1' }] },
+  ] } });
+  assert.equal(b.data.dateRules.length, 2);
+  assert.deepEqual([b.data.dateRules[0].from, b.data.dateRules[0].to, b.data.dateRules[0].kind], ['2026-12-26', '2026-12-26', 'closed']);
+  assert.equal(b.data.dateRules[1].ranges.length, 1);
+  const pub = stripPrivateFields([b])[0];
+  assert.equal(pub.data.dateRules[0].note, undefined);
+  assert.equal(b.data.dateRules[0].note, 'Family');
+});

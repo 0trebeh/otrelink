@@ -45,24 +45,31 @@ export default {
         help: 'Not set: the duration is not shown and each appointment takes the “Start times every” time (30 min by default).' },
       { key: 'price', type: 'text', label: 'Price (optional)', max: 30, placeholder: '$40' },
     ], default: [{ id: 's1', name: 'Consultation', description: '', duration: '30', price: '' }] },
-    { key: 'hours', type: 'list', label: 'Available hours', itemLabel: 'time range', max: 40,
-      help: 'Add several ranges for the same day for breaks (e.g. 9:00–13:00 and 14:00–18:00).', fields: [
+    { key: 'hours', type: 'weeklyHours', label: 'Weekly hours', max: 60,
+      help: 'Turn each day on or off and add several time ranges for breaks (e.g. 9:00–13:00 and 14:00–18:00). An end time of 00:00 means midnight.', fields: [
         { key: 'day', type: 'select', label: 'Day', default: 'mon', options: WEEKDAYS },
         { key: 'from', type: 'time', label: 'From', default: '09:00' },
         { key: 'to', type: 'time', label: 'To', default: '17:00' },
       ], default: ['mon', 'tue', 'wed', 'thu', 'fri'].map((day, i) => ({ id: `h${i}`, day, from: '09:00', to: '17:00' })) },
+    { key: 'dateRules', type: 'dateRules', label: 'Days off & special dates', max: 150, privateItemKeys: ['note'],
+      help: 'Close whole days (holidays, vacations), block some hours on a date, or set special hours for a date. Existing appointments are not cancelled.' },
     { key: 'timezone', type: 'select', label: 'Your time zone', default: localTimeZone(), options: timeZoneOptions, help: 'Visitors see the times in their own time zone.' },
     { key: 'slotStep', type: 'select', label: 'Start times every', default: 'service', options: [
-      { value: 'service', label: 'Length of the service' }, { value: '15', label: '15 minutes' }, { value: '30', label: '30 minutes' }, { value: '60', label: '1 hour' },
+      { value: 'service', label: 'Length of the service' },
+      ...['5', '10', '15', '20', '30', '45', '60', '90', '120'].map((m) => ({ value: m, label: Number(m) < 60 ? `${m} minutes` : `${Number(m) / 60} hour${m === '60' ? '' : 's'}` })),
     ] },
     { key: 'buffer', type: 'select', label: 'Break between appointments', default: '0', options: [
-      { value: '0', label: 'None' }, { value: '5', label: '5 min' }, { value: '10', label: '10 min' }, { value: '15', label: '15 min' }, { value: '30', label: '30 min' },
+      { value: '0', label: 'None' }, ...['5', '10', '15', '20', '30', '45', '60', '90'].map((m) => ({ value: m, label: `${m} min` })),
     ] },
     { key: 'minNotice', type: 'select', label: 'Minimum notice', default: '2', options: [
-      { value: '0', label: 'None' }, { value: '1', label: '1 hour' }, { value: '2', label: '2 hours' }, { value: '4', label: '4 hours' },
-      { value: '12', label: '12 hours' }, { value: '24', label: '1 day' }, { value: '48', label: '2 days' },
+      { value: '0', label: 'None' }, { value: '0.5', label: '30 minutes' }, { value: '1', label: '1 hour' }, { value: '2', label: '2 hours' },
+      { value: '3', label: '3 hours' }, { value: '4', label: '4 hours' }, { value: '6', label: '6 hours' }, { value: '12', label: '12 hours' },
+      { value: '24', label: '1 day' }, { value: '48', label: '2 days' }, { value: '72', label: '3 days' }, { value: '168', label: '1 week' },
     ] },
-    { key: 'maxDays', type: 'range', label: 'Book up to (days ahead)', min: 1, max: 120, default: 30 },
+    { key: 'maxDays', type: 'range', label: 'Book up to (days ahead)', min: 1, max: 365, default: 30 },
+    { key: 'maxPerDay', type: 'select', label: 'Appointments per day', default: '', options: [
+      { value: '', label: 'No limit' }, ...['1', '2', '3', '4', '5', '6', '8', '10', '12', '15', '20', '30'].map((n) => ({ value: n, label: `Up to ${n}` })),
+    ], help: 'When a day reaches the limit it shows no free times.' },
     { key: 'confirmMode', type: 'select', label: 'New bookings', default: 'auto', options: [
       { value: 'auto', label: 'Confirm automatically' }, { value: 'manual', label: 'I confirm each one' },
     ] },

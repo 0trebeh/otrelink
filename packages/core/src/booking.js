@@ -74,7 +74,48 @@ export const weekdayOf = (dateStr) => {
 };
 
 const toMin = (hhmm) => { const [h, m] = String(hhmm || '0:0').split(':').map(Number); return h * 60 + m; };
+// End of a range: "00:00" means midnight at the end of the day.
+const toEndMin = (hhmm) => toMin(hhmm) || 1440;
 const tzOf = (data) => (isValidTimeZone(data.timezone) ? data.timezone : 'UTC');
+
+/** Kinds of special dates. */
+export const DATE_RULE_KINDS = {
+  closed: { label: 'Closed', help: 'No bookings on these days' },
+  block: { label: 'Block hours', help: 'Your usual hours, except these times' },
+  open: { label: 'Special hours', help: 'Only these hours (replaces your usual hours, also on days you are normally closed)' },
+};
+
+/** Special-date rules that apply to a date ("YYYY-MM-DD"). */
+export function rulesOn(data, date) {
+  return (data.dateRules || []).filter((r) => r.from && r.from <= date && date <= (r.to || r.from));
+}
+
+const rangeList = (list) => (list || []).map((r) => [toMin(r.from), toEndMin(r.to)]).filter(([a, b]) => b > a);
+
+/** Opening ranges of a date in minutes after midnight: weekly hours, special hours or none (closed). */
+export function openRanges(data, date) {
+  const rules = rulesOn(data, date);
+  if (rules.some((r) => r.kind === 'closed')) return [];
+  const special = rules.filter((r) => r.kind === 'open');
+  if (special.length) return rangeList(special.flatMap((r) => r.ranges || []));
+  const day = weekdayOf(date);
+  return rangeList((data.hours || []).filter((h) => h.day === day));
+}
+
+/** Blocked ranges of a date (minutes after midnight). */
+export function blockedRanges(data, date) {
+  return rangeList(rulesOn(data, date).filter((r) => r.kind === 'block').flatMap((r) => r.ranges || []));
+}
+
+/** Minutes still open on a date once blocked hours are removed. */
+function freeMinutes(data, date) {
+  const blocked = blockedRanges(data, date);
+  let total = 0;
+  for (const [a, b] of openRanges(data, date)) {
+    for (let m = a; m < b; m += 5) if (!blocked.some(([x, y]) => m < y && m + 5 > x)) total += 5;
+  }
+  return total;
+}
 
 /** The service chosen (by id) or the first one. */
 /** Minutes an appointment takes. Services without a duration use the "Start times every" step (or 30 min). */
@@ -86,15 +127,14 @@ export function pickService(data, serviceId) {
   return (data.services || []).find((s) => s.id === serviceId) || (data.services || [])[0] || null;
 }
 
-/** Days (in the block's zone) that can be booked: from today to maxDays ahead, with hours set. */
+/** Days (in the block's zone) that can be booked: from today to maxDays ahead, with open hours left. */
 export function bookableDays(data, now = new Date()) {
   const tz = tzOf(data);
-  const open = new Set((data.hours || []).map((h) => h.day));
   const today = zonedDateStr(now, tz);
   const out = [];
   for (let i = 0; i <= (Number(data.maxDays) || 30); i++) {
     const day = addDays(today, i);
-    if (open.has(weekdayOf(day))) out.push(day);
+    if (freeMinutes(data, day) > 0) out.push(day);
   }
   return out;
 }
@@ -117,13 +157,15 @@ export function computeSlots({ data, serviceId, date, bookings = [], now = new D
   const buffer = Number(data.buffer) || 0;
   const today = zonedDateStr(now, tz);
   if (date < today || date > addDays(today, Number(data.maxDays) || 30)) return [];
+  // Daily limit of appointments.
+  const perDay = Number(data.maxPerDay) || 0;
+  if (perDay && bookings.filter((b) => zonedDateStr(new Date(b.start), tz) === date).length >= perDay) return [];
   const earliest = now.getTime() + (Number(data.minNotice) || 0) * 3600e3;
   const busy = bookings.map((b) => [new Date(b.start).getTime() - buffer * 60e3, new Date(b.end).getTime() + buffer * 60e3]);
-  const day = weekdayOf(date);
+  // Blocked hours (no buffer around them).
+  for (const [a, b] of blockedRanges(data, date)) busy.push([zonedToUtc(date, a, tz).getTime(), zonedToUtc(date, b, tz).getTime()]);
   const slots = new Set();
-  for (const range of (data.hours || []).filter((h) => h.day === day)) {
-    const from = toMin(range.from);
-    const to = toMin(range.to);
+  for (const [from, to] of openRanges(data, date)) {
     for (let m = from; m + duration <= to; m += step) {
       const start = zonedToUtc(date, m, tz).getTime();
       const end = start + duration * 60e3;

@@ -110,7 +110,7 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending, plan }), [page, set, pageUrl, saved.slug, analytics, dirty, pendingBookings, pendingReviews, refreshPending, plan]);
+  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, saving, save, pendingBookings, pendingReviews, refreshPending, plan }), [page, set, pageUrl, saved.slug, analytics, dirty, saving, save, pendingBookings, pendingReviews, refreshPending, plan]);
   const Section = section.Component;
   const sectionLocked = (id) => !allowsSection(plan, id);
   const liveUrl = `${pageUrl}/${saved.slug}`;

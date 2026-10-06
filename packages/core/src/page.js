@@ -111,8 +111,13 @@ export function sanitizeBlock(b, depth = 0, state = { count: 0 }) {
  */
 export function stripPrivateFields(blocks = []) {
   return blocks.map((b) => {
-    const priv = (blockTypes.get(b.type)?.fields || []).filter((f) => f.private).map((f) => f.key);
-    const data = priv.length ? Object.fromEntries(Object.entries(b.data || {}).filter(([k]) => !priv.includes(k))) : b.data;
+    const fields = blockTypes.get(b.type)?.fields || [];
+    const priv = fields.filter((f) => f.private).map((f) => f.key);
+    let data = priv.length ? Object.fromEntries(Object.entries(b.data || {}).filter(([k]) => !priv.includes(k))) : b.data;
+    // Private keys inside list items (e.g. the note of a closed day).
+    for (const f of fields.filter((x) => x.privateItemKeys && Array.isArray(data?.[x.key]))) {
+      data = { ...data, [f.key]: data[f.key].map((it) => Object.fromEntries(Object.entries(it).filter(([k]) => !f.privateItemKeys.includes(k)))) };
+    }
     return { ...b, data, ...(b.children ? { children: stripPrivateFields(b.children) } : {}) };
   });
 }

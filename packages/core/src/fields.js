@@ -16,6 +16,13 @@
 import { safeUrl } from './util/html.js';
 
 const str = (v) => (v === null || v === undefined ? '' : String(v));
+/** "YYYY-MM-DD" if it is a real calendar date, else ''. */
+function validDate(v) {
+  const d = str(v).trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+  const t = new Date(`${d}T00:00:00Z`);
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d ? d : '';
+}
 const clamp = (n, min, max) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
 
 /** Field options can be a static array or a function (lazy registries). */
@@ -159,6 +166,34 @@ export const fieldTypes = {
         zoom: n(v?.zoom, 100, 300, 100),
         fit: fits.includes(v?.fit) ? v.fit : fits[0],
       };
+    },
+  },
+  // Weekly opening hours: a list of { id, day, from, to } edited day by day
+  // in the dashboard. Several ranges per day allow breaks.
+  weeklyHours: {
+    default: [],
+    sanitize: (v, f) => fieldTypes.list.sanitize(v, f),
+  },
+  // Special dates: closed days, blocked hours or special hours.
+  // Items: { id, from, to: "YYYY-MM-DD", kind: closed|block|open, ranges: [{ from, to }], note }.
+  dateRules: {
+    default: [],
+    sanitize: (v, f) => {
+      if (!Array.isArray(v)) return [];
+      const time = (t) => fieldTypes.time.sanitize(t, { default: '' });
+      return v.slice(0, f.max ?? 100).map((item) => {
+        const from = validDate(item?.from);
+        if (!from) return null;
+        let to = validDate(item?.to) || from;
+        if (to < from) to = from;
+        const kind = ['closed', 'block', 'open'].includes(item?.kind) ? item.kind : 'closed';
+        const ranges = kind === 'closed' || !Array.isArray(item?.ranges) ? [] : item.ranges.slice(0, 8)
+          .map((r) => ({ from: time(r?.from), to: time(r?.to) })).filter((r) => r.from && r.to);
+        return {
+          id: str(item?.id).slice(0, 40) || Math.random().toString(36).slice(2, 10),
+          from, to, kind, ranges, note: str(item?.note).replace(/[\r\n]+/g, ' ').trim().slice(0, 100),
+        };
+      }).filter(Boolean);
     },
   },
   // A repeatable group of sub-fields, e.g. accordion items or gallery images.
