@@ -24,6 +24,7 @@ import { buttonStyles } from '../buttons/index.js';
 
 import link from './link.js';
 import header from './header.js';
+import copy from './copy.js';
 import text from './text.js';
 import image from './image.js';
 import banner from './banner.js';
@@ -47,6 +48,7 @@ import catalog from './catalog.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
+  copy,
   collection,
   header,
   text,

@@ -18,6 +18,9 @@ const BASE_CSS = `
 .ol-root{position:relative;min-height:100%;font-family:var(--ol-body-font);font-size:var(--ol-body-size);color:var(--ol-text-color);-webkit-font-smoothing:antialiased;isolation:isolate}
 .ol-root *,.ol-root *::before,.ol-root *::after{box-sizing:border-box}
 .ol-root iframe{color-scheme:light}
+.ol-root.ol-noselect{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.ol-root.ol-noselect :is(input,textarea,select,[contenteditable]){-webkit-user-select:text;user-select:text}
+.ol-root.ol-noselect img,.ol-root.ol-nomenu img{-webkit-user-drag:none;-webkit-touch-callout:none}
 .ol-root .ol-bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
 .ol-root .ol-main{max-width:var(--ol-max-width);margin:0 auto;padding:var(--ol-pad-top) 16px 40px;display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
 .ol-root .ol-profile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-bottom:24px}
@@ -168,7 +171,8 @@ export function renderPage(page, opts = {}) {
     : '';
 
   const entrance = animate && d.entrance !== 'none' ? `ol-enter-${d.entrance}` : '';
-  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}" data-mode="${mode}">`
+  const protect = [page.settings?.noSelect && 'ol-noselect', page.settings?.noRightClick && 'ol-nomenu'].filter(Boolean).join(' ');
+  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}" data-mode="${mode}">`
     + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>`
     + `<main class="ol-main">${renderProfile(page, d)}<section class="ol-blocks">${blocksHtml}</section>${renderSocials(page, d, 'bottom')}${footer}</main>`
     + `${gate}</div>`;
@@ -266,5 +270,20 @@ export function hydratePage(container, page, opts = {}) {
     if (opts.interceptLinks && el.tagName === 'A') e.preventDefault();
   };
   container.addEventListener('click', onClick);
-  return () => container.removeEventListener('click', onClick);
+
+  // Content protection (Settings): no right-click menu, no dragging text or images.
+  // Form fields keep their menu so visitors can still paste.
+  const root = container.querySelector('.ol-root');
+  const field = (t) => t?.closest?.('input,textarea,select,[contenteditable]');
+  const onMenu = (e) => { if (!field(e.target)) e.preventDefault(); };
+  const onDrag = (e) => { if (!field(e.target)) e.preventDefault(); };
+  const noMenu = root?.classList.contains('ol-nomenu');
+  const noDrag = root?.classList.contains('ol-noselect') || noMenu;
+  if (noMenu) container.addEventListener('contextmenu', onMenu);
+  if (noDrag) container.addEventListener('dragstart', onDrag);
+  return () => {
+    container.removeEventListener('click', onClick);
+    container.removeEventListener('contextmenu', onMenu);
+    container.removeEventListener('dragstart', onDrag);
+  };
 }

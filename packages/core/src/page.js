@@ -6,7 +6,7 @@
 //   blocks:  [{ id, type, enabled, data: {...}, options: { animation, showFrom, showUntil }, children?: [...] }],
 //            (children only on container types such as Collection, nested up to MAX_DEPTH)
 //   design:  { theme, ...design fields, wallpaper: { type, ...wallpaper fields } },
-//   settings:{ published, seoTitle, seoDescription, ogImage, hideFooter, sensitive, sensitiveMessage }
+//   settings:{ published, seoTitle, seoDescription, ogImage, hideFooter, noSelect, noRightClick, sensitive, sensitiveMessage }
 // }
 
 import { blockTypes, commonBlockFields, blockStyleFields } from './blocks/index.js';
@@ -31,6 +31,10 @@ export const settingsFields = [
   { key: 'seoDescription', type: 'textarea', label: 'SEO description', max: 200 },
   { key: 'ogImage', type: 'image', label: 'Sharing image', help: 'Shown when your link is shared on social media.' },
   { key: 'hideFooter', type: 'toggle', label: 'Hide “Made with Otrelink” footer', default: false },
+  { key: 'noSelect', type: 'toggle', label: 'Block text selection', default: false,
+    help: 'Visitors can’t select or drag text and images on your page (forms still work). It makes copying harder, not impossible.' },
+  { key: 'noRightClick', type: 'toggle', label: 'Block right-click', default: false,
+    help: 'Turns off the right-click menu (and the long-press menu on images) on your page.' },
   { key: 'sensitive', type: 'toggle', label: 'Sensitive content warning', default: false, help: 'Visitors must confirm before seeing the page.' },
   { key: 'sensitiveMessage', type: 'text', label: 'Warning message', default: 'This page may contain sensitive content.', showIf: { key: 'sensitive', truthy: true } },
 ];

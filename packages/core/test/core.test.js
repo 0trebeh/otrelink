@@ -423,3 +423,14 @@ test('a block can have its own style', async () => {
   assert.ok(html.includes('ol-styled ol-bs-glass') && html.includes('--ol-btn-bg:#ff0000') && html.includes('--ol-glass-alpha:50%'));
   assert.ok(css.includes('.ol-root .ol-bs-glass.ol-styled .ol-btn{'));
 });
+
+test('copy block and content protection', async () => {
+  const { blockTypes, sanitizeBlock, renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  const b = sanitizeBlock({ id: 'c1', type: 'copy', data: { title: 'Copy code', text: 'SAVE"20<' } });
+  const html = blockTypes.get('copy').render(b.data, { blockId: 'c1' });
+  assert.ok(html.includes('data-copy="SAVE&quot;20&lt;"') && html.includes('<button type="button" class="ol-btn has-media ol-copybtn"'));
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x', title: 'X' }), settings: { noSelect: true, noRightClick: true } });
+  const r = renderPage(page);
+  assert.ok(r.html.includes('ol-noselect ol-nomenu') && r.css.includes('.ol-root.ol-noselect{'));
+  assert.ok(!renderPage(sanitizePage(createDefaultPage({ slug: 'y', title: 'Y' }))).html.includes('ol-noselect'));
+});

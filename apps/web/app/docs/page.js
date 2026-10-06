@@ -335,6 +335,7 @@ export default function DocsPage() {
 
           <H2 id="sharing">Sharing &amp; analytics</H2>
           <P>In <i>Settings</i> you can copy your link, download a QR code, change your username, add an SEO title, description and sharing image, hide the page, hide the footer, or show a sensitive-content warning.</P>
+          <P><b>Protect content:</b> <i>Block text selection</i> stops visitors from selecting or dragging text and images, and <i>Block right-click</i> turns off the right-click menu (and the long-press menu on images). Form fields keep working so visitors can still type and paste. This makes copying harder, but it can’t stop someone determined (screenshots, developer tools). Use the <i>Copy button</i> block when you do want visitors to copy something, like a discount code or an account number.</P>
           <Table
             head={['Metric', 'Meaning']}
             rows={[
