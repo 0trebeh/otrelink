@@ -351,3 +351,15 @@ test('booking: date rules are sanitized and notes stay private', async () => {
   assert.equal(pub.data.dateRules[0].note, undefined);
   assert.equal(b.data.dateRules[0].note, 'Family');
 });
+
+// ── Banner ──────────────────────────────────────────────────────────────
+test('banner: renders a link with escaped text, image and button', async () => {
+  const { blockTypes, sanitizeBlock } = await import('../src/index.js');
+  const mod = blockTypes.get('banner');
+  const b = sanitizeBlock({ id: 'bn', type: 'banner', data: { title: 'Sale <b>', url: 'shop.com', buttonLabel: 'Shop', image: 'https://x.co/a.jpg', ratio: '3 / 1', align: 'center' } });
+  const html = mod.render(b.data, { blockId: 'bn' });
+  assert.ok(html.startsWith('<a class="ol-banner al-center at-bottom has-image"'));
+  assert.ok(html.includes('href="https://shop.com/"') && html.includes('Sale &lt;b&gt;') && html.includes('ol-banner-btn') && html.includes('aspect-ratio:3 / 1'));
+  const plain = mod.render(sanitizeBlock({ id: 'c', type: 'banner', data: { url: 'javascript:alert(1)', buttonLabel: 'x' } }).data, { blockId: 'c' });
+  assert.ok(plain.startsWith('<div') && !plain.includes('javascript') && !plain.includes('ol-banner-btn'));
+});

@@ -25,6 +25,7 @@ import link from './link.js';
 import header from './header.js';
 import text from './text.js';
 import image from './image.js';
+import banner from './banner.js';
 import gallery from './gallery.js';
 import video from './video.js';
 import music from './music.js';
@@ -48,6 +49,7 @@ export const blockTypes = createRegistry('blockTypes', [
   header,
   text,
   image,
+  banner,
   gallery,
   pdf,
   video,
