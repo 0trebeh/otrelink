@@ -229,7 +229,8 @@ export function applyColorScheme(doc, scheme) {
  * @returns {() => void} cleanup function
  */
 export function hydratePage(container, page, opts = {}) {
-  applyColorScheme(container.ownerDocument, colorSchemeOf(resolveDesign(page.design)));
+  // The dashboard preview lives inside the dashboard document: it must not change it.
+  if (opts.colorScheme !== false) applyColorScheme(container.ownerDocument, colorSchemeOf(resolveDesign(page.design)));
   // Stagger entrance animations.
   container.querySelectorAll('.ol-enter').forEach((el, i) => {
     el.style.animationDelay = `${Math.min(i, 14) * 55}ms`;
