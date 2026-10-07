@@ -1,4 +1,4 @@
-import { createDefaultPage, sanitizePage, sanitizeSlug } from '@otrelink/core';
+import { createDefaultPage, sanitizePage, sanitizeSlug, buildTemplatePage } from '@otrelink/core';
 import { getDb } from '@/lib/db';
 import { toDashboardPage } from '@/lib/pages';
 import { handler, json, error, readJson, requireVerifiedUser } from '@/lib/http';
@@ -21,7 +21,8 @@ export const POST = handler(async (req) => {
   // Pages allowed by the plan (Free: 1, Pro: 10, Business: set by the admin).
   if ((await db.pages.countByUser(user.id)) >= user.plan.maxPages) return error(403, 'page_limit', { limit: user.plan.maxPages, plan: user.plan.id });
   try {
-    const content = sanitizePage(createDefaultPage({ slug, title: body.title }));
+    // Optional template (dashboard → New page → template).
+    const content = (body.template && buildTemplatePage(String(body.template))) || sanitizePage(createDefaultPage({ slug, title: body.title }));
     const page = await db.pages.create({ userId: user.id, slug, ...content });
     return json({ page: toDashboardPage(page) }, { status: 201 });
   } catch (err) {

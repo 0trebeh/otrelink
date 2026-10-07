@@ -6,7 +6,7 @@
 //  `ed` = { page, set(updater, mergeKey), pageUrl, savedSlug, analytics, dirty, pendingBookings, pendingReviews, pendingOrders,
 //          refreshPending, plan, today, setToday }
 // ─────────────────────────────────────────────────────────────
-import { CalendarDays, ClipboardList, Star, Link2, UserRound, Palette, Image as ImageIcon, SlidersHorizontal, Settings, BarChart3, MapPin, ShoppingBag, Stamp, ReceiptText } from 'lucide-react';
+import { CalendarDays, ClipboardList, Star, Link2, UserRound, Palette, Image as ImageIcon, SlidersHorizontal, Settings, BarChart3, MapPin, ShoppingBag, Stamp, ReceiptText, LayoutTemplate } from 'lucide-react';
 import LinksSection from './LinksSection';
 import ProfileSection from './ProfileSection';
 import ThemeSection from './ThemeSection';
@@ -21,6 +21,7 @@ import TodaySection from './TodaySection';
 import OrdersSection from './OrdersSection';
 import LoyaltySection from './LoyaltySection';
 import InvoicesSection from './InvoicesSection';
+import TemplatesSection from './TemplatesSection';
 
 export const sections = [
   // Build the page
@@ -28,6 +29,7 @@ export const sections = [
   { id: 'profile', label: 'Profile', icon: UserRound, Component: ProfileSection, group: 'Page' },
   { id: 'today', label: 'Today', icon: MapPin, Component: TodaySection, group: 'Page' },
   // Look
+  { id: 'templates', label: 'Templates', icon: LayoutTemplate, Component: TemplatesSection, wide: true, group: 'Design' },
   { id: 'theme', label: 'Theme', icon: Palette, Component: ThemeSection, group: 'Design' },
   { id: 'wallpaper', label: 'Wallpaper', icon: ImageIcon, Component: WallpaperSection, group: 'Design' },
   { id: 'style', label: 'Style', icon: SlidersHorizontal, Component: StyleSection, group: 'Design' },

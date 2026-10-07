@@ -696,3 +696,16 @@ test('invoices: totals, money and cleaning', async () => {
   assert.equal(allowsSection(PLANS.free, 'invoices'), false);
   assert.equal(allowsSection(PLANS.pro, 'invoices'), true);
 });
+
+test('20 templates build valid pages', async () => {
+  const { TEMPLATES, TEMPLATE_CATEGORIES, buildTemplatePage, renderPage, blockTypes, themes } = await import('../src/index.js');
+  assert.equal(TEMPLATES.length, 20);
+  assert.equal(new Set(TEMPLATES.map((t) => t.id)).size, 20);
+  for (const t of TEMPLATES) {
+    assert.ok(TEMPLATE_CATEGORIES.includes(t.category) && themes.has(t.theme), t.id);
+    const page = buildTemplatePage(t.id);
+    assert.ok(page.blocks.length > 1 && page.blocks.every((b) => blockTypes.has(b.type)), t.id);
+    assert.ok(renderPage({ id: 'x', slug: 'x', ...page }).html.includes('ol-root'), t.id);
+  }
+  assert.equal(buildTemplatePage('nope'), null);
+});

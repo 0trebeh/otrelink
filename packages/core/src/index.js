@@ -42,3 +42,4 @@ export * from './invoices.js';
 export * from './page.js';
 export * from './render.js';
 export * from './docs.js';
+export * from './templates.js';

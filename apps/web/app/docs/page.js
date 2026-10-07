@@ -16,6 +16,7 @@ export const metadata = {
 const toc = [
   { id: 'getting-started', label: 'Getting started' },
   { id: 'blocks', label: 'Blocks' },
+  { id: 'templates', label: 'Templates' },
   { id: 'customizing', label: 'Customizing' },
   { id: 'custom-css', label: 'Custom CSS' },
   { id: 'css-structure', label: 'Page structure', sub: true },
@@ -162,6 +163,9 @@ export default function DocsPage() {
           <P>Text blocks and FAQ answers support light formatting: <C>**bold**</C>, <C>*italic*</C>, <C>~~strike~~</C> and <C>[link text](https://…)</C>.</P>
 
           {/* ── Customizing ── */}
+          <H2 id="templates">Templates</H2>
+          <P>20 ready-made pages (minimal, content creator, musician, photographer, restaurant, food truck, bakery, online store, coach, developer, real estate, fitness, salon, podcast, conference, nonprofit, wedding, artist, teacher and business card), filtered by category. Click one to see a live preview, then <i>Use as the base of this page</i> (editor → <i>Templates</i>): it replaces your blocks and design, and with <i>Keep my profile</i> on your title, bio, picture and social icons stay. Nothing is saved until you press <b>Save</b>, and Ctrl+Z undoes it. You can also pick a template when you create a new page (<i>New page → Templates</i>).</P>
+
           <H2 id="customizing">Customizing</H2>
           <Table
             head={['Section', 'What it does']}

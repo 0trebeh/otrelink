@@ -4,7 +4,9 @@ import GlobalAnalytics from './GlobalAnalytics';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock, Menu, X, BookOpen } from 'lucide-react';
+import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock, Menu, X, BookOpen, LayoutTemplate } from 'lucide-react';
+import { TEMPLATES } from '@otrelink/core';
+import TemplatePicker from './TemplatePicker';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Input, Modal, Logo } from './ui';
 import Preview from './Preview';
@@ -27,12 +29,14 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
   const [slug, setSlug] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [template, setTemplate] = useState('');
+  const [picking, setPicking] = useState(false);
 
   const create = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
     setBusy(true); setErr('');
     try {
-      const { page } = await api('/api/pages', { method: 'POST', body: { slug, title: `@${slug}` } });
+      const { page } = await api('/api/pages', { method: 'POST', body: { slug, title: `@${slug}`, ...(template ? { template } : {}) } });
       router.push(`/dashboard/${page.id}`);
     } catch (e2) { setErr(errorMessage(e2)); setBusy(false); }
   };
@@ -116,12 +120,33 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
             <span className="pl-3 text-sm text-muted whitespace-nowrap">{pageUrl.replace(/^https?:\/\//, '')}/</span>
             <input required autoFocus aria-label="Username for the page" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s/g, ''))} className="flex-1 h-11 px-1 text-sm outline-none min-w-0" placeholder="yourbrand" />
           </div>
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-soft px-3 py-2.5">
+            <span className="text-sm min-w-0"><span className="block text-xs text-muted">Start from</span><b className="truncate block">{template ? TEMPLATES.find((t) => t.id === template)?.name : 'A blank page'}</b></span>
+            <span className="flex gap-1 shrink-0">
+              {template && <Button size="sm" variant="ghost" onClick={() => setTemplate('')}>Blank</Button>}
+              <Button size="sm" onClick={() => setPicking(true)}><LayoutTemplate size={14} /> {template ? 'Change' : 'Templates'}</Button>
+            </span>
+          </div>
           {err && <p className="text-sm text-danger">{err}</p>}
           <Button type="submit" variant="primary" className="w-full" disabled={busy || slug.length < 3}>
             {busy && <Loader2 size={16} className="animate-spin" />} Create page
           </Button>
         </form>
       </Modal>
+      {picking && (
+        <div className="fixed inset-0 z-50 bg-canvas overflow-y-auto" role="dialog" aria-modal="true" aria-label="Templates">
+          <div className="max-w-6xl mx-auto px-4 sm:px-8 py-6">
+            <div className="flex items-center justify-between gap-3 mb-5">
+              <div>
+                <h2 className="font-display text-2xl font-extrabold tracking-tight">Choose a template</h2>
+                <p className="text-sm text-muted">Your new page starts with it. Everything stays editable.</p>
+              </div>
+              <Button onClick={() => setPicking(false)}>Close</Button>
+            </div>
+            <TemplatePicker useLabel="Start my page with it" onUse={(id) => { setTemplate(id); setPicking(false); }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
