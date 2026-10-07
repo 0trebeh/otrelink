@@ -570,3 +570,19 @@ test('translate switch is rendered with the page language', async () => {
   assert.ok(renderPage(page, { mode: 'export' }).html.includes('data-ol-lang')); // exported sites load Google Translate too
   assert.ok(!renderPage(sanitizePage({ ...page, settings: { language: 'es' } })).html.includes('data-ol-lang'));
 });
+
+test('code block: language from the file name, lines and colors', async () => {
+  const { codeLanguage, parseLineList, splitHtmlLines, highlight, renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  assert.equal(codeLanguage({ language: 'auto', filename: 'README.md' }), 'markdown');
+  assert.equal(codeLanguage({ language: 'auto', filename: 'schema.sql' }), 'sql');
+  assert.equal(codeLanguage({ language: 'css', filename: 'x.sql' }), 'css');
+  assert.deepEqual([...parseLineList('2, 5-6 x')], [2, 5, 6]);
+  const { html } = await highlight('/* a\nb */ SELECT 1;', 'sql');
+  const lines = splitHtmlLines(html);
+  assert.equal(lines.length, 2);
+  assert.ok(lines.every((l) => (l.match(/<span/g) || []).length === (l.match(/<\/span>/g) || []).length));
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), blocks: [{ type: 'code', data: { code: '<b>\tx</b>\n\n', marked: '1' } }] });
+  assert.equal(page.blocks[0].data.code, '<b>\tx</b>');
+  const r = renderPage(page);
+  assert.ok(r.html.includes('&lt;b&gt;  x&lt;/b&gt;') && r.html.includes('is-marked') && r.html.includes('translate="no"'));
+});

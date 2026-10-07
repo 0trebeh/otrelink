@@ -27,6 +27,22 @@ export const fieldInputs = {
   textarea: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} maxLength={field.max} placeholder={field.placeholder} onChange={(e) => onChange(e.target.value)} />,
   embed: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} maxLength={field.max ?? 20000} placeholder={field.placeholder} spellCheck={false} className="font-mono text-xs min-h-28" onChange={(e) => onChange(e.target.value)} />,
   code: ({ value, onChange, field, id }) => <Textarea id={id} value={value ?? ''} placeholder={field.placeholder} spellCheck={false} className="font-mono text-xs min-h-40" onChange={(e) => onChange(e.target.value)} />,
+  // Source code (Code block): monospace, no wrapping, Tab inserts spaces (Esc then Tab leaves the box).
+  source: ({ value, onChange, field, id }) => (
+    <Textarea id={id} value={value ?? ''} maxLength={field.max ?? 20000} spellCheck={false} autoCapitalize="off" autoCorrect="off" wrap="off"
+      className="font-mono text-xs leading-relaxed min-h-56 whitespace-pre overflow-x-auto [tab-size:2]"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') { e.currentTarget.dataset.tabOut = '1'; return; }
+        if (e.key !== 'Tab' || e.shiftKey || e.currentTarget.dataset.tabOut) { delete e.currentTarget.dataset.tabOut; return; }
+        e.preventDefault();
+        const el = e.currentTarget;
+        const { selectionStart: a, selectionEnd: b } = el;
+        const next = `${el.value.slice(0, a)}  ${el.value.slice(b)}`;
+        onChange(next);
+        requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = a + 2; });
+      }}
+      onChange={(e) => onChange(e.target.value)} />
+  ),
   number: ({ value, onChange, field, id }) => <Input id={id} type="number" value={value ?? 0} min={field.min} max={field.max} step={field.step} onChange={(e) => onChange(Number(e.target.value))} />,
   range: ({ value, onChange, field, id }) => (
     <div className="flex items-center gap-3">

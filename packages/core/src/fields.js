@@ -145,6 +145,12 @@ export const fieldTypes = {
       return Number.isNaN(d.getTime()) ? '' : d.toISOString();
     },
   },
+  // Source code shown as-is (Code block): keeps indentation and every character
+  // (it is always escaped when rendered).
+  source: {
+    default: '',
+    sanitize: (v, f) => str(v).replace(/\u0000/g, '').replace(/\r\n?/g, '\n').replace(/\s+$/, '').slice(0, f.max ?? 20000),
+  },
   // Raw embed HTML (an <iframe> or a provider snippet). It is never inserted
   // into the page as-is: the Embed block rebuilds plain iframes and runs any
   // other code inside a sandboxed iframe.

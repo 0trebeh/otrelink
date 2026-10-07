@@ -29,6 +29,7 @@ export * from './blocks/catalog.js';
 export * from './blocks/loyalty.js';
 export * from './blocks/status.js';
 export * from './blocks/location.js';
+export * from './blocks/code.js';
 export * from './plans.js';
 export * from './util/image.js';
 export * from './survey.js';

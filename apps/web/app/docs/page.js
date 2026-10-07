@@ -28,6 +28,7 @@ const toc = [
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
+  { id: 'code-block', label: 'Code block' },
   { id: 'catalog', label: 'Catalog' },
   { id: 'food', label: 'Food trucks & shops' },
   { id: 'orders', label: 'Pickup orders', sub: true },
@@ -310,6 +311,10 @@ export default function DocsPage() {
               <li>Reviews are anonymous (no account needed), so anyone with your link can write one. Use “I approve each one” if you get spam.</li>
             </ul>
           </Warning>
+
+          <H2 id="code-block">Code block</H2>
+          <P>The <i>Code</i> block (Content category) shows a snippet with syntax colors: SQL, HTML, CSS, JavaScript, TypeScript, JSON, Markdown / README, Python, Bash, PHP and 20 more. Choose the language, or leave <i>Detect</i>: a file name like <C>README.md</C> or <C>query.sql</C> picks it, otherwise it is guessed from the code.</P>
+          <P>Options: 8 color themes (GitHub dark and light, One Dark, Dracula, Monokai, Nord, Night Owl, Solarized light), line numbers (and the first number), highlighted lines (<C>3, 7-9</C>), wrapping long lines, a max height with scroll, text size, tab width, a top bar (window dots, simple or none) and a <i>Copy</i> button. In the editor, Tab inserts two spaces; press Esc and then Tab to move to the next field. Code is never translated by the translate button.</P>
 
           <H2 id="catalog">Catalog</H2>
           <P>Add a <i>Catalog</i> block (Content category, Pro plan) to show your products. By default it is a button that opens the catalog on your page; choose <i>Always visible</i> to show the products directly. Pick a grid (2 per row) or a list.</P>
