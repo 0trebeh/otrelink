@@ -1,6 +1,7 @@
 // Otrelink public page. Plain JavaScript: fetch the page, render it with the
 // shared renderer from @otrelink/core, and send analytics beacons.
 import { mountPage, resolveDesign } from '@otrelink/core';
+import { getGeo, visitContext } from './geo.js';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 const HOME = import.meta.env.VITE_HOME_URL || API;
@@ -24,8 +25,12 @@ function visitorId() {
   } catch { return ''; }
 }
 
+// Location (when it arrives) and time context go with every event.
+let geo = null;
+const geoReady = getGeo().then((g) => { geo = g; return g; });
+
 function track(pageId, payload) {
-  const body = JSON.stringify({ pageId, visitor: visitorId(), ...payload });
+  const body = JSON.stringify({ pageId, visitor: visitorId(), ...visitContext(), ...(geo || {}), ...payload });
   const url = `${API}/api/public/track`;
   // sendBeacon survives navigation; text/plain avoids a CORS preflight.
   if (navigator.sendBeacon?.(url, new Blob([body], { type: 'text/plain' }))) return;
@@ -73,7 +78,11 @@ async function main() {
       apiBase: API, // used by blocks that talk to the server (Booking)
       onTrack: (target) => track(page.id, { type: 'click', target }),
     });
-    track(page.id, { type: 'view', referrer: document.referrer });
+    // The visit waits up to 3 s for the location; it is sent anyway if the visitor leaves first.
+    let sent = false;
+    const sendView = () => { if (!sent) { sent = true; track(page.id, { type: 'view', referrer: document.referrer }); } };
+    Promise.race([geoReady, new Promise((r) => setTimeout(r, 3000))]).then(sendView);
+    addEventListener('pagehide', sendView, { once: true });
   } catch (err) {
     console.error(err);
     showState('Something went wrong', 'The page could not be loaded. Refresh to try again.');

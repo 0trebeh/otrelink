@@ -75,6 +75,8 @@ html[data-theme="dark"] .text-amber-800,
 html[data-theme="dark"] .text-amber-950 { color: #fbbf24; }
 /* The phone frame of the preview stays dark; a thin edge keeps it visible. */
 html[data-theme="dark"] .phone-bezel { outline: 1px solid #34343f; }
+/* Analytics map: darker tiles in dark mode. */
+html[data-theme="dark"] .ol-visit-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 html[data-theme="dark"] .dot-canvas {
   background-color: #141419;
   background-image: radial-gradient(#2c2c36 1px, transparent 1.2px);

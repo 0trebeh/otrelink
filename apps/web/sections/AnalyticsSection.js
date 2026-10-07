@@ -1,8 +1,14 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { blockTypes, socials, findBlock } from '@otrelink/core';
+import dynamic from 'next/dynamic';
 import { api } from '@/lib/client';
 import { Panel, cx } from '@/components/ui';
+import TimeBars from './analytics/TimeBars';
+import { countryName, flag } from './analytics/geo';
+
+// Leaflet only runs in the browser.
+const VisitMap = dynamic(() => import('./analytics/VisitMap'), { ssr: false, loading: () => <div className="h-80 sm:h-96 rounded-2xl bg-soft animate-pulse" /> });
 
 const VIEWS = '#7a2cf0';
 const CLICKS = '#0e9f8f';
@@ -71,13 +77,15 @@ function TrendChart({ series }) {
   );
 }
 
-function BarList({ title, rows, empty = 'No data yet' }) {
+function BarList({ title, rows, empty = 'No data yet', limit = 8 }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? rows : rows.slice(0, limit);
   const max = Math.max(1, ...rows.map((r) => r.count));
   return (
     <Panel title={title}>
       {rows.length === 0 ? <p className="text-sm text-muted">{empty}</p> : (
         <ul className="space-y-2">
-          {rows.map((r) => (
+          {shown.map((r) => (
             <li key={r.key} className="relative rounded-xl overflow-hidden">
               <span className="absolute inset-y-0 left-0 bg-accent-soft rounded-xl" style={{ width: `${(r.count / max) * 100}%` }} />
               <span className="relative flex justify-between gap-3 px-3 py-2 text-sm">
@@ -88,20 +96,75 @@ function BarList({ title, rows, empty = 'No data yet' }) {
           ))}
         </ul>
       )}
+      {rows.length > limit && (
+        <button type="button" onClick={() => setAll((v) => !v)} className="mt-3 text-xs font-semibold text-accent-ink hover:underline cursor-pointer">
+          {all ? 'Show less' : `Show all ${rows.length}`}
+        </button>
+      )}
     </Panel>
+  );
+}
+
+const ago = (ts) => {
+  const s = Math.round((Date.now() - new Date(ts).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  for (const [u, n] of [['day', 86400], ['hour', 3600], ['minute', 60]]) {
+    if (s >= n) { const v = Math.floor(s / n); return `${v} ${u}${v === 1 ? '' : 's'} ago`; }
+  }
+  return '';
+};
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+const HOURS_FULL = HOURS.map((h) => `${h}:00–${h}:59`);
+// Weeks start on Monday on screen (data index 0 = Sunday).
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const WEEK_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEK_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function RecentVisits({ rows }) {
+  if (!rows.length) return <p className="text-sm text-muted">No visits in this range yet.</p>;
+  return (
+    <div className="overflow-x-auto -mx-1">
+      <table className="w-full text-sm min-w-[520px]">
+        <thead>
+          <tr className="text-left text-xs text-muted">
+            <th className="font-semibold px-1 pb-2">When</th>
+            <th className="font-semibold px-1 pb-2">Where</th>
+            <th className="font-semibold px-1 pb-2">Device</th>
+            <th className="font-semibold px-1 pb-2">From</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-line/70">
+          {rows.map((v, i) => (
+            <tr key={i}>
+              <td className="px-1 py-2 whitespace-nowrap" title={new Date(v.ts).toLocaleString()}>
+                {ago(v.ts)}{v.returning && <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-accent-ink">returning</span>}
+              </td>
+              <td className="px-1 py-2">
+                {v.cc || v.city
+                  ? <span title={[v.city, v.region, countryName(v.cc)].filter(Boolean).join(', ')}>{flag(v.cc)} {v.city || countryName(v.cc)}{v.approx && <span className="text-muted" title="Estimated from the time zone"> ≈</span>}</span>
+                  : <span className="text-muted">Unknown</span>}
+              </td>
+              <td className="px-1 py-2 text-muted whitespace-nowrap">{[v.device && v.device.charAt(0).toUpperCase() + v.device.slice(1), v.os, v.browser].filter(Boolean).join(' · ')}</td>
+              <td className="px-1 py-2 text-muted truncate max-w-40">{v.referrer}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 export default function AnalyticsSection({ ed }) {
   const { page } = ed;
   const [days, setDays] = useState(30);
+  const [metric, setMetric] = useState('views');
   const [data, setData] = useState(null);
   const [err, setErr] = useState(false);
 
   useEffect(() => {
     let alive = true;
     setErr(false);
-    api(`/api/pages/${page.id}/analytics?days=${days}`).then((d) => alive && setData(d)).catch(() => alive && setErr(true));
+    api(`/api/pages/${page.id}/analytics?days=${days}&tz=${encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone || '')}`).then((d) => alive && setData(d)).catch(() => alive && setErr(true));
     return () => { alive = false; };
   }, [page.id, days]);
 
@@ -131,23 +194,65 @@ export default function AnalyticsSection({ ed }) {
       {data && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Stat label="Views" value={fmt(data.totals.views)} />
+            <Stat label="Page visits" value={fmt(data.totals.views)} />
             <Stat label="Unique visitors" value={fmt(data.totals.visitors)} />
             <Stat label="Clicks" value={fmt(data.totals.clicks)} />
             <Stat label="Click rate" value={`${(data.totals.ctr * 100).toFixed(1)}%`} />
           </div>
-          <Panel title="Views and clicks per day">
+          <Panel title="Visits and clicks per day">
             {data.totals.views + data.totals.clicks === 0
               ? <p className="text-sm text-muted">No visits in this range yet. Share your link to start collecting data.</p>
               : <TrendChart series={data.series} />}
           </Panel>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <h3 className="font-display text-lg font-bold tracking-tight">Where and when</h3>
+            <div className="inline-flex rounded-full bg-panel border border-line p-1" role="group" aria-label="Show">
+              {[['views', 'Visits'], ['clicks', 'Clicks']].map(([k, l]) => (
+                <button key={k} type="button" onClick={() => setMetric(k)} aria-pressed={metric === k}
+                  className={cx('h-8 px-3.5 rounded-full text-[13px] font-semibold cursor-pointer', metric === k ? 'bg-ink text-white' : 'text-muted hover:text-ink')}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Panel title={metric === 'views' ? 'Map of visits' : 'Map of clicks'}>
+            <VisitMap points={data.points} metric={metric} />
+            <p className="text-xs text-muted mt-2">
+              {data.points.filter((p) => p[metric] > 0).length} places
+              {data.totals.views > 0 && ` · ${data.totals.located} of ${data.totals.views} visits located`}
+              {data.totals.approx > 0 && ` (${data.totals.approx} estimated from the time zone, dashed circles)`}
+              . Locations are approximate (by IP, about 1 km); IP addresses are never stored.
+            </p>
+          </Panel>
+
+          <div className="grid lg:grid-cols-2 gap-5">
+            <Panel title="Hour of the day" description="In your visitors’ local time.">
+              <TimeBars values={data.hours[metric]} labels={HOURS} full={HOURS_FULL} every={3}
+                color={metric === 'views' ? VIEWS : CLICKS} unit={metric === 'views' ? 'visits' : 'clicks'} />
+            </Panel>
+            <Panel title="Day of the week" description="In your visitors’ local time.">
+              <TimeBars values={WEEK_ORDER.map((d) => data.weekdays[metric][d])} labels={WEEK_ORDER.map((d) => WEEK_SHORT[d])}
+                full={WEEK_ORDER.map((d) => WEEK_FULL[d])} color={metric === 'views' ? VIEWS : CLICKS} unit={metric === 'views' ? 'visits' : 'clicks'} />
+            </Panel>
+            <BarList title="Countries" rows={data.countries[metric].map((r) => ({ ...r, label: `${flag(r.key)} ${countryName(r.key)}` }))} />
+            <BarList title="Cities" rows={data.cities[metric].map((r) => { const [city, cc] = r.key.split('|'); return { ...r, label: `${flag(cc)} ${city}` }; })} />
+          </div>
+
+          <h3 className="font-display text-lg font-bold tracking-tight pt-2">Blocks and visitors</h3>
           <div className="grid lg:grid-cols-2 gap-5">
             <BarList title="Top blocks" rows={blockRows} empty="No clicks yet" />
             <BarList title="Social icons" rows={data.socials.map((r) => ({ ...r, label: socials.get(r.key)?.label || r.key }))} empty="No clicks yet" />
             <BarList title="Referrers" rows={data.referrers} />
             <BarList title="Devices" rows={data.devices.map((r) => ({ ...r, label: r.key.charAt(0).toUpperCase() + r.key.slice(1) }))} />
-            <BarList title="Countries" rows={data.countries} empty="Country data appears when deployed behind Vercel or Cloudflare." />
+            <BarList title="Operating systems" rows={data.os} />
+            <BarList title="Browsers" rows={data.browsers} />
           </div>
+
+          <Panel title="Latest visits" description="The last 30 visits in this range.">
+            <RecentVisits rows={data.recent} />
+          </Panel>
         </>
       )}
     </div>

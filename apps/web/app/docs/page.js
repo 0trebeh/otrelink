@@ -339,15 +339,20 @@ export default function DocsPage() {
           <Table
             head={['Metric', 'Meaning']}
             rows={[
-              ['Views', 'Times your public page was opened (bots are ignored).'],
+              ['Page visits', 'Times your public page was opened (bots are ignored).'],
               ['Unique visitors', 'Different browsers that opened your page in the selected range.'],
               ['Clicks', 'Clicks on links, buttons, images with a link and social icons.'],
-              ['Click rate', 'Clicks ÷ views.'],
+              ['Click rate', 'Clicks ÷ visits.'],
+              ['Map of visits / clicks', 'Where your visitors are, as circles that grow with the count. Click a circle for the city, region and numbers.'],
+              ['Hour of the day / Day of the week', 'When people visit or click, in each visitor’s local time.'],
+              ['Countries / Cities', 'Top places for visits or clicks (switch with Visits / Clicks).'],
               ['Top blocks / Social icons', 'Which links get the most clicks. Also shown on each block card in Links.'],
               ['Referrers', 'Where visitors came from (e.g. instagram.com, direct).'],
-              ['Devices / Countries', 'Mobile, desktop or tablet; country when the host provides it.'],
+              ['Devices / Operating systems / Browsers', 'Mobile, desktop or tablet; iOS, Android, Windows…; Chrome, Safari, the Instagram or TikTok in-app browser…'],
+              ['Latest visits', 'The last 30 visits with time, place, device and referrer (“returning” marks visitors seen before in the range).'],
             ]}
           />
+          <P><b>Location:</b> the public page asks free services (GeoJS and ipwho.is, ipapi.co as a fallback) for the visitor’s approximate location by IP. Only the country, region, city and coordinates rounded to about 1 km are saved, never the IP address. When those services are blocked (ad blockers, Brave…), the dashboard estimates the place from the visitor’s time zone; those points are shown with dashed circles and “≈”. The map uses OpenStreetMap.</P>
           <Note>The dashboard preview never counts views or clicks. Analytics are kept for 180 days.</Note>
 
           {/* ── Data ── */}

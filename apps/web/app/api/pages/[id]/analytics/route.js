@@ -7,5 +7,7 @@ export const GET = handler(async (req, { params }) => {
   const since = new Date(Date.now() - (days - 1) * 864e5);
   since.setUTCHours(0, 0, 0, 0);
   const events = await db.events.listForPage(page.id, since);
-  return json(summarize(events, days));
+  // Owner's time zone: hour / weekday of old visits that didn't send their local time.
+  const tz = String(new URL(req.url).searchParams.get('tz') || '').slice(0, 50);
+  return json(summarize(events, days, { tz }));
 });
