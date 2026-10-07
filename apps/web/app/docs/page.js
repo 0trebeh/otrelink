@@ -224,7 +224,7 @@ export default function DocsPage() {
 
           <H3 id="css-tips">Tips &amp; limits</H3>
           <ul className="list-disc pl-5 space-y-2 text-[15px] leading-7 text-ink/80 mb-6 max-w-[68ch]">
-            <li><b>Target one block:</b> open the block in <i>Links → Animation &amp; schedule</i> and copy its selector (<C>[data-block-id=&quot;…&quot;]</C>).</li>
+            <li><b>Target one block:</b> open the block in <i>Links → Style</i> and copy its selector (<C>[data-block-id=&quot;…&quot;]</C>).</li>
             <li><b>Media queries</b> work as usual, e.g. <C>@media (min-width: 768px)</C>.</li>
             <li><b>Not allowed:</b> <C>@import</C> and the <C>&lt;</C> character are removed for security. To use a font, pick it in <i>Style → Typography</i>.</li>
             <li><b>Wallpaper effects</b> often use <C>.ol-bg::before</C> and <C>.ol-bg::after</C>. Override them there.</li>

@@ -89,17 +89,17 @@ export default function BlockCard({
                     <RotateCcw size={13} /> Use the page style
                   </button>
                 )}
+                <CssSelector id={block.id} />
               </div>
             )}
           </div>
           <div className="mt-3">
-            <button type="button" onClick={() => setShowMore((v) => !v)} className="text-[13px] font-semibold text-accent-ink cursor-pointer inline-flex items-center gap-1">
+            <button type="button" onClick={() => setShowMore((v) => !v)} className="text-[13px] font-semibold text-accent-ink cursor-pointer inline-flex items-center gap-1" aria-expanded={showMore}>
               Animation & schedule <ChevronDown size={14} className={cx('transition-transform', showMore && 'rotate-180')} />
             </button>
             {showMore && (
               <div className="mt-3 rounded-2xl bg-soft p-4">
                 <FieldList fields={commonBlockFields} values={block.options || {}} onChange={onOptions} compact />
-                <CssSelector id={block.id} />
               </div>
             )}
           </div>
@@ -165,7 +165,7 @@ function CssSelector({ id }) {
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <p className="text-xs text-muted mt-1">Use it in Style → Custom CSS. <a href="/docs#css-blocks" target="_blank" rel="noreferrer" className="underline">See block classes</a></p>
+      <p className="text-xs text-muted mt-1">For anything these options don’t cover, target this block in Style → Custom CSS. <a href="/docs#css-blocks" target="_blank" rel="noreferrer" className="underline">See block classes</a></p>
     </div>
   );
 }
