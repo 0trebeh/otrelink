@@ -586,3 +586,15 @@ test('code block: language from the file name, lines and colors', async () => {
   const r = renderPage(page);
   assert.ok(r.html.includes('&lt;b&gt;  x&lt;/b&gt;') && r.html.includes('is-marked') && r.html.includes('translate="no"'));
 });
+
+test('HTML block runs in a sandbox and is a Pro feature', async () => {
+  const { renderPage, createDefaultPage, sanitizePage, htmlBlockDoc, allowsBlock, PLANS, resolveDesign } = await import('../src/index.js');
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), blocks: [{ type: 'html', data: { html: '<p>Hi</p>', js: 'x("</script><b>")', css: 'p{color:red}</style>' } }] });
+  const r = renderPage(page);
+  assert.ok(/<iframe [^>]*sandbox="allow-scripts[^"]*"/.test(r.html) && !/sandbox="[^"]*allow-same-origin/.test(r.html));
+  assert.ok(!r.html.includes('<p>Hi</p>')); // never inline: only escaped inside srcdoc
+  const doc = htmlBlockDoc(page.blocks[0].data, { id: 'b', design: resolveDesign({}) });
+  assert.ok(doc.includes('<\\/script><b>') && doc.includes('<\\/style>') && doc.includes(':root{--ol-btn-bg'));
+  assert.equal(allowsBlock(PLANS.free, 'html'), false);
+  assert.equal(allowsBlock(PLANS.pro, 'html'), true);
+});

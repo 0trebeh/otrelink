@@ -46,6 +46,7 @@ import reviews from './reviews.js';
 import embed from './embed.js';
 import catalog from './catalog.js';
 import code from './code.js';
+import html from './html.js';
 import status from './status.js';
 import location from './location.js';
 import route from './route.js';
@@ -63,6 +64,7 @@ export const blockTypes = createRegistry('blockTypes', [
   pdf,
   video,
   embed,
+  html,
   code,
   music,
   map,
@@ -143,6 +145,7 @@ const STYLE_GROUPS = {
   survey: ['button', 'card', 'radius'],
   reviews: ['button', 'card', 'radius'],
   vcard: ['button', 'card', 'radius'],
+  html: (d) => (d.background === 'card' ? ['card', 'radius'] : d.title ? ['text', 'radius'] : ['radius']),
   code: (d) => (showsButton(d) ? ['button', 'radius'] : ['radius']),
   status: (d) => (d.style === 'card' ? ['card', 'radius'] : ['card']),
   location: ['card', 'radius'],
@@ -212,6 +215,7 @@ const CLICKABLE = {
   catalog: (d) => d.display === 'button' || has(d.whatsapp) || (d.products || []).some((p) => p.url),
   status: false, loyalty: false,
   code: (d) => d.display === 'button',
+  html: false,
   location: (d) => d.directions,
   route: (d) => d.directions,
 };

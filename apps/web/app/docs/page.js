@@ -28,6 +28,7 @@ const toc = [
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
+  { id: 'html-block', label: 'HTML block' },
   { id: 'code-block', label: 'Code block' },
   { id: 'catalog', label: 'Catalog' },
   { id: 'food', label: 'Food trucks & shops' },
@@ -312,6 +313,17 @@ export default function DocsPage() {
             </ul>
           </Warning>
 
+          <H2 id="html-block">HTML block</H2>
+          <P>The <i>HTML</i> block (Media category, Pro plan) runs your own code: paste HTML, and optionally CSS and JavaScript in their own boxes. It is shown inside the block and grows with its content (or set a fixed height). Use it for a calculator, a small game, a custom form, a widget, an animation…</P>
+          <P>With <i>Use the page fonts and colors</i> on, your code gets the page fonts, text colors and the same CSS variables as Custom CSS, e.g. <C>var(--ol-btn-bg)</C>, <C>var(--ol-btn-fg)</C>, <C>var(--ol-text-color)</C> or <C>var(--ol-title-font)</C>, so it matches your theme. Choose a transparent background or a card.</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>For safety the code runs in its own isolated frame: it can’t read or change the rest of your page, cookies or visitor data. To style the page itself use <i>Custom CSS</i>.</li>
+              <li>Links open in a new tab unless they say <C>target="_top"</C>. Scripts from other sites (<C>{'<script src="https://…">'}</C>) work.</li>
+              <li>Clicks inside the block are not counted in Analytics.</li>
+            </ul>
+          </Warning>
+
           <H2 id="code-block">Code block</H2>
           <P>The <i>Code</i> block (Content category) shows a snippet with syntax colors: SQL, HTML, CSS, JavaScript, TypeScript, JSON, Markdown / README, Python, Bash, PHP and 20 more. Choose the language, or leave <i>Detect</i>: a file name like <C>README.md</C> or <C>query.sql</C> picks it, otherwise it is guessed from the code.</P>
           <P>Options: 8 color themes (GitHub dark and light, One Dark, Dracula, Monokai, Nord, Night Owl, Solarized light), line numbers (and the first number), highlighted lines (<C>3, 7-9</C>), wrapping long lines, a max height with scroll, text size, tab width, a top bar (window dots, simple or none) and a <i>Copy</i> button. In the editor, Tab inserts two spaces; press Esc and then Tab to move to the next field. Code is never translated by the translate button.</P>
@@ -385,7 +397,7 @@ export default function DocsPage() {
             head={['Plan', 'What it includes']}
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
-              ['Pro · $10/month', 'Up to 10 pages, Embeds, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, the translate button and photo or video backgrounds.'],
+              ['Pro · $10/month', 'Up to 10 pages, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, the translate button and photo or video backgrounds.'],
               ['Business', 'Custom number of pages and features, set up with the Otrelink team.'],
             ]}
           />

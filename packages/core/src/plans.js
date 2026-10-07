@@ -12,6 +12,7 @@
 /** Features that plans can turn on or off. */
 export const PLAN_FEATURES = {
   embed: { label: 'Embeds', blocks: ['embed'] },
+  html: { label: 'HTML block', blocks: ['html'] },
   booking: { label: 'Booking & agenda', blocks: ['booking'], sections: ['agenda'] },
   reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'] },
   survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'] },
