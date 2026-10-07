@@ -29,6 +29,14 @@ export const profileFields = [
 
 export const settingsFields = [
   { key: 'published', type: 'toggle', label: 'Page is public', default: true, help: 'When off, only you can see it in the dashboard.' },
+  { key: 'navMenu', type: 'toggle', label: 'Navigation menu', default: false,
+    help: 'A menu button that jumps to the sections of your page. Handy for long pages.' },
+  { key: 'navItems', type: 'select', label: 'Menu shows', default: 'headers', showIf: { key: 'navMenu', truthy: true }, options: [
+    { value: 'headers', label: 'Header blocks' }, { value: 'all', label: 'Every block with a title' },
+  ], help: 'Any block can also get its own menu entry: open it → Animation & schedule → Menu label.' },
+  { key: 'navPosition', type: 'select', label: 'Menu button', default: 'left', showIf: { key: 'navMenu', truthy: true }, options: [
+    { value: 'left', label: 'Top left' }, { value: 'right', label: 'Top right' },
+  ] },
   { key: 'language', type: 'select', label: 'Page language', default: 'en', options: [{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }],
     help: 'The language your page is written in.' },
   { key: 'translateButton', type: 'toggle', label: 'Translate button (ES / EN)', default: false,

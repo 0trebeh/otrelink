@@ -89,6 +89,8 @@ export const commonBlockFields = [
   { key: 'animation', type: 'select', label: 'Attention animation', default: 'none', options: () => attentionAnimations.options() },
   { key: 'showFrom', type: 'datetime', label: 'Show from', help: 'Leave empty to show right away.' },
   { key: 'showUntil', type: 'datetime', label: 'Hide after', help: 'Leave empty to never hide.' },
+  { key: 'navLabel', type: 'text', label: 'Menu label (optional)', max: 60,
+    help: 'Lists this block in the navigation menu (Settings → Navigation menu).' },
 ];
 
 /**

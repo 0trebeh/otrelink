@@ -598,3 +598,21 @@ test('HTML block runs in a sandbox and is a Pro feature', async () => {
   assert.equal(allowsBlock(PLANS.free, 'html'), false);
   assert.equal(allowsBlock(PLANS.pro, 'html'), true);
 });
+
+test('navigation menu lists sections and gives them anchors', async () => {
+  const { navItems, navSlug, renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  assert.equal(navSlug('Nuestro Menú!'), 'nuestro-menu');
+  const blocks = [
+    { id: 'h1', type: 'header', data: { text: 'Menu' } },
+    { id: 'l1', type: 'link', data: { title: 'Instagram', url: 'https://x.co' } },
+    { id: 'h2', type: 'header', data: { text: 'Menu' } },
+    { id: 'l2', type: 'link', data: { title: 'Shop', url: 'https://x.co' }, options: { navLabel: 'Our shop' } },
+    { id: 'h3', type: 'header', enabled: false, data: { text: 'Hidden' } },
+  ];
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), blocks, settings: { navMenu: true } });
+  assert.deepEqual(navItems(page).map((n) => [n.label, n.anchor]), [['Menu', 'menu'], ['Menu', 'menu-2'], ['Our shop', 'our-shop']]);
+  assert.equal(navItems({ ...page, settings: { ...page.settings, navItems: 'all' } }).length, 4);
+  const r = renderPage(page);
+  assert.ok(r.html.includes('class="ol-nav-btn"') && r.html.includes('id="menu-2"') && r.html.includes('href="#our-shop"'));
+  assert.ok(!renderPage(sanitizePage({ ...page, settings: {} })).html.includes('ol-nav-btn'));
+});

@@ -11,7 +11,8 @@ import { googleFontsHref } from './fonts.js';
 import { designCss, resolveDesign, colorSchemeOf } from './design.js';
 import { socialHref, socialIcon, socials } from './socials.js';
 import { esc, safeUrl, miniMarkdown } from './util/html.js';
-import { verifiedSvg } from './icons.js';
+import { verifiedSvg, icon } from './icons.js';
+import { navItems } from './nav.js';
 import { flattenBlocks } from './tree.js';
 import { PAGE_LANGUAGES, pageLanguage, otherLanguage, setupTranslate } from './translate.js';
 
@@ -74,6 +75,25 @@ const BASE_CSS = `
 .ol-root .ol-lang button[aria-pressed="true"]{background:var(--ol-surface-fg);color:var(--ol-surface);opacity:1}
 .ol-root .ol-lang[aria-busy] button[aria-pressed="true"]{animation:ol-lang-wait 1s ease-in-out infinite alternate}
 @keyframes ol-lang-wait{to{opacity:.3}}
+.ol-root.has-nav-right .ol-lang{right:auto;left:12px}
+.ol-root .ol-navmenu{position:fixed;top:12px;z-index:30;font-family:var(--ol-body-font)}
+.ol-root .ol-navmenu-left{left:max(12px,calc(50% - var(--ol-max-width)/2 - 4px))}
+.ol-root .ol-navmenu-right{right:max(12px,calc(50% - var(--ol-max-width)/2 - 4px))}
+.ol-root .ol-nav-btn{width:42px;height:42px;border-radius:50%;border:0;display:grid;place-items:center;cursor:pointer;background:var(--ol-surface);color:var(--ol-surface-fg);box-shadow:0 4px 16px rgba(0,0,0,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:transform .15s}
+.ol-root .ol-nav-btn:active{transform:scale(.94)}
+.ol-root .ol-nav-panel{position:absolute;top:50px;width:min(290px,calc(100vw - 24px));max-height:min(70vh,560px);overflow:auto;border-radius:18px;padding:8px;background:var(--ol-surface);color:var(--ol-surface-fg);box-shadow:0 18px 50px -12px rgba(0,0,0,.45);transform-origin:top left;animation:ol-nav-in .16s ease-out}
+.ol-root .ol-navmenu-right .ol-nav-panel{right:0;transform-origin:top right}
+.ol-root .ol-nav-panel[hidden]{display:none}
+@keyframes ol-nav-in{from{opacity:0;transform:scale(.96) translateY(-4px)}}
+.ol-root .ol-nav-title{margin:6px 10px 6px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.55}
+.ol-root .ol-nav-list{list-style:none;margin:0;padding:0}
+.ol-root .ol-nav-list a{display:block;padding:10px 12px;border-radius:12px;text-decoration:none;color:inherit;font-weight:600;font-size:15px;line-height:1.3}
+.ol-root .ol-nav-list a.is-sub{padding-left:26px;font-weight:500;font-size:14px;opacity:.85}
+.ol-root .ol-nav-list a:hover,.ol-root .ol-nav-list a:focus-visible{background:color-mix(in srgb,var(--ol-surface-fg) 8%,transparent);outline:none}
+.ol-root .ol-nav-list a[aria-current="true"]{background:var(--ol-surface-fg);color:var(--ol-surface)}
+.ol-root .ol-nav-top{display:flex;align-items:center;gap:8px;margin-top:4px;padding:10px 12px;border-top:1px solid color-mix(in srgb,var(--ol-surface-fg) 12%,transparent);text-decoration:none;color:inherit;font-size:13px;font-weight:600;opacity:.75}
+.ol-root .ol-block[id]{scroll-margin-top:70px}
+.ol-root.has-nav .ol-main{padding-top:max(var(--ol-pad-top),66px)}
 @media (prefers-reduced-motion:reduce){.ol-root *{animation:none!important;transition:none!important}}
 `;
 
@@ -134,6 +154,9 @@ export function renderPage(page, opts = {}) {
   const usedTypes = new Set();
   const usedAnims = new Set();
   const usedBlockButtons = new Set(); // button styles used by blocks with their own style
+  // Navigation menu: blocks it lists get an id to jump to (and to link to: page#section).
+  const nav = navItems(page, (b) => b.enabled && blockTypes.has(b.type) && (mode === 'preview' || !isScheduledOut(b, now)));
+  const anchors = new Map(nav.map((n) => [n.id, ['app', 'root'].includes(n.anchor) ? `${n.anchor}-section` : n.anchor]));
 
   // Renders a list of blocks. Containers (collections) get their rendered
   // children in ctx.children, plus ctx.container for children to adapt their look.
@@ -166,7 +189,8 @@ export function renderPage(page, opts = {}) {
       const cls = ['ol-block', `ol-b-${mod.type}`, depth === 0 && 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled',
         own && 'ol-styled', own?.buttonStyle && `ol-bs-${own.buttonStyle}`].filter(Boolean).join(' ');
       const style = own?.vars ? ` style="${esc(own.vars)}"` : '';
-      return `<div class="${cls}" data-block-id="${esc(block.id)}" data-block-type="${esc(mod.type)}"${style}>${inner}</div>`;
+      const anchor = anchors.get(block.id);
+      return `<div class="${cls}"${anchor ? ` id="${esc(anchor)}"` : ''} data-block-id="${esc(block.id)}" data-block-type="${esc(mod.type)}"${style}>${inner}</div>`;
     })
     .join('');
   const blocksHtml = renderBlocks(page.blocks, 0, null);
@@ -186,8 +210,16 @@ export function renderPage(page, opts = {}) {
   const langSwitch = page.settings?.translateButton
     ? `<nav class="ol-lang notranslate" aria-label="Language" translate="no">${[lang, otherLanguage(lang)].map((l) => `<button type="button" data-ol-lang="${l}" lang="${l}" aria-pressed="${l === lang}" title="${esc(PAGE_LANGUAGES[l].label)}">${PAGE_LANGUAGES[l].short}</button>`).join('')}</nav>`
     : '';
-  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}" data-mode="${mode}" lang="${lang}">`
-    + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>${langSwitch}`
+  const navRight = page.settings?.navPosition === 'right';
+  const navHtml = nav.length
+    ? `<div class="ol-navmenu ol-navmenu-${navRight ? 'right' : 'left'}">`
+      + `<button type="button" class="ol-nav-btn" aria-expanded="false" aria-controls="ol-nav-panel" aria-label="Menu">${icon('menu', 20)}</button>`
+      + `<nav class="ol-nav-panel" id="ol-nav-panel" aria-label="Sections" hidden><p class="ol-nav-title">${esc(page.profile?.title || 'Menu')}</p><ul class="ol-nav-list">`
+      + nav.map((n) => `<li><a href="#${esc(anchors.get(n.id))}" data-ol-nav="${esc(n.id)}"${n.depth ? ' class="is-sub"' : ''}>${esc(n.label)}</a></li>`).join('')
+      + `</ul><a href="#" class="ol-nav-top" data-ol-nav="top">${icon('arrowUp', 15)}Back to top</a></nav></div>`
+    : '';
+  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}${nav.length ? ` has-nav${navRight ? ' has-nav-right' : ''}` : ''}" data-mode="${mode}" lang="${lang}">`
+    + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>${langSwitch}${navHtml}`
     + `<main class="ol-main">${renderProfile(page, d)}<section class="ol-blocks">${blocksHtml}</section>${renderSocials(page, d, 'bottom')}${footer}</main>`
     + `${gate}</div>`;
 
@@ -297,10 +329,75 @@ export function hydratePage(container, page, opts = {}) {
   if (noMenu) container.addEventListener('contextmenu', onMenu);
   if (noDrag) container.addEventListener('dragstart', onDrag);
   const stopTranslate = setupTranslate(container, page);
+  const stopNav = setupNav(container, opts);
   return () => {
     stopTranslate();
+    stopNav();
     container.removeEventListener('click', onClick);
     container.removeEventListener('contextmenu', onMenu);
     container.removeEventListener('dragstart', onDrag);
+  };
+}
+
+/** Navigation menu: open / close, jump to a section, mark the section on screen. */
+function setupNav(container, opts) {
+  const menu = container.querySelector('.ol-navmenu');
+  if (!menu) return () => {};
+  const doc = container.ownerDocument;
+  const win = doc.defaultView;
+  const btn = menu.querySelector('.ol-nav-btn');
+  const panel = menu.querySelector('.ol-nav-panel');
+  const links = [...panel.querySelectorAll('a[data-ol-nav]:not([data-ol-nav="top"])')];
+  const reduce = win.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    btn.innerHTML = icon(open ? 'close' : 'menu', 20);
+    if (open) (panel.querySelector('[aria-current="true"]') || links[0])?.focus({ preventScroll: true });
+  };
+  const target = (id) => container.querySelector(`[data-block-id="${CSS.escape(id)}"]`);
+  const go = (id) => {
+    const behavior = reduce ? 'auto' : 'smooth';
+    if (id === 'top') win.scrollTo({ top: 0, behavior });
+    else target(id)?.scrollIntoView({ behavior, block: 'start' });
+    // Shareable link to the section (only on the real page).
+    if (opts.mode === 'live') {
+      const a = id === 'top' ? '' : links.find((l) => l.dataset.olNav === id)?.getAttribute('href') || '';
+      try { win.history.replaceState(null, '', a || win.location.pathname + win.location.search); } catch { /* sandboxed */ }
+    }
+  };
+  const onClick = (e) => {
+    if (e.target.closest('.ol-nav-btn')) { setOpen(panel.hidden); return; }
+    const a = e.target.closest('a[data-ol-nav]');
+    if (a) { e.preventDefault(); setOpen(false); go(a.dataset.olNav); }
+  };
+  const onDoc = (e) => { if (!panel.hidden && !menu.contains(e.target)) setOpen(false); };
+  const onKey = (e) => { if (e.key === 'Escape' && !panel.hidden) { setOpen(false); btn.focus(); } };
+  // The section on screen is marked in the menu.
+  let raf = 0;
+  const onScroll = () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const line = win.innerHeight * 0.3;
+      let current = null;
+      for (const l of links) { const el = target(l.dataset.olNav); if (el && el.getBoundingClientRect().top <= line) current = l; }
+      links.forEach((l) => l.setAttribute('aria-current', String(l === current)));
+    });
+  };
+  menu.addEventListener('click', onClick);
+  doc.addEventListener('pointerdown', onDoc);
+  doc.addEventListener('keydown', onKey);
+  win.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  // page#section opens at that section.
+  if (opts.mode === 'live' && win.location.hash.length > 1) {
+    const l = links.find((x) => x.getAttribute('href') === decodeURIComponent(win.location.hash));
+    if (l) setTimeout(() => target(l.dataset.olNav)?.scrollIntoView({ block: 'start' }), 300);
+  }
+  return () => {
+    menu.removeEventListener('click', onClick);
+    doc.removeEventListener('pointerdown', onDoc);
+    doc.removeEventListener('keydown', onKey);
+    win.removeEventListener('scroll', onScroll);
   };
 }
