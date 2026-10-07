@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, Check, Minus, CreditCard, Loader2, Mail, Sparkles } from 'lucide-react';
-import { PLANS, PLAN_FEATURES } from '@otrelink/core';
+import { PLANS, groupedFeatures } from '@otrelink/core';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Logo, cx } from './ui';
 
@@ -58,7 +58,11 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
   const featureRows = [
     { label: 'Pages', values: [`${PLANS.free.maxPages}`, `${PLANS.pro.maxPages}`, 'Custom'] },
     { label: 'Links, socials, text, images, video, music, maps, PDF, contact, collections, analytics', values: [true, true, true] },
-    ...Object.entries(PLAN_FEATURES).map(([, f]) => ({ label: f.label, values: [false, true, true] })),
+    // Plan features, grouped by kind (a heading row before each group).
+    ...groupedFeatures().flatMap((g) => [
+      { label: g.label, heading: true },
+      ...g.features.map((f) => ({ label: f.label, values: [f.free, true, true] })),
+    ]),
   ];
 
   const cards = [
@@ -158,7 +162,11 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
               </tr>
             </thead>
             <tbody>
-              {featureRows.map((r) => (
+              {featureRows.map((r) => (r.heading ? (
+                <tr key={`g-${r.label}`} className="bg-soft/70">
+                  <th colSpan={4} scope="colgroup" className="px-5 pt-4 pb-2 text-left text-[11px] font-semibold uppercase tracking-wider text-muted">{r.label}</th>
+                </tr>
+              ) : (
                 <tr key={r.label} className="border-b border-line/60 last:border-0">
                   <td className="px-5 py-3">{r.label}</td>
                   {r.values.map((v, i) => (
@@ -167,7 +175,7 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
                     </td>
                   ))}
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </section>

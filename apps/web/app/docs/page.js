@@ -398,7 +398,7 @@ export default function DocsPage() {
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
               ['Pro · $10/month', 'Up to 10 pages, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, the translate button and photo or video backgrounds.'],
-              ['Business', 'Custom number of pages and features, set up with the Otrelink team.'],
+              ['Business', 'Custom number of pages and features, set up with the Otrelink team (each feature can be turned on or off, even the Code block).'],
             ]}
           />
           <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal; you can cancel any time and keep Pro until the end of the period you paid. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>

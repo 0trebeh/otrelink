@@ -616,3 +616,12 @@ test('navigation menu lists sections and gives them anchors', async () => {
   assert.ok(r.html.includes('class="ol-nav-btn"') && r.html.includes('id="menu-2"') && r.html.includes('href="#our-shop"'));
   assert.ok(!renderPage(sanitizePage({ ...page, settings: {} })).html.includes('ol-nav-btn'));
 });
+
+test('plan features are grouped; the Code block is in Free and Business can turn it off', async () => {
+  const { groupedFeatures, PLAN_FEATURES, PLANS, allowsBlock, resolvePlan } = await import('../src/index.js');
+  const groups = groupedFeatures();
+  assert.deepEqual(groups.flatMap((g) => g.features.map((f) => f.key)).sort(), Object.keys(PLAN_FEATURES).sort());
+  assert.equal(allowsBlock(PLANS.free, 'code'), true);
+  assert.equal(allowsBlock(PLANS.free, 'html'), false);
+  assert.equal(allowsBlock(resolvePlan({ plan: 'business', limits: { features: { code: false } } }), 'code'), false);
+});

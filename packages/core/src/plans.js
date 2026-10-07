@@ -9,26 +9,48 @@
 //    limits: { maxPages, features: { embed, booking, … } }  (Business only)
 // ─────────────────────────────────────────────────────────────
 
-/** Features that plans can turn on or off. */
+/** Groups of features, in the order the dashboard and the admin show them. */
+export const FEATURE_GROUPS = [
+  { id: 'content', label: 'Content blocks' },
+  { id: 'activity', label: 'Bookings & visitors' },
+  { id: 'business', label: 'Shop & food business' },
+  { id: 'page', label: 'Page & design' },
+];
+
+/**
+ * Features that plans can turn on or off. `free: true` = included in Free too
+ * (Business plans can still turn it off).
+ */
 export const PLAN_FEATURES = {
-  embed: { label: 'Embeds', blocks: ['embed'] },
-  html: { label: 'HTML block', blocks: ['html'] },
-  booking: { label: 'Booking & agenda', blocks: ['booking'], sections: ['agenda'] },
-  reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'] },
-  survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'] },
-  catalog: { label: 'Product catalog', blocks: ['catalog'] },
-  orders: { label: 'Pickup orders', sections: ['orders'] },
-  location: { label: 'Location, route & open status', blocks: ['location', 'route', 'status'], sections: ['today'] },
-  loyalty: { label: 'Loyalty cards', blocks: ['loyalty'], sections: ['loyalty'] },
-  translate: { label: 'Translate button' },
-  mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'] },
+  // Content blocks
+  code: { label: 'Code block', blocks: ['code'], group: 'content', free: true },
+  embed: { label: 'Embeds', blocks: ['embed'], group: 'content' },
+  html: { label: 'HTML block', blocks: ['html'], group: 'content' },
+  // Bookings & visitors
+  booking: { label: 'Booking & agenda', blocks: ['booking'], sections: ['agenda'], group: 'activity' },
+  reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'], group: 'activity' },
+  survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'], group: 'activity' },
+  // Shop & food business
+  catalog: { label: 'Product catalog', blocks: ['catalog'], group: 'business' },
+  orders: { label: 'Pickup orders', sections: ['orders'], group: 'business' },
+  location: { label: 'Location, route & open status', blocks: ['location', 'route', 'status'], sections: ['today'], group: 'business' },
+  loyalty: { label: 'Loyalty cards', blocks: ['loyalty'], sections: ['loyalty'], group: 'business' },
+  // Page & design
+  translate: { label: 'Translate button', group: 'page' },
+  mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'], group: 'page' },
 };
 
+/** [{ id, label, features: [{ key, label, free }] }] — for lists grouped by kind. */
+export const groupedFeatures = () => FEATURE_GROUPS.map((g) => ({
+  ...g,
+  features: Object.entries(PLAN_FEATURES).filter(([, f]) => f.group === g.id).map(([key, f]) => ({ key, label: f.label, free: Boolean(f.free) })),
+})).filter((g) => g.features.length);
+
 const ALL_ON = Object.fromEntries(Object.keys(PLAN_FEATURES).map((k) => [k, true]));
-const ALL_OFF = Object.fromEntries(Object.keys(PLAN_FEATURES).map((k) => [k, false]));
+const FREE_ONLY = Object.fromEntries(Object.entries(PLAN_FEATURES).map(([k, f]) => [k, Boolean(f.free)]));
 
 export const PLANS = {
-  free: { id: 'free', label: 'Free', price: 0, maxPages: 1, features: ALL_OFF,
+  free: { id: 'free', label: 'Free', price: 0, maxPages: 1, features: FREE_ONLY,
     tagline: 'One page with links, socials and the basic blocks.' },
   pro: { id: 'pro', label: 'Pro', price: 10, maxPages: 10, features: ALL_ON,
     tagline: 'Up to 10 pages and every feature.' },
