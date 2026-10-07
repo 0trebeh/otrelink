@@ -116,6 +116,9 @@ export const blockStyleFields = [
   { key: 'stSurfaceColor', group: 'card', type: 'color', label: 'Card color', default: '', allowEmpty: true, },
   { key: 'stSurfaceTextColor', group: 'card', type: 'color', label: 'Card text color', default: '', allowEmpty: true },
   { key: 'stTextColor', group: 'text', type: 'color', label: 'Text color', default: '', allowEmpty: true, },
+  // Highlights inside a block (e.g. the date badges of the Events calendar), apart from the card colors.
+  { key: 'stAccentColor', group: 'accent', type: 'color', label: 'Accent color', default: '', allowEmpty: true, help: 'Date badges, buttons and the selected day. Empty = the card text color.' },
+  { key: 'stAccentTextColor', group: 'accent', type: 'color', label: 'Accent text color', default: '', allowEmpty: true },
 ];
 
 /**
@@ -149,7 +152,7 @@ const STYLE_GROUPS = {
   survey: ['button', 'card', 'radius'],
   reviews: ['button', 'card', 'radius'],
   vcard: ['button', 'card', 'radius'],
-  events: ['card', 'text', 'radius'],
+  events: ['accent', 'card', 'text', 'radius'],
   html: (d) => (d.background === 'card' ? ['card', 'radius'] : d.title ? ['text', 'radius'] : ['radius']),
   code: (d) => (showsButton(d) ? ['button', 'radius'] : ['radius']),
   status: (d) => (d.style === 'card' ? ['card', 'radius'] : ['card']),
@@ -161,7 +164,7 @@ const STYLE_GROUPS = {
 /** Style groups that affect a block (see STYLE_GROUPS). */
 export function blockStyleGroups(block) {
   const g = STYLE_GROUPS[block?.type];
-  if (!g) return ['button', 'card', 'text', 'radius'];
+  if (!g) return ['button', 'card', 'text', 'radius'];  // (accent only for blocks that list it)
   return typeof g === 'function' ? g(block.data || {}) : g;
 }
 
@@ -175,7 +178,7 @@ export function blockStyleFieldsFor(block) {
 export const hasBlockStyle = (options = {}) => blockStyleFields.some((f) => options[f.key] !== undefined && options[f.key] !== '');
 
 /** CSS variables + button style id for a block with its own style. */
-export function blockStyleOf(options = {}, groups = ['button', 'card', 'text', 'radius']) {
+export function blockStyleOf(options = {}, groups = ['button', 'card', 'text', 'radius', 'accent']) {
   // Values of groups that don't affect this block (e.g. left from an older setting) are ignored.
   options = Object.fromEntries(Object.entries(options).filter(([k]) => { const f = blockStyleFields.find((x) => x.key === k); return !f || groups.includes(f.group); }));
   if (!hasBlockStyle(options)) return null;
@@ -198,6 +201,8 @@ export function blockStyleOf(options = {}, groups = ['button', 'card', 'text', '
   add('--ol-surface', options.stSurfaceColor);
   add('--ol-surface-fg', options.stSurfaceTextColor);
   if (options.stTextColor) { add('--ol-text-color', options.stTextColor); add('--ol-title-color', options.stTextColor); }
+  add('--ol-accent', options.stAccentColor);
+  add('--ol-accent-fg', options.stAccentTextColor);
   const buttonStyle = buttonStyles.has(options.stButtonStyle) ? options.stButtonStyle : '';
   return { vars: vars.join(';'), buttonStyle };
 }

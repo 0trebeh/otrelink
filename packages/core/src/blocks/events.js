@@ -255,12 +255,12 @@ export default {
 .ol-root .ol-ev-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
 .ol-root .ol-ev{background:var(--ol-surface);color:var(--ol-surface-fg);border-radius:var(--ol-surface-radius);overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .ol-root .ol-ev.is-past{opacity:.55}
-.ol-root .ol-ev.is-now{box-shadow:inset 0 0 0 2px var(--ol-surface-fg)}
+.ol-root .ol-ev.is-now{box-shadow:inset 0 0 0 2px var(--ol-accent,var(--ol-surface-fg))}
 .ol-root .ol-ev-media{display:block;aspect-ratio:16/9;overflow:hidden;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent)}
 .ol-root .ol-ev-media img{width:100%;height:100%;object-fit:cover;display:block}
 .ol-root .ol-ev-body{display:flex;gap:14px;padding:14px 16px;flex:1;min-width:0}
 .ol-root .ol-ev-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.ol-root .ol-ev-badge{flex:none;width:58px;align-self:flex-start;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;border-radius:calc(var(--ol-surface-radius)*.6);background:var(--ol-surface-fg);color:var(--ol-surface);line-height:1.05;text-align:center}
+.ol-root .ol-ev-badge{flex:none;width:58px;align-self:flex-start;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;border-radius:calc(var(--ol-surface-radius)*.6);background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface));line-height:1.05;text-align:center}
 .ol-root .ol-ev-badge b{font-family:var(--ol-title-font);font-size:1.35em;font-weight:800;white-space:nowrap}
 .ol-root .ol-ev-badge small{font-size:.68em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:3px;white-space:nowrap}
 .ol-root .ol-ev-tag{align-self:flex-start;font-size:.7em;font-weight:800;padding:2px 8px;border-radius:999px;background:#16a34a;color:#fff;margin-bottom:2px}
@@ -270,7 +270,7 @@ export default {
 .ol-root .ol-ev-meta span{display:flex;align-items:flex-start;gap:6px}
 .ol-root .ol-ev-meta svg{flex:none;margin-top:1px}
 .ol-root .ol-ev-desc{margin:6px 0 0;font-size:.85em;line-height:1.45;opacity:.85;white-space:pre-line;overflow-wrap:anywhere}
-.ol-root .ol-ev-link{align-self:flex-start;margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;font-weight:700;font-size:.82em;text-decoration:none;background:var(--ol-surface-fg);color:var(--ol-surface)!important}
+.ol-root .ol-ev-link{align-self:flex-start;margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;font-weight:700;font-size:.82em;text-decoration:none;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))!important}
 .ol-root .ol-ev-empty{margin:0;padding:16px;border-radius:var(--ol-surface-radius);background:var(--ol-surface);color:var(--ol-surface-fg);opacity:.8;text-align:center;font-size:.9em}
 .ol-root .is-grid .ol-ev-list{grid-template-columns:repeat(2,minmax(0,1fr))}
 .ol-root .is-grid .ol-ev-body,.ol-root .is-carousel .ol-ev-body{padding:12px 14px}
@@ -298,7 +298,7 @@ export default {
 .ol-root .ol-cal-day i{position:absolute;bottom:5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:currentColor}
 .ol-root .ol-cal-day.is-today{box-shadow:inset 0 0 0 1.5px currentColor}
 .ol-root .ol-cal-day:hover:not(.is-empty){background:color-mix(in srgb,var(--ol-surface-fg) 8%,transparent)}
-.ol-root .ol-cal-day.is-sel{background:var(--ol-surface-fg);color:var(--ol-surface);opacity:1}
+.ol-root .ol-cal-day.is-sel{background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface));opacity:1}
 .ol-root .ol-cal-daytitle{margin:14px 0 8px;font-weight:700;font-size:.9em}
 .ol-root .ol-cal .ol-ev{background:color-mix(in srgb,var(--ol-surface-fg) 6%,transparent)}
 .ol-root .ol-cal .ol-ev-empty{background:none;padding:6px 0;text-align:left}`,

@@ -339,6 +339,7 @@ export default function DocsPage() {
               ['Hours', 'Like the page language, 12 hours (7:00 PM) or 24 hours (19:00).'],
               ['Past events', 'Hidden (default), shown faded, or shown at the end. The month calendar always shows them.'],
               ['Show at most', 'Limit how many events are listed (0 = all). Events happening today get a “Today” label.'],
+              ['Style → Accent color', 'Color of the date badges, the link buttons and the selected day (and Accent text color for their text), apart from the card colors. Empty = the card text color.'],
             ]}
           />
 
