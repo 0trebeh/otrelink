@@ -448,3 +448,13 @@ test('block style shows only the options that affect the block', async () => {
   const link = { type: 'link', options: { stSurfaceColor: '#ff0000' } };
   assert.equal(blockStyleOf(link.options, blockStyleGroups(link)), null);
 });
+
+test('social icons can show at the top and the bottom', async () => {
+  const { renderPage, createDefaultPage, sanitizePage, resolveDesign } = await import('../src/index.js');
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x', title: 'X' }), socials: [{ id: 's', platform: 'instagram', url: 'https://instagram.com/x' }] });
+  const count = (pos) => { page.design = resolveDesign({ ...page.design, socialsPosition: pos }); return (renderPage(page).html.match(/instagram\.com\/x/g) || []).length; };
+  assert.equal(count('top'), 1);
+  assert.equal(count('bottom'), 1);
+  assert.equal(count('both'), 2);
+  assert.equal(sanitizePage({ ...page, design: { ...page.design, socialsPosition: 'both' } }).design.socialsPosition, 'both');
+});

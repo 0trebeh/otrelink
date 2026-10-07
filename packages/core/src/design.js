@@ -62,7 +62,9 @@ export const designGroups = [
       { key: 'avatarSize', type: 'range', label: 'Avatar size', min: 48, max: 160, default: 96, unit: 'px' },
       { key: 'avatarBorderWidth', type: 'range', label: 'Avatar border', min: 0, max: 8, default: 0, unit: 'px' },
       { key: 'avatarBorderColor', type: 'color', label: 'Avatar border color', default: '#ffffff' },
-      { key: 'socialsPosition', type: 'select', label: 'Social icons position', default: 'top', options: ['top', 'bottom'] },
+      { key: 'socialsPosition', type: 'select', label: 'Social icons position', default: 'top', options: [
+        { value: 'top', label: 'Top' }, { value: 'bottom', label: 'Bottom' }, { value: 'both', label: 'Top and bottom' },
+      ] },
       { key: 'socialsStyle', type: 'select', label: 'Social icons style', default: 'plain', options: ['plain', 'filled', 'outline', 'brand'] },
       { key: 'socialsColor', type: 'color', label: 'Social icons color', default: '#111111' },
       { key: 'socialsSize', type: 'range', label: 'Social icons size', min: 16, max: 36, default: 24, unit: 'px' },

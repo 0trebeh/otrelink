@@ -77,7 +77,8 @@ function isScheduledOut(block, now) {
 }
 
 function renderSocials(page, d, position) {
-  if (d.socialsPosition !== position || !page.socials?.length) return '';
+  // 'both' shows the icons under the profile and again at the end of the page.
+  if ((d.socialsPosition !== position && d.socialsPosition !== 'both') || !page.socials?.length) return '';
   const items = page.socials
     .filter((s) => socials.has(s.platform) && s.url)
     .map((s) => {
