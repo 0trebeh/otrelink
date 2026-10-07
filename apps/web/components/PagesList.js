@@ -1,5 +1,6 @@
 'use client';
 import ThemeToggle from './ThemeToggle';
+import GlobalAnalytics from './GlobalAnalytics';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -75,6 +76,9 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
             )}
         </div>
 
+        {pages.length > 0 && <GlobalAnalytics />}
+
+        {pages.length > 0 && <h2 className="font-display text-xl font-bold tracking-tight mb-4">Pages</h2>}
         {pages.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line p-12 text-center">
             <p className="font-display text-xl font-bold">You don&apos;t have a page yet</p>

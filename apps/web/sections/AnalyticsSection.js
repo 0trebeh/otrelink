@@ -14,7 +14,7 @@ const VIEWS = '#7a2cf0';
 const CLICKS = '#0e9f8f';
 const fmt = (n) => new Intl.NumberFormat('en', { notation: n > 9999 ? 'compact' : 'standard' }).format(n);
 
-function Stat({ label, value }) {
+export function Stat({ label, value }) {
   return (
     <div className="rounded-3xl bg-panel border border-line/70 p-5">
       <p className="text-sm text-muted">{label}</p>
@@ -23,7 +23,7 @@ function Stat({ label, value }) {
   );
 }
 
-function TrendChart({ series }) {
+export function TrendChart({ series }) {
   const [hover, setHover] = useState(null);
   const W = 640, H = 220, P = { l: 36, r: 12, t: 12, b: 26 };
   const max = Math.max(4, ...series.flatMap((d) => [d.views, d.clicks]));
@@ -38,10 +38,10 @@ function TrendChart({ series }) {
   return (
     <div className="relative">
       <div className="flex gap-4 text-xs mb-2" aria-hidden="true">
-        <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: VIEWS }} />Views</span>
+        <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: VIEWS }} />Visits</span>
         <span className="inline-flex items-center gap-1.5"><span className="w-3 h-0.5 rounded" style={{ background: CLICKS }} />Clicks</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Views and clicks per day"
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Visits and clicks per day"
         onMouseLeave={() => setHover(null)}
         onMouseMove={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
@@ -69,7 +69,7 @@ function TrendChart({ series }) {
       {h && (
         <div className="pointer-events-none absolute top-6 rounded-xl bg-ink text-white text-xs px-3 py-2 shadow-lg" style={{ left: `clamp(0px, calc(${(x(hover) / W) * 100}% - 60px), calc(100% - 130px))` }}>
           <p className="font-semibold mb-1">{new Date(h.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}</p>
-          <p className="flex items-center gap-1.5"><span className="size-2 rounded-full" style={{ background: VIEWS }} />{h.views} views</p>
+          <p className="flex items-center gap-1.5"><span className="size-2 rounded-full" style={{ background: VIEWS }} />{h.views} visits</p>
           <p className="flex items-center gap-1.5"><span className="size-2 rounded-full" style={{ background: CLICKS }} />{h.clicks} clicks</p>
         </div>
       )}
@@ -77,7 +77,7 @@ function TrendChart({ series }) {
   );
 }
 
-function BarList({ title, rows, empty = 'No data yet', limit = 8 }) {
+export function BarList({ title, rows, empty = 'No data yet', limit = 8 }) {
   const [all, setAll] = useState(false);
   const shown = all ? rows : rows.slice(0, limit);
   const max = Math.max(1, ...rows.map((r) => r.count));
