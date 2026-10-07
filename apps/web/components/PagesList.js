@@ -1,10 +1,10 @@
 'use client';
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle, { ThemeMenuItem } from './ThemeToggle';
 import GlobalAnalytics from './GlobalAnalytics';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock } from 'lucide-react';
+import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock, Menu, X, BookOpen } from 'lucide-react';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Input, Modal, Logo } from './ui';
 import Preview from './Preview';
@@ -46,10 +46,11 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
 
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between h-16 px-4 sm:px-8">
+      <header className="relative flex items-center justify-between h-16 px-4 sm:px-8">
         <Logo />
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:block text-sm text-muted">{user.email}</span>
+        {/* Desktop */}
+        <div className="hidden sm:flex items-center gap-3">
+          <span className="text-sm text-muted">{user.email}</span>
           <Link href="/dashboard/plan" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold bg-panel border border-line hover:border-ink/30">
             <Sparkles size={14} /> {user.plan.label}
           </Link>
@@ -58,6 +59,8 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
           <Link href="/docs" className="h-8 px-3 inline-flex items-center rounded-full text-[13px] font-semibold hover:bg-panel">Docs</Link>
           <Button size="sm" variant="ghost" onClick={logout}><LogOut size={15} /> Log out</Button>
         </div>
+        {/* Phone: logo + menu */}
+        <MobileMenu user={user} onLogout={logout} />
       </header>
       <main className="max-w-6xl mx-auto px-4 sm:px-8 py-8">
         {verifiedMsg && <p role="status" className={`mb-4 rounded-2xl px-4 py-3 text-sm ${verifiedMsg.ok ? 'bg-teal/10 text-teal' : 'bg-danger/10 text-danger'}`}>{verifiedMsg.text}</p>}
@@ -119,6 +122,42 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
           </Button>
         </form>
       </Modal>
+    </div>
+  );
+}
+
+/** Phone header menu (hamburger): account, plan, install, dark mode, docs and log out. */
+function MobileMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    const onDown = (e) => { if (!box.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onDown);
+    return () => { document.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onDown); };
+  }, [open]);
+  const item = 'w-full flex items-center gap-3 h-11 px-3 rounded-xl text-[15px] font-medium hover:bg-soft cursor-pointer';
+  return (
+    <div ref={box} className="sm:hidden">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? 'Close menu' : 'Open menu'}
+        className="inline-grid place-items-center size-10 rounded-full hover:bg-panel cursor-pointer">
+        {open ? <X size={21} /> : <Menu size={21} />}
+      </button>
+      {open && (
+        <nav id="mobile-menu" aria-label="Account" className="absolute right-3 left-3 top-[3.75rem] z-40 rounded-2xl bg-panel border border-line shadow-xl p-2">
+          <p className="px-3 pt-1.5 pb-2 text-xs text-muted truncate border-b border-line/70 mb-1">{user.email}</p>
+          <Link href="/dashboard/plan" className={item} onClick={() => setOpen(false)}>
+            <Sparkles size={17} /> <span className="flex-1">Plan</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-soft">{user.plan.label}</span>
+          </Link>
+          <InstallButton className="!w-full !justify-start !h-11 !px-3 !rounded-xl !text-[15px] !font-medium !border-0 !bg-transparent hover:!bg-soft !gap-3" />
+          <ThemeMenuItem className={item} />
+          <Link href="/docs" className={item} onClick={() => setOpen(false)}><BookOpen size={17} /> Docs</Link>
+          <button type="button" className={item} onClick={() => { setOpen(false); onLogout(); }}><LogOut size={17} /> Log out</button>
+        </nav>
+      )}
     </div>
   );
 }

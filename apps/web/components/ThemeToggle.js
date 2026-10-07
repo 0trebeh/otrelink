@@ -31,7 +31,7 @@ export function DashboardTheme() {
   return null;
 }
 
-export default function ThemeToggle({ className }) {
+function useTheme() {
   const [theme, setTheme] = useState('light');
   useEffect(() => setTheme(readTheme()), []);
   const toggle = () => {
@@ -40,6 +40,23 @@ export default function ThemeToggle({ className }) {
     applyTheme(next);
     setTheme(next);
   };
+  return [theme, toggle];
+}
+
+/** Menu row version (phone menu): "Dark mode" with an on/off switch look. */
+export function ThemeMenuItem({ className }) {
+  const [theme, toggle] = useTheme();
+  const dark = theme === 'dark';
+  return (
+    <button type="button" role="switch" aria-checked={dark} onClick={toggle} className={className}>
+      {dark ? <Sun size={17} /> : <Moon size={17} />}
+      <span className="flex-1 text-left">{dark ? 'Light mode' : 'Dark mode'}</span>
+    </button>
+  );
+}
+
+export default function ThemeToggle({ className }) {
+  const [theme, toggle] = useTheme();
   const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
   return (
     <IconButton label={label} onClick={toggle} className={className} aria-pressed={theme === 'dark'}>
