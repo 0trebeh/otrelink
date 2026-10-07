@@ -129,6 +129,18 @@ export const fieldTypes = {
       return f.default ?? '#000000';
     },
   },
+  // A point on the map: { lat, lon, query (the address it was found from), label }.
+  // The dashboard finds it from the field named by `address`.
+  geoPoint: {
+    default: {},
+    sanitize: (v) => {
+      const n = (x, max) => { const k = Number(x); return x !== '' && x !== null && x !== undefined && Number.isFinite(k) && Math.abs(k) <= max ? Math.round(k * 1e6) / 1e6 : null; };
+      const lat = n(v?.lat, 90);
+      const lon = n(v?.lon, 180);
+      if (lat === null || lon === null) return {};
+      return { lat, lon, query: str(v?.query).slice(0, 200), label: str(v?.label).replace(/[\r\n]+/g, ' ').slice(0, 200) };
+    },
+  },
   // A calendar date "YYYY-MM-DD" (no time zone).
   date: {
     default: '',

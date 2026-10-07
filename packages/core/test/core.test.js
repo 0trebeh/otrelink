@@ -664,3 +664,20 @@ test('events: dates, ranges, hours and past events', async () => {
     assert.ok(r.html.includes(`ol-events is-${layout}`), layout);
   }
 });
+
+test('map block: Google color filters and styled maps', async () => {
+  const { renderPage, createDefaultPage, sanitizePage, styledMapDoc } = await import('../src/index.js');
+  const pt = { lat: 48.8584, lon: 2.2945, query: 'Eiffel Tower' };
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), blocks: [
+    { type: 'map', data: { address: 'Eiffel Tower', googleStyle: 'grayscale' } },
+    { type: 'map', data: { address: 'Eiffel Tower', provider: 'styled', mapStyle: 'dark', point: pt } },
+    { type: 'map', data: { address: 'Eiffel Tower', provider: 'styled', point: { lat: 'x', lon: 2 } } },
+  ] });
+  assert.deepEqual(page.blocks[2].data.point, {});
+  const html = renderPage(page).html;
+  assert.ok(html.includes('style="filter:grayscale(1)"'));
+  assert.ok(/<iframe sandbox="allow-scripts[^"]*" srcdoc=/.test(html) && !/sandbox="[^"]*allow-same-origin/.test(html));
+  assert.equal((html.match(/maps\.google\.com\/maps\?q=/g) || []).length, 2); // no point yet: falls back to Google Maps
+  const doc = styledMapDoc({ point: pt, mapStyle: 'dark', zoom: 14, markerLabel: '</script><b>' }, { color: '#ff0000' });
+  assert.ok(doc.includes('dark_all') && doc.includes('integrity="sha256-') && doc.includes('#ff0000') && !doc.includes('</script><b>'));
+});

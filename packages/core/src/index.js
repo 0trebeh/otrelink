@@ -31,6 +31,7 @@ export * from './blocks/status.js';
 export * from './blocks/location.js';
 export * from './blocks/code.js';
 export { htmlBlockDoc } from './blocks/html.js';
+export { MAP_STYLES, GOOGLE_FILTERS, styledMapDoc } from './blocks/map.js';
 export { formatEventDate, formatEventTime, visibleEvents, eventEnd, eventOn } from './blocks/events.js';
 export * from './plans.js';
 export * from './util/image.js';

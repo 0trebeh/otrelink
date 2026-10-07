@@ -12,6 +12,7 @@ import FontField from './FontField';
 import ChoiceField from './ChoiceField';
 import ImageAdjustField from './ImageAdjustField';
 import { WeeklyHoursField, DateRulesField } from './ScheduleFields';
+import GeoPointField from './GeoPointField';
 
 const toLocal = (iso) => {
   if (!iso) return '';
@@ -78,6 +79,7 @@ export const fieldInputs = {
   file: FileField,
   list: ListField,
   weeklyHours: WeeklyHoursField,
+  geoPoint: GeoPointField,
   dateRules: DateRulesField,
   date: ({ value, onChange, id }) => <Input id={id} type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />,
   time: ({ value, onChange, id }) => <Input id={id} type="time" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />,

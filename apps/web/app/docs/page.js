@@ -28,6 +28,7 @@ const toc = [
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
+  { id: 'maps', label: 'Map styles' },
   { id: 'events', label: 'Events calendar' },
   { id: 'html-block', label: 'HTML block' },
   { id: 'code-block', label: 'Code block' },
@@ -313,6 +314,14 @@ export default function DocsPage() {
               <li>Reviews are anonymous (no account needed), so anyone with your link can write one. Use “I approve each one” if you get spam.</li>
             </ul>
           </Warning>
+
+          <H2 id="maps">Map styles</H2>
+          <P>The <i>Map</i> block has two kinds of map:</P>
+          <ul className="list-disc pl-5 space-y-1 text-[15px] text-muted leading-relaxed mb-4">
+            <li><b>Google Maps</b> (default): the usual Google map, with a <i>Colors</i> filter on top: Normal, Grayscale, Dark, Night blue, Vintage, Soft or Blueprint. The filter tints the whole map, including labels and photos.</li>
+            <li><b>Styled map</b>: OpenStreetMap with real map styles: Light, Dark, Voyager, Minimal (no labels), Satellite and Topographic. You choose the marker (pin, dot or none), its color (your button color by default), a label on it, zoom buttons, mouse-wheel zoom (off by default so the page scrolls freely) and whether visitors can move the map. The block finds the address on the map by itself (OpenStreetMap search); if the pin is off, fix the latitude and longitude by hand.</li>
+          </ul>
+          <P>Both can show a <i>Get directions</i> button under the map. Styled maps need an internet connection to load their tiles, like Google Maps.</P>
 
           <H2 id="events">Events calendar</H2>
           <P>The <i>Events calendar</i> block (Content category, every plan) shows your agenda. Each event has a title, subtitle, description, place, image and an optional link (tickets, sign-up…). Its date is <b>one day</b> or <b>several days</b> (a range), <b>all day</b> or <b>from – to</b> hours (a time earlier than the start means after midnight).</P>
