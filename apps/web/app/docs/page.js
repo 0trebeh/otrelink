@@ -36,6 +36,7 @@ const toc = [
   { id: 'food', label: 'Food trucks & shops' },
   { id: 'orders', label: 'Pickup orders', sub: true },
   { id: 'loyalty', label: 'Loyalty cards', sub: true },
+  { id: 'invoices', label: 'Invoices' },
   { id: 'translate', label: 'Translate button' },
   { id: 'plans', label: 'Plans' },
   { id: 'sharing', label: 'Sharing & analytics' },
@@ -406,6 +407,16 @@ export default function DocsPage() {
           <P>When they pay, open the <i>Loyalty</i> tab and tap <i>Scan QR</i> (it uses your phone or computer camera) or type the code. Then <i>Add stamp</i> (or +2). When the card is full, <i>Give reward</i> uses the stamps (extra stamps carry over). <i>Undo</i> reverts the last change. If you scan the same card again too soon, it asks first (you choose the time in the block). Stamps are saved on the server, so customers can’t add them themselves; their card updates on its own while it is open. Find cards by name or code in the list.</P>
           <P>A card lives in the browser where it was created. If a customer changes phone or clears their browser data, find their old card by name and keep counting on a new one by hand.</P>
 
+          <H2 id="invoices">Invoices</H2>
+          <P>The <i>Invoices</i> tab (Pro plan) makes invoices for your customers and downloads them as PDF. First open <i>Business details</i>: your business name, address, tax ID, contact, logo (PNG or JPG; defaults to your profile picture), accent color, number prefix (<C>INV-</C> → INV-0001, INV-0002…), currency, tax name and rate (e.g. IVA 16%), days until due, default notes (payment instructions) and footer. The invoice language follows your page language, or choose English or Spanish.</P>
+          <P>Each invoice has a status (<b>Draft</b>, <b>Sent</b>, <b>Paid</b>, <b>Void</b>), a date and due date, the client’s details, items (description, quantity, unit price; a negative price works as a discount line), a discount %, the tax % and notes. Totals update as you type. <i>View PDF</i> and <i>Download</i> save it first. Once it is not a draft, <i>Copy link</i> gives your client a link to download the PDF without an account. In <i>Orders</i>, the <i>Invoice</i> button makes a draft from a pickup order with its items. Paid invoices print a PAID stamp; void ones VOID.</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>The PDF uses standard fonts: Latin letters and accents (á, ñ, €…) work; emoji and other alphabets are left out.</li>
+              <li>These invoices are for your records and your clients. Check what your country requires for official tax invoices.</li>
+            </ul>
+          </Warning>
+
           <H2 id="translate">Translate button</H2>
           <P>In <i>Settings</i>, choose the <b>Page language</b> (the language you write in) and turn on <b>Translate button (ES / EN)</b> (Pro plan). Your page gets a small ES / EN switch in the top corner (or, with <i>Show the ES / EN switch → Inside the navigation menu</i>, as a Language row in the menu; this needs the Navigation menu on). Choosing the other language translates the whole page with <b>Google Translate</b>, in the visitor’s browser. Nothing is stored and you don’t write translations.</P>
           <Warning>
@@ -426,6 +437,7 @@ export default function DocsPage() {
             ]}
           />
           <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal; you can cancel any time and keep Pro until the end of the period you paid. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>
+          <P><b>Your invoices:</b> every subscription payment appears under <i>Billing history</i> on the plan page, with a PDF invoice to download.</P>
 
           <H2 id="sharing">Sharing &amp; analytics</H2>
           <P>In <i>Settings</i> you can copy your link, download a QR code, change your username, add an SEO title, description and sharing image, hide the page, hide the footer, or show a sensitive-content warning.</P>

@@ -36,6 +36,7 @@ export const PLAN_FEATURES = {
   orders: { label: 'Pickup orders', sections: ['orders'], group: 'business' },
   location: { label: 'Location, route & open status', blocks: ['location', 'route', 'status'], sections: ['today'], group: 'business' },
   loyalty: { label: 'Loyalty cards', blocks: ['loyalty'], sections: ['loyalty'], group: 'business' },
+  invoices: { label: 'Invoices (PDF)', sections: ['invoices'], group: 'business' },
   // Page & design
   translate: { label: 'Translate button', group: 'page' },
   mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'], group: 'page' },

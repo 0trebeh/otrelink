@@ -1,7 +1,9 @@
 'use client';
 // Pickup orders from the Catalog block: new → preparing → ready → picked up.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Clock, Phone, MessageCircle, Volume2, VolumeX, RotateCcw, ShoppingBag, StickyNote } from 'lucide-react';
+import { Clock, Phone, MessageCircle, Volume2, VolumeX, RotateCcw, ShoppingBag, StickyNote, ReceiptText } from 'lucide-react';
+import { allowsSection } from '@otrelink/core';
+import { OPEN_INVOICE_KEY } from './InvoicesSection';
 import { flattenBlocks, formatMoney } from '@otrelink/core';
 import { api, errorMessage } from '@/lib/client';
 import { Panel, Button, cx } from '@/components/ui';
@@ -82,6 +84,16 @@ export default function OrdersSection({ ed }) {
     return () => clearInterval(t);
   }, [load]);
 
+  // "Invoice" on an order: a draft invoice with its items, opened in Invoices.
+  const canInvoice = allowsSection(ed.plan, 'invoices');
+  const toInvoice = async (o) => {
+    try {
+      const r = await api('/api/invoices', { method: 'POST', body: { pageId: page.id, fromOrder: o.id } });
+      try { sessionStorage.setItem(OPEN_INVOICE_KEY, r.invoice.id); } catch { /* private mode */ }
+      window.location.hash = 'invoices';
+    } catch (e) { setErr(errorMessage(e)); }
+  };
+
   const move = async (o, status) => {
     if (status === 'cancelled' && !window.confirm(`Cancel order #${o.code}? The customer sees it as cancelled.`)) return;
     setOrders((list) => list.map((x) => (x.id === o.id ? { ...x, status } : x)));
@@ -128,7 +140,7 @@ export default function OrdersSection({ ed }) {
                 <section key={c.id} aria-label={c.label}>
                   <h2 className="flex items-center gap-2 text-sm font-bold mb-2">{c.label}<span className="min-w-5 h-5 px-1.5 rounded-full bg-soft text-xs grid place-items-center">{list.length}</span></h2>
                   <div className="space-y-3">
-                    {list.map((o) => <OrderCard key={o.id} o={o} col={c} onMove={move} />)}
+                    {list.map((o) => <OrderCard key={o.id} o={o} col={c} onMove={move} onInvoice={canInvoice ? toInvoice : null} />)}
                     {!list.length && <p className="text-xs text-muted rounded-2xl border border-dashed border-line p-4 text-center">No orders</p>}
                   </div>
                 </section>
@@ -137,7 +149,7 @@ export default function OrdersSection({ ed }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {orders.map((o) => <OrderCard key={o.id} o={o} onMove={move} />)}
+            {orders.map((o) => <OrderCard key={o.id} o={o} onMove={move} onInvoice={canInvoice ? toInvoice : null} />)}
             {!orders.length && <p className="text-sm text-muted">No completed orders yet.</p>}
           </div>
         )}
@@ -158,7 +170,7 @@ function Header({ children }) {
   );
 }
 
-function OrderCard({ o, col, onMove }) {
+function OrderCard({ o, col, onMove, onInvoice }) {
   const money = (n) => formatMoney(n, o.money || {});
   const wa = o.phone.replace(/\D/g, '');
   const final = FINAL[o.status];
@@ -196,6 +208,7 @@ function OrderCard({ o, col, onMove }) {
         {col?.back && <Button size="sm" onClick={() => onMove(o, col.back)} title="Move back"><RotateCcw size={14} /></Button>}
         {col && <Button size="sm" variant="ghost" onClick={() => onMove(o, 'cancelled')} className="text-danger">Cancel</Button>}
         {!col && <Button size="sm" onClick={() => onMove(o, o.status === 'cancelled' ? 'new' : 'ready')}><RotateCcw size={14} /> Reopen</Button>}
+        {onInvoice && o.status !== 'cancelled' && <Button size="sm" variant="ghost" onClick={() => onInvoice(o)} title="Make an invoice from this order"><ReceiptText size={14} /> Invoice</Button>}
       </div>
     </article>
   );

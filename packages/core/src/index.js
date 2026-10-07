@@ -38,6 +38,7 @@ export * from './util/image.js';
 export * from './survey.js';
 export * from './translate.js';
 export * from './nav.js';
+export * from './invoices.js';
 export * from './page.js';
 export * from './render.js';
 export * from './docs.js';

@@ -3,7 +3,7 @@ import ThemeToggle from './ThemeToggle';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Check, Minus, CreditCard, Loader2, Mail, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Minus, CreditCard, Loader2, Mail, Sparkles, Download, ReceiptText } from 'lucide-react';
 import { PLANS, groupedFeatures } from '@otrelink/core';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Logo, cx } from './ui';
@@ -180,7 +180,33 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
           </table>
         </section>
         <p className="text-xs text-muted mt-4 inline-flex items-center gap-1.5"><Sparkles size={13} /> Payments are processed by Stripe and PayPal. You can cancel any time; Pro stays until the end of the period you paid.</p>
+        <BillingHistory />
       </main>
     </div>
+  );
+}
+
+/** Your payments to Otrelink, each with a PDF invoice. */
+function BillingHistory() {
+  const [list, setList] = useState(null);
+  const lang = typeof navigator !== 'undefined' && /^es/i.test(navigator.language) ? 'es' : 'en';
+  useEffect(() => { api('/api/billing/invoices').then((r) => setList(r.invoices)).catch(() => setList([])); }, []);
+  if (!list?.length) return null;
+  const money = (n, c) => new Intl.NumberFormat([], { style: 'currency', currency: c || 'USD' }).format(n);
+  return (
+    <section className="mt-10 rounded-3xl bg-panel border border-line/70 p-5 sm:p-6">
+      <h2 className="font-display text-lg font-bold tracking-tight flex items-center gap-2"><ReceiptText size={18} /> Billing history</h2>
+      <p className="text-sm text-muted mt-0.5">Download the invoice of each payment.</p>
+      <ul className="mt-4 divide-y divide-line/70">
+        {list.map((p) => (
+          <li key={p.id} className="flex items-center gap-3 py-3 text-sm">
+            <span className="font-semibold tabular-nums w-28 shrink-0">{p.code}</span>
+            <span className="flex-1 min-w-0 text-muted truncate">{new Date(p.date).toLocaleDateString([], { dateStyle: 'medium' })} · {p.provider === 'paypal' ? 'PayPal' : 'Card'}{p.refunded ? ' · Refunded' : ''}</span>
+            <span className="font-semibold tabular-nums">{money(p.amount, p.currency)}</span>
+            <a href={`/api/billing/invoices/${p.id}?download=1&lang=${lang}`} className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-line text-[13px] font-semibold bg-panel hover:border-ink/30"><Download size={14} /> PDF</a>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

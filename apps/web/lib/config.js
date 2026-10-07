@@ -28,6 +28,11 @@ export const config = {
   paypalWebhookId: process.env.PAYPAL_WEBHOOK_ID || '',
   paypalMode: process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox',
   businessContactEmail: process.env.BUSINESS_CONTACT_EMAIL || '',
+  // Your details on the subscription invoices users download (Plan page)
+  billingCompanyName: process.env.BILLING_COMPANY_NAME || 'Otrelink',
+  billingCompanyDetails: process.env.BILLING_COMPANY_DETAILS || '', // address, tax ID… (lines separated by \n)
+  billingInvoicePrefix: process.env.BILLING_INVOICE_PREFIX || 'OTR-',
+  billingFooter: process.env.BILLING_INVOICE_FOOTER || 'Thank you for using Otrelink!',
   // Key the admin dashboard (Otrelink-Admin) uses to call /api/admin/*
   adminApiKey: process.env.ADMIN_API_KEY || '',
 };

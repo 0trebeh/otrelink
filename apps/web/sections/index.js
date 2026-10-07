@@ -6,7 +6,7 @@
 //  `ed` = { page, set(updater, mergeKey), pageUrl, savedSlug, analytics, dirty, pendingBookings, pendingReviews, pendingOrders,
 //          refreshPending, plan, today, setToday }
 // ─────────────────────────────────────────────────────────────
-import { CalendarDays, ClipboardList, Star, Link2, UserRound, Palette, Image as ImageIcon, SlidersHorizontal, Settings, BarChart3, MapPin, ShoppingBag, Stamp } from 'lucide-react';
+import { CalendarDays, ClipboardList, Star, Link2, UserRound, Palette, Image as ImageIcon, SlidersHorizontal, Settings, BarChart3, MapPin, ShoppingBag, Stamp, ReceiptText } from 'lucide-react';
 import LinksSection from './LinksSection';
 import ProfileSection from './ProfileSection';
 import ThemeSection from './ThemeSection';
@@ -20,6 +20,7 @@ import ReviewsSection from './ReviewsSection';
 import TodaySection from './TodaySection';
 import OrdersSection from './OrdersSection';
 import LoyaltySection from './LoyaltySection';
+import InvoicesSection from './InvoicesSection';
 
 export const sections = [
   // Build the page
@@ -32,6 +33,7 @@ export const sections = [
   { id: 'style', label: 'Style', icon: SlidersHorizontal, Component: StyleSection, group: 'Design' },
   // What visitors do. `badge` names a number in `ed` shown next to the label.
   { id: 'orders', label: 'Orders', icon: ShoppingBag, Component: OrdersSection, wide: true, badge: 'pendingOrders', group: 'Activity' },
+  { id: 'invoices', label: 'Invoices', icon: ReceiptText, Component: InvoicesSection, wide: true, group: 'Activity' },
   { id: 'agenda', label: 'Agenda', icon: CalendarDays, Component: AgendaSection, wide: true, badge: 'pendingBookings', group: 'Activity' },
   { id: 'reviews', label: 'Reviews', icon: Star, Component: ReviewsSection, wide: true, badge: 'pendingReviews', group: 'Activity' },
   { id: 'loyalty', label: 'Loyalty', icon: Stamp, Component: LoyaltySection, wide: true, group: 'Activity' },

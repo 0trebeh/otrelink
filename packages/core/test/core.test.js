@@ -681,3 +681,18 @@ test('map block: Google color filters and styled maps', async () => {
   const doc = styledMapDoc({ point: pt, mapStyle: 'dark', zoom: 14, markerLabel: '</script><b>' }, { color: '#ff0000' });
   assert.ok(doc.includes('dark_all') && doc.includes('integrity="sha256-') && doc.includes('#ff0000') && !doc.includes('</script><b>'));
 });
+
+test('invoices: totals, money and cleaning', async () => {
+  const { sanitizeInvoice, invoiceTotals, invoiceMoney, invoiceCode, PLANS, allowsSection } = await import('../src/index.js');
+  const inv = sanitizeInvoice({ status: 'bogus', items: [{ description: 'A', qty: 2, price: 150 }, { description: 'Credit', qty: 1, price: -20 }, { description: '', price: 0 }], discount: 10, taxRate: 16, client: { name: 'Ana', email: 'bad' } });
+  assert.equal(inv.status, 'draft');
+  assert.equal(inv.client.email, '');
+  const t = invoiceTotals(inv);
+  assert.equal(t.lines.length, 2);
+  assert.deepEqual([t.subtotal, t.discount, t.tax, t.total], [280, 28, 40.32, 292.32]);
+  assert.equal(invoiceMoney(-25, { currency: '$' }), '-$25');
+  assert.equal(invoiceMoney(1234.5, { currency: '€', currencyPosition: 'after', numberFormat: 'comma' }), '1.234,50 €');
+  assert.equal(invoiceCode('INV-', 7), 'INV-0007');
+  assert.equal(allowsSection(PLANS.free, 'invoices'), false);
+  assert.equal(allowsSection(PLANS.pro, 'invoices'), true);
+});

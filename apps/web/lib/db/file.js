@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -77,7 +77,8 @@ export async function createFileDriver() {
         state.pages = state.pages.filter((p) => p.userId !== id);
         state.assets = state.assets.filter((a) => a.userId !== id);
         state.push = state.push.filter((p) => p.userId !== id);
-        for (const k of ['events', 'bookings', 'responses', 'reviews', 'orders', 'cards']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
+        state.payments = state.payments.filter((p) => p.userId !== id);
+        for (const k of ['events', 'bookings', 'responses', 'reviews', 'orders', 'cards', 'invoices']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
         await persist();
       },
     },
@@ -254,6 +255,52 @@ export async function createFileDriver() {
         state.orders = state.orders.filter((o) => o.pageId !== pageId);
         await persist();
       },
+    },
+    // Invoices made by page owners (newest number first in lists).
+    invoices: {
+      create: async (inv) => {
+        if (state.invoices.some((x) => x.pageId === inv.pageId && x.number === inv.number)) throw Object.assign(new Error('number_taken'), { code: 'number_taken' });
+        const doc = { id: crypto.randomUUID(), createdAt: now(), updatedAt: now(), ...inv };
+        state.invoices.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.invoices.find((x) => x.id === id)),
+      list: async ({ pageId, status, limit = 300 } = {}) => clone(state.invoices
+        .filter((x) => x.pageId === pageId && (!status || x.status === status))
+        .sort((a, b) => b.number - a.number)
+        .slice(0, limit)),
+      maxNumber: async (pageId) => state.invoices.filter((x) => x.pageId === pageId).reduce((m, x) => Math.max(m, x.number || 0), 0),
+      update: async (id, patch) => {
+        const i = state.invoices.findIndex((x) => x.id === id);
+        if (i < 0) return null;
+        state.invoices[i] = { ...state.invoices[i], ...patch, updatedAt: now() };
+        await persist();
+        return clone(state.invoices[i]);
+      },
+      remove: async (id) => {
+        state.invoices = state.invoices.filter((x) => x.id !== id);
+        await persist();
+      },
+      removeMany: async ({ pageId }) => {
+        state.invoices = state.invoices.filter((x) => x.pageId !== pageId);
+        await persist();
+      },
+    },
+    // Subscription payments to Otrelink (Stripe / PayPal), shown as invoices to the user.
+    payments: {
+      // Same provider payment id twice (webhook retries) → the first one is kept.
+      record: async (p) => {
+        const found = state.payments.find((x) => x.provider === p.provider && x.providerId === p.providerId);
+        if (found) return clone(found);
+        const number = state.payments.reduce((m, x) => Math.max(m, x.number || 0), 0) + 1;
+        const doc = { id: crypto.randomUUID(), createdAt: now(), number, ...p };
+        state.payments.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.payments.find((x) => x.id === id)),
+      listByUser: async (userId) => clone(state.payments.filter((x) => x.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))),
     },
     // Loyalty cards.
     cards: {

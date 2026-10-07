@@ -25,6 +25,9 @@ export async function createMongoDriver() {
   const reviews = db.collection('reviews');
   const orders = db.collection('orders');
   const cards = db.collection('loyalty_cards');
+  const invoices = db.collection('invoices');
+  const payments = db.collection('payments');
+  const counters = db.collection('counters');
   const limits = db.collection('rate_limits');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
@@ -54,6 +57,9 @@ export async function createMongoDriver() {
     [orders, { createdAtDate: 1 }, { expireAfterSeconds: 180 * 86400 }],
     [cards, { pageId: 1, code: 1 }, { unique: true }],
     [cards, { pageId: 1, updatedAt: -1 }, {}],
+    [invoices, { pageId: 1, number: 1 }, { unique: true }],
+    [payments, { provider: 1, providerId: 1 }, { unique: true }],
+    [payments, { userId: 1, createdAt: -1 }, {}],
     // Rate-limit counters delete themselves when their window ends.
     [limits, { expiresAt: 1 }, { expireAfterSeconds: 0 }],
     [users, { verifyTokenHash: 1 }, { sparse: true }],
@@ -135,6 +141,7 @@ export async function createMongoDriver() {
           events.deleteMany({ pageId: { $in: pageIds } }), bookings.deleteMany({ pageId: { $in: pageIds } }),
           responses.deleteMany({ pageId: { $in: pageIds } }), reviews.deleteMany({ pageId: { $in: pageIds } }),
           orders.deleteMany({ pageId: { $in: pageIds } }), cards.deleteMany({ pageId: { $in: pageIds } }),
+          invoices.deleteMany({ pageId: { $in: pageIds } }), payments.deleteMany({ userId: id }),
         ]);
         await users.deleteOne({ _id: id });
       },
@@ -258,6 +265,36 @@ export async function createMongoDriver() {
       count: async ({ pageId, statuses, since }) => orders.countDocuments({ pageId, ...(statuses ? { status: { $in: statuses } } : {}), ...(since ? { createdAt: { $gte: since } } : {}) }),
       update: async (id, patch) => out(await orders.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after', projection: { createdAtDate: 0 } })),
       removeMany: async ({ pageId }) => { await orders.deleteMany({ pageId }); },
+    },
+    invoices: {
+      create: async (inv) => {
+        const t = new Date().toISOString();
+        const doc = { _id: crypto.randomUUID(), createdAt: t, updatedAt: t, ...inv };
+        await invoices.insertOne(doc).catch((err) => { if (err?.code === 11000) throw Object.assign(new Error('number_taken'), { code: 'number_taken' }); throw err; });
+        return out(doc);
+      },
+      findById: async (id) => out(await invoices.findOne({ _id: id })),
+      list: async ({ pageId, status, limit = 300 } = {}) =>
+        (await invoices.find({ pageId, ...(status ? { status } : {}) }).sort({ number: -1 }).limit(limit).toArray()).map(out),
+      maxNumber: async (pageId) => (await invoices.find({ pageId }, { projection: { number: 1 } }).sort({ number: -1 }).limit(1).next())?.number || 0,
+      update: async (id, patch) => out(await invoices.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
+      remove: async (id) => { await invoices.deleteOne({ _id: id }); },
+      removeMany: async ({ pageId }) => { await invoices.deleteMany({ pageId }); },
+    },
+    payments: {
+      record: async (p) => {
+        const found = await payments.findOne({ provider: p.provider, providerId: p.providerId });
+        if (found) return out(found);
+        const c = await counters.findOneAndUpdate({ _id: 'payments' }, { $inc: { n: 1 } }, { upsert: true, returnDocument: 'after' });
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), number: c?.n || 1, ...p };
+        try { await payments.insertOne(doc); } catch (err) {
+          if (err?.code === 11000) return out(await payments.findOne({ provider: p.provider, providerId: p.providerId }));
+          throw err;
+        }
+        return out(doc);
+      },
+      findById: async (id) => out(await payments.findOne({ _id: id })),
+      listByUser: async (userId) => (await payments.find({ userId }).sort({ createdAt: -1 }).limit(200).toArray()).map(out),
     },
     cards: {
       create: async (c) => {

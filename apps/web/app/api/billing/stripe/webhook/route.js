@@ -1,6 +1,7 @@
 // Stripe → Otrelink. In Stripe: Developers → Webhooks → add endpoint
 //   https://YOUR-APP/api/billing/stripe/webhook
-// Events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted
+// Events: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted,
+//         invoice.paid (records each payment: users download its PDF invoice from the Plan page)
 import { getDb } from '@/lib/db';
 import { verifyWebhook, getSubscription, stateFromSubscription } from '@/lib/billing/stripe';
 import { billingPatch } from '@/lib/billing';
@@ -24,6 +25,22 @@ export async function POST(req) {
     } else if (event.type.startsWith('customer.subscription.')) {
       sub = obj;
       userId = obj.metadata?.userId;
+    }
+    // A paid Stripe invoice = one payment (renewals included).
+    if (event.type === 'invoice.paid' && obj.amount_paid > 0) {
+      const subId = typeof obj.subscription === 'string' ? obj.subscription : obj.parent?.subscription_details?.subscription || obj.subscription?.id;
+      const metaUser = obj.subscription_details?.metadata?.userId || obj.parent?.subscription_details?.metadata?.userId;
+      const user = (metaUser && await db.users.findById(metaUser)) || (subId && await db.users.findBySubscription(subId));
+      const period = obj.lines?.data?.[0]?.period;
+      if (user) {
+        await db.payments.record({
+          userId: user.id, provider: 'stripe', providerId: obj.id,
+          amount: obj.amount_paid / 100, currency: String(obj.currency || 'usd').toUpperCase(),
+          periodStart: period?.start ? new Date(period.start * 1000).toISOString() : null,
+          periodEnd: period?.end ? new Date(period.end * 1000).toISOString() : null,
+          description: 'Otrelink Pro — monthly subscription',
+        });
+      }
     }
     if (sub) {
       const user = (userId && await db.users.findById(userId)) || await db.users.findBySubscription(sub.id);
