@@ -468,3 +468,14 @@ test('block text color reaches captions (inherited text)', async () => {
   assert.ok(blockStyleFieldsFor({ type: 'gallery', data: { items: [{ caption: 'Hi' }] } }).some((f) => f.key === 'stTextColor'));
   assert.ok(!blockStyleFieldsFor({ type: 'gallery', data: { items: [{ caption: '' }] } }).some((f) => f.key === 'stTextColor'));
 });
+
+test('blocks that can never be clicked are known', async () => {
+  const { blockTracksClicks } = await import('../src/index.js');
+  assert.equal(blockTracksClicks({ type: 'text', data: {} }), false);
+  assert.equal(blockTracksClicks({ type: 'header', data: {} }), false);
+  assert.equal(blockTracksClicks({ type: 'link', data: {} }), true);
+  assert.equal(blockTracksClicks({ type: 'image', data: { url: '' } }), false);
+  assert.equal(blockTracksClicks({ type: 'image', data: { url: 'https://x.co' } }), true);
+  assert.equal(blockTracksClicks({ type: 'map', data: { display: 'always' } }), false);
+  assert.equal(blockTracksClicks({ type: 'collection', data: { mode: 'button' } }), true);
+});

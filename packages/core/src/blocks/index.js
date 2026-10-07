@@ -178,3 +178,26 @@ export function blockStyleOf(options = {}, groups = ['button', 'card', 'text', '
   const buttonStyle = buttonStyles.has(options.stButtonStyle) ? options.stButtonStyle : '';
   return { vars: vars.join(';'), buttonStyle };
 }
+
+/**
+ * Whether a block can ever count clicks (it has a link or a button visitors tap).
+ * Text, headers, dividers, FAQ, countdowns and players never do; some blocks
+ * only do with certain settings (an image with a link, a map shown as a button…).
+ * The dashboard hides the click counter for the others.
+ */
+const has = (v) => Boolean(v);
+const CLICKABLE = {
+  text: false, header: false, divider: false, countdown: false, faq: false, music: false, video: false,
+  image: (d) => has(d.url),
+  banner: (d) => has(d.url),
+  gallery: (d) => (d.items || []).some((i) => i.url),
+  embed: (d) => d.display === 'button',
+  map: (d) => d.display === 'button',
+  collection: (d) => d.mode === 'button',
+  catalog: (d) => d.display === 'button' || has(d.whatsapp) || (d.products || []).some((p) => p.url),
+};
+export function blockTracksClicks(block) {
+  const rule = CLICKABLE[block?.type];
+  if (rule === undefined) return true;
+  return typeof rule === 'function' ? rule(block.data || {}) : rule;
+}
