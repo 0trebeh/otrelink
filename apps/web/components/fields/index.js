@@ -79,6 +79,7 @@ export const fieldInputs = {
   list: ListField,
   weeklyHours: WeeklyHoursField,
   dateRules: DateRulesField,
+  date: ({ value, onChange, id }) => <Input id={id} type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />,
   time: ({ value, onChange, id }) => <Input id={id} type="time" value={value ?? ''} onChange={(e) => onChange(e.target.value)} />,
   datetime: ({ value, onChange, id }) => (
     <Input id={id} type="datetime-local" value={toLocal(value)} onChange={(e) => onChange(e.target.value ? new Date(e.target.value).toISOString() : '')} />

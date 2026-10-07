@@ -28,6 +28,7 @@ const toc = [
   { id: 'bookings', label: 'Bookings & agenda' },
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
+  { id: 'events', label: 'Events calendar' },
   { id: 'html-block', label: 'HTML block' },
   { id: 'code-block', label: 'Code block' },
   { id: 'catalog', label: 'Catalog' },
@@ -312,6 +313,20 @@ export default function DocsPage() {
               <li>Reviews are anonymous (no account needed), so anyone with your link can write one. Use “I approve each one” if you get spam.</li>
             </ul>
           </Warning>
+
+          <H2 id="events">Events calendar</H2>
+          <P>The <i>Events calendar</i> block (Content category, every plan) shows your agenda. Each event has a title, subtitle, description, place, image and an optional link (tickets, sign-up…). Its date is <b>one day</b> or <b>several days</b> (a range), <b>all day</b> or <b>from – to</b> hours (a time earlier than the start means after midnight).</P>
+          <Table
+            head={['Option', 'What it does']}
+            rows={[
+              ['Show as', 'Banners (a date badge and the details), Carousel (swipe sideways), Grid (2 per row) or Month calendar (visitors move between months and tap a day to see its events).'],
+              ['Date format', 'Friday, October 10 · Fri, Oct 10 · Oct 10 · 10 October · 10/10. Written in your page language (Settings → Page language): in Spanish, “viernes, 10 de octubre”.'],
+              ['Year', 'Only when it is not this year (default), always or never.'],
+              ['Hours', 'Like the page language, 12 hours (7:00 PM) or 24 hours (19:00).'],
+              ['Past events', 'Hidden (default), shown faded, or shown at the end. The month calendar always shows them.'],
+              ['Show at most', 'Limit how many events are listed (0 = all). Events happening today get a “Today” label.'],
+            ]}
+          />
 
           <H2 id="html-block">HTML block</H2>
           <P>The <i>HTML</i> block (Media category, Pro plan) runs your own code: paste HTML, and optionally CSS and JavaScript in their own boxes. It is shown inside the block and grows with its content (or set a fixed height). Use it for a calculator, a small game, a custom form, a widget, an animation…</P>

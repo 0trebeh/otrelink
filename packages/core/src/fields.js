@@ -129,6 +129,11 @@ export const fieldTypes = {
       return f.default ?? '#000000';
     },
   },
+  // A calendar date "YYYY-MM-DD" (no time zone).
+  date: {
+    default: '',
+    sanitize: (v) => validDate(v),
+  },
   // Time of day "HH:MM" (24h).
   time: {
     default: '09:00',

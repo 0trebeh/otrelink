@@ -47,6 +47,7 @@ import embed from './embed.js';
 import catalog from './catalog.js';
 import code from './code.js';
 import html from './html.js';
+import events from './events.js';
 import status from './status.js';
 import location from './location.js';
 import route from './route.js';
@@ -70,6 +71,7 @@ export const blockTypes = createRegistry('blockTypes', [
   map,
   contact,
   catalog,
+  events,
   status,
   location,
   route,
@@ -147,6 +149,7 @@ const STYLE_GROUPS = {
   survey: ['button', 'card', 'radius'],
   reviews: ['button', 'card', 'radius'],
   vcard: ['button', 'card', 'radius'],
+  events: ['card', 'text', 'radius'],
   html: (d) => (d.background === 'card' ? ['card', 'radius'] : d.title ? ['text', 'radius'] : ['radius']),
   code: (d) => (showsButton(d) ? ['button', 'radius'] : ['radius']),
   status: (d) => (d.style === 'card' ? ['card', 'radius'] : ['card']),
@@ -218,6 +221,7 @@ const CLICKABLE = {
   status: false, loyalty: false,
   code: (d) => d.display === 'button',
   html: false,
+  events: (d) => (d.events || []).some((e) => e.url),
   location: (d) => d.directions,
   route: (d) => d.directions,
 };

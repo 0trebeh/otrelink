@@ -638,3 +638,29 @@ test('ES / EN switch can live inside the navigation menu', async () => {
   const onlyLang = renderPage(sanitizePage({ ...base, blocks: [], settings: { translateButton: true, translatePlace: 'menu', navMenu: true } })).html;
   assert.ok(onlyLang.includes('ol-nav-btn') && onlyLang.includes('ol-lang-inmenu') && !onlyLang.includes('Back to top'));
 });
+
+test('events: dates, ranges, hours and past events', async () => {
+  const { formatEventDate, formatEventTime, visibleEvents, renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  const now = Date.parse('2026-10-08T15:00:00Z');
+  const d = { dateFormat: 'long', showYear: 'auto', timeFormat: 'auto', timezone: 'UTC' };
+  const sp = (s) => s.replace(/[\u2009\u202f]/g, ' ');
+  assert.equal(formatEventDate({ date: '2026-10-10' }, d, { now }), 'Saturday, October 10');
+  assert.equal(sp(formatEventDate({ date: '2026-10-10', kind: 'range', endDate: '2026-10-12' }, { ...d, dateFormat: 'short' }, { now })), 'Oct 10 – 12');
+  assert.equal(formatEventDate({ date: '2027-01-02' }, { ...d, dateFormat: 'short' }, { now }), 'Jan 2, 2027');
+  assert.equal(formatEventDate({ date: '2026-10-10' }, { ...d, dateFormat: 'dayMonth' }, { locale: 'es', now }), '10 de octubre');
+  assert.equal(sp(formatEventTime({ from: '19:00', to: '22:30' }, { timeFormat: '24h' })), '19:00 – 22:30');
+  assert.equal(formatEventTime({ allDay: true, from: '19:00' }, d), '');
+  const events = [
+    { id: 'a', title: 'Old', date: '2026-10-01' },
+    { id: 'b', title: 'Fair', date: '2026-10-07', kind: 'range', endDate: '2026-10-09' },
+    { id: 'c', title: 'Show', date: '2026-10-20', from: '20:00' },
+  ];
+  assert.deepEqual(visibleEvents({ ...d, events, past: 'hide' }, now).map((e) => e.id), ['b', 'c']);
+  assert.equal(visibleEvents({ ...d, events, past: 'hide' }, now)[0].now, true);
+  assert.deepEqual(visibleEvents({ ...d, events, past: 'end' }, now).map((e) => e.id), ['b', 'c', 'a']);
+  for (const layout of ['banners', 'carousel', 'grid', 'calendar']) {
+    const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), blocks: [{ type: 'events', data: { ...d, layout, events } }] });
+    const r = renderPage(page, { now });
+    assert.ok(r.html.includes(`ol-events is-${layout}`), layout);
+  }
+});

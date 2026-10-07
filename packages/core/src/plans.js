@@ -27,6 +27,7 @@ export const PLAN_FEATURES = {
   embed: { label: 'Embeds', blocks: ['embed'], group: 'content' },
   html: { label: 'HTML block', blocks: ['html'], group: 'content' },
   // Bookings & visitors
+  events: { label: 'Events calendar', blocks: ['events'], group: 'activity', free: true },
   booking: { label: 'Booking & agenda', blocks: ['booking'], sections: ['agenda'], group: 'activity' },
   reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'], group: 'activity' },
   survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'], group: 'activity' },
