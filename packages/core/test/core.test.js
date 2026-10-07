@@ -625,3 +625,16 @@ test('plan features are grouped; the Code block is in Free and Business can turn
   assert.equal(allowsBlock(PLANS.free, 'html'), false);
   assert.equal(allowsBlock(resolvePlan({ plan: 'business', limits: { features: { code: false } } }), 'code'), false);
 });
+
+test('ES / EN switch can live inside the navigation menu', async () => {
+  const { renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  const base = { ...createDefaultPage({ slug: 'x' }), blocks: [{ type: 'header', data: { text: 'Menu' } }] };
+  const inMenu = renderPage(sanitizePage({ ...base, settings: { translateButton: true, translatePlace: 'menu', navMenu: true } })).html;
+  assert.ok(inMenu.includes('ol-lang-inmenu') && !inMenu.includes('<nav class="ol-lang'));
+  // Without the navigation menu it stays in the corner.
+  const corner = renderPage(sanitizePage({ ...base, settings: { translateButton: true, translatePlace: 'menu' } })).html;
+  assert.ok(corner.includes('<nav class="ol-lang') && !corner.includes('ol-nav-btn'));
+  // Menu on but no sections: the menu still opens, with just the language.
+  const onlyLang = renderPage(sanitizePage({ ...base, blocks: [], settings: { translateButton: true, translatePlace: 'menu', navMenu: true } })).html;
+  assert.ok(onlyLang.includes('ol-nav-btn') && onlyLang.includes('ol-lang-inmenu') && !onlyLang.includes('Back to top'));
+});

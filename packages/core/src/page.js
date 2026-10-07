@@ -41,6 +41,9 @@ export const settingsFields = [
     help: 'The language your page is written in.' },
   { key: 'translateButton', type: 'toggle', label: 'Translate button (ES / EN)', default: false,
     help: 'Visitors can read your page in the other language. The text is translated automatically by Google Translate, in their browser.' },
+  { key: 'translatePlace', type: 'select', label: 'Show the ES / EN switch', default: 'corner', showIf: { key: 'translateButton', truthy: true }, options: [
+    { value: 'corner', label: 'In the top corner' }, { value: 'menu', label: 'Inside the navigation menu' },
+  ], help: 'Inside the menu needs “Navigation menu” on; otherwise it stays in the corner.' },
   { key: 'seoTitle', type: 'text', label: 'SEO title', max: 70, help: 'Browser tab and search results. Defaults to your title.' },
   { key: 'seoDescription', type: 'textarea', label: 'SEO description', max: 200 },
   { key: 'ogImage', type: 'image', label: 'Sharing image', help: 'Shown when your link is shared on social media.' },

@@ -93,6 +93,11 @@ const BASE_CSS = `
 .ol-root .ol-nav-list a[aria-current="true"]{background:var(--ol-surface-fg);color:var(--ol-surface)}
 .ol-root .ol-nav-top{display:flex;align-items:center;gap:8px;margin-top:4px;padding:10px 12px;border-top:1px solid color-mix(in srgb,var(--ol-surface-fg) 12%,transparent);text-decoration:none;color:inherit;font-size:13px;font-weight:600;opacity:.75}
 .ol-root .ol-block[id]{scroll-margin-top:70px}
+.ol-root .ol-nav-lang{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:4px;padding:8px 6px 6px 12px;border-top:1px solid color-mix(in srgb,var(--ol-surface-fg) 12%,transparent);font-size:13px;font-weight:600}
+.ol-root .ol-nav-lang>span{display:inline-flex;align-items:center;gap:8px;opacity:.75}
+.ol-root .ol-nav-list+.ol-nav-lang{margin-top:4px}
+.ol-root .ol-nav-title+.ol-nav-lang{border-top:0;margin-top:0}
+.ol-root .ol-lang.ol-lang-inmenu{position:static;box-shadow:none;background:color-mix(in srgb,var(--ol-surface-fg) 8%,transparent)}
 .ol-root.has-nav .ol-main{padding-top:max(var(--ol-pad-top),66px)}
 @media (prefers-reduced-motion:reduce){.ol-root *{animation:none!important;transition:none!important}}
 `;
@@ -207,18 +212,24 @@ export function renderPage(page, opts = {}) {
   const protect = [page.settings?.noSelect && 'ol-noselect', page.settings?.noRightClick && 'ol-nomenu'].filter(Boolean).join(' ');
   // Translate switch: Google Translate in the visitor's browser (see translate.js).
   const lang = pageLanguage(page);
-  const langSwitch = page.settings?.translateButton
-    ? `<nav class="ol-lang notranslate" aria-label="Language" translate="no">${[lang, otherLanguage(lang)].map((l) => `<button type="button" data-ol-lang="${l}" lang="${l}" aria-pressed="${l === lang}" title="${esc(PAGE_LANGUAGES[l].label)}">${PAGE_LANGUAGES[l].short}</button>`).join('')}</nav>`
+  const langButtons = `${[lang, otherLanguage(lang)].map((l) => `<button type="button" data-ol-lang="${l}" lang="${l}" aria-pressed="${l === lang}" title="${esc(PAGE_LANGUAGES[l].label)}">${PAGE_LANGUAGES[l].short}</button>`).join('')}`;
+  // ES / EN in the corner, or inside the navigation menu (Settings → Translate button → Show it).
+  const langInMenu = page.settings?.translateButton && page.settings?.translatePlace === 'menu' && page.settings?.navMenu;
+  const langSwitch = page.settings?.translateButton && !langInMenu
+    ? `<nav class="ol-lang notranslate" aria-label="Language" translate="no">${langButtons}</nav>`
     : '';
   const navRight = page.settings?.navPosition === 'right';
-  const navHtml = nav.length
+  const showNav = nav.length > 0 || langInMenu;
+  const navHtml = showNav
     ? `<div class="ol-navmenu ol-navmenu-${navRight ? 'right' : 'left'}">`
       + `<button type="button" class="ol-nav-btn" aria-expanded="false" aria-controls="ol-nav-panel" aria-label="Menu">${icon('menu', 20)}</button>`
-      + `<nav class="ol-nav-panel" id="ol-nav-panel" aria-label="Sections" hidden><p class="ol-nav-title">${esc(page.profile?.title || 'Menu')}</p><ul class="ol-nav-list">`
-      + nav.map((n) => `<li><a href="#${esc(anchors.get(n.id))}" data-ol-nav="${esc(n.id)}"${n.depth ? ' class="is-sub"' : ''}>${esc(n.label)}</a></li>`).join('')
-      + `</ul><a href="#" class="ol-nav-top" data-ol-nav="top">${icon('arrowUp', 15)}Back to top</a></nav></div>`
+      + `<nav class="ol-nav-panel" id="ol-nav-panel" aria-label="Sections" hidden><p class="ol-nav-title">${esc(page.profile?.title || 'Menu')}</p>`
+      + (nav.length ? `<ul class="ol-nav-list">${nav.map((n) => `<li><a href="#${esc(anchors.get(n.id))}" data-ol-nav="${esc(n.id)}"${n.depth ? ' class="is-sub"' : ''}>${esc(n.label)}</a></li>`).join('')}</ul>` : '')
+      + (langInMenu ? `<div class="ol-nav-lang"><span>${icon('globe', 15)}Language</span><div class="ol-lang ol-lang-inmenu notranslate" role="group" aria-label="Language" translate="no">${langButtons}</div></div>` : '')
+      + (nav.length ? `<a href="#" class="ol-nav-top" data-ol-nav="top">${icon('arrowUp', 15)}Back to top</a>` : '')
+      + '</nav></div>'
     : '';
-  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}${nav.length ? ` has-nav${navRight ? ' has-nav-right' : ''}` : ''}" data-mode="${mode}" lang="${lang}">`
+  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}${showNav ? ` has-nav${navRight ? ' has-nav-right' : ''}` : ''}" data-mode="${mode}" lang="${lang}">`
     + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>${langSwitch}${navHtml}`
     + `<main class="ol-main">${renderProfile(page, d)}<section class="ol-blocks">${blocksHtml}</section>${renderSocials(page, d, 'bottom')}${footer}</main>`
     + `${gate}</div>`;

@@ -383,7 +383,7 @@ export default function DocsPage() {
           <P>A card lives in the browser where it was created. If a customer changes phone or clears their browser data, find their old card by name and keep counting on a new one by hand.</P>
 
           <H2 id="translate">Translate button</H2>
-          <P>In <i>Settings</i>, choose the <b>Page language</b> (the language you write in) and turn on <b>Translate button (ES / EN)</b> (Pro plan). Your page gets a small ES / EN switch in the top corner. Choosing the other language translates the whole page with <b>Google Translate</b>, in the visitor’s browser. Nothing is stored and you don’t write translations.</P>
+          <P>In <i>Settings</i>, choose the <b>Page language</b> (the language you write in) and turn on <b>Translate button (ES / EN)</b> (Pro plan). Your page gets a small ES / EN switch in the top corner (or, with <i>Show the ES / EN switch → Inside the navigation menu</i>, as a Language row in the menu; this needs the Navigation menu on). Choosing the other language translates the whole page with <b>Google Translate</b>, in the visitor’s browser. Nothing is stored and you don’t write translations.</P>
           <Warning>
             <ul className="list-disc pl-5 space-y-1">
               <li>Translation is automatic, so names of dishes or brand words may come out oddly. Prices, codes and the switch itself are never translated.</li>
