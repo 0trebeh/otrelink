@@ -13,12 +13,12 @@ const OPEN_KEY = 'ol-overview-open';
 
 /** Simple analytics of all the user's pages, on the "Your pages" screen. */
 export default function GlobalAnalytics() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false); // closed by default; the browser remembers if you open it
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [err, setErr] = useState(false);
 
-  useEffect(() => { try { if (localStorage.getItem(OPEN_KEY) === '0') setOpen(false); } catch { /* ignore */ } }, []);
+  useEffect(() => { try { if (localStorage.getItem(OPEN_KEY) === '1') setOpen(true); } catch { /* ignore */ } }, []);
   const toggle = () => setOpen((v) => { try { localStorage.setItem(OPEN_KEY, v ? '0' : '1'); } catch { /* ignore */ } return !v; });
 
   useEffect(() => {
