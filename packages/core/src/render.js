@@ -18,6 +18,7 @@ const BASE_CSS = `
 .ol-root{position:relative;min-height:100%;font-family:var(--ol-body-font);font-size:var(--ol-body-size);color:var(--ol-text-color);-webkit-font-smoothing:antialiased;isolation:isolate}
 .ol-root *,.ol-root *::before,.ol-root *::after{box-sizing:border-box}
 .ol-root iframe{color-scheme:light}
+.ol-root .ol-styled{color:var(--ol-text-color)}
 .ol-root.ol-noselect{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .ol-root.ol-noselect :is(input,textarea,select,[contenteditable]){-webkit-user-select:text;user-select:text}
 .ol-root.ol-noselect img,.ol-root.ol-nomenu img{-webkit-user-drag:none;-webkit-touch-callout:none}

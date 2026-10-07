@@ -458,3 +458,13 @@ test('social icons can show at the top and the bottom', async () => {
   assert.equal(count('both'), 2);
   assert.equal(sanitizePage({ ...page, design: { ...page.design, socialsPosition: 'both' } }).design.socialsPosition, 'both');
 });
+
+test('block text color reaches captions (inherited text)', async () => {
+  const { renderPage, createDefaultPage, sanitizePage, blockStyleFieldsFor } = await import('../src/index.js');
+  const page = sanitizePage(createDefaultPage({ slug: 'x', title: 'X' }));
+  page.blocks = [{ id: 'g', type: 'gallery', enabled: true, data: { items: [{ id: 'i', image: 'https://x.co/a.jpg', caption: 'Hi' }] }, options: { stTextColor: '#ff0000' } }];
+  const r = renderPage(sanitizePage(page));
+  assert.ok(r.html.includes('--ol-text-color:#ff0000') && r.css.includes('.ol-root .ol-styled{color:var(--ol-text-color)}'));
+  assert.ok(blockStyleFieldsFor({ type: 'gallery', data: { items: [{ caption: 'Hi' }] } }).some((f) => f.key === 'stTextColor'));
+  assert.ok(!blockStyleFieldsFor({ type: 'gallery', data: { items: [{ caption: '' }] } }).some((f) => f.key === 'stTextColor'));
+});

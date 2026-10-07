@@ -118,13 +118,13 @@ const STYLE_GROUPS = {
   header: ['text'],
   divider: ['text'],
   text: (d) => (d.card ? ['card', 'radius'] : ['text']),
-  image: ['text', 'radius'],
-  gallery: ['text', 'radius'], // captions
-  video: ['text', 'radius'],
+  image: (d) => (d.caption ? ['text', 'radius'] : ['radius']), // text = caption
+  gallery: (d) => ((d.items || []).some((i) => i.caption) ? ['text', 'radius'] : ['radius']), // text = captions
+  video: (d) => (d.title ? ['text', 'radius'] : ['radius']), // text = title
   music: ['radius'],
   banner: ['radius'],
-  embed: (d) => (showsButton(d) ? ['button', 'text', 'radius'] : ['text', 'radius']),
-  map: (d) => (showsButton(d) ? ['button', 'text', 'radius'] : ['text', 'radius']),
+  embed: (d) => (showsButton(d) ? ['button', 'radius'] : d.title ? ['text', 'radius'] : ['radius']),
+  map: (d) => (showsButton(d) ? ['button', 'radius'] : d.title ? ['text', 'radius'] : ['radius']),
   pdf: ['button', 'card', 'radius'],
   faq: ['card', 'radius'],
   countdown: ['card', 'radius'],
