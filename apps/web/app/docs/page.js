@@ -29,6 +29,10 @@ const toc = [
   { id: 'surveys', label: 'Surveys' },
   { id: 'reviews', label: 'Reviews' },
   { id: 'catalog', label: 'Catalog' },
+  { id: 'food', label: 'Food trucks & shops' },
+  { id: 'orders', label: 'Pickup orders', sub: true },
+  { id: 'loyalty', label: 'Loyalty cards', sub: true },
+  { id: 'translate', label: 'Translate button' },
   { id: 'plans', label: 'Plans' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
@@ -317,17 +321,66 @@ export default function DocsPage() {
               ['Discount', 'Shows the new price, the old one crossed out and a “-20%” label.'],
               ['Stock', 'Empty: not shown. 0: “Sold out” and the buy button turns off. A low number shows “Only N left” (you choose from which number).'],
               ['Label', 'A small tag on the image, like “New” or “Best seller”.'],
+              ['Category', 'Groups products (Burgers, Drinks…). With 2 or more categories, visitors get tabs to jump between them (turn off with Category tabs).'],
+              ['Tags', 'Menu info shown as small chips: Popular, Spicy, Vegetarian, Vegan, Gluten-free, Dairy-free.'],
+              ['Allergens', 'A short line under the description, e.g. “Contains: milk, eggs”.'],
+              ['Extras', <>One per line with its price after “=”: <C>Extra cheese = 1.50</C>. No price = free (<C>No onion</C>). With pickup orders visitors tick them when they add the product; otherwise they are listed on the card.</>],
               ['Link', 'Your product or checkout page (Buy button).'],
             ]}
           />
+          <P><b>Sold out today:</b> in the <i>Today</i> tab you can switch off any product for the day without touching its stock. It shows “Sold out” and can’t be ordered.</P>
           <P><b>Order via WhatsApp:</b> add your number and every product without its own link gets an <i>Order</i> button that opens WhatsApp with the message already written (you can change it; <C>{'{product}'}</C> and <C>{'{price}'}</C> are filled in). Clicks on Buy and Order buttons count in Analytics.</P>
+
+          <H2 id="food">Food trucks &amp; shops</H2>
+          <P>Four blocks in the <i>Business</i> category (Pro plan) plus the <i>Today</i> tab help a food truck, a stall or any small shop tell visitors where and when to find them.</P>
+          <Table
+            head={['Block', 'What it shows']}
+            rows={[
+              ['Open / Closed', 'A label (or card) with “Open now · Until 9:00 PM” or “Closed · Opens tomorrow at 11:00 AM”. Hours come from the block (weekly hours, days off and special dates) or from your Route block. An end time earlier than the start runs past midnight (18:00–02:00). Checked again every minute. You can edit every text.'],
+              ['Where we are today', 'The place you set in the Today tab, with a map and Google Maps / Waze buttons. It is shown until midnight (in the block’s time zone); after that, or if you didn’t set one, it shows the current or next stop of your Route block, or a text you choose.'],
+              ['Route', 'Your stops for each day of the week (or every day) with times and a directions button. Today is highlighted and the stop happening now says “Here now”.'],
+              ['Loyalty card', 'A digital stamp card. See Loyalty cards below.'],
+            ]}
+          />
+          <P><b>The Today tab</b> saves at once (no need to press Save) and your page changes right away:</P>
+          <ul className="list-disc pl-5 space-y-1 text-[15px] text-muted leading-relaxed mb-4">
+            <li><b>Open or closed:</b> Automatic follows your hours; <i>Open now</i> or <i>Closed now</i> stay until you switch back (for a day off, or when you close early).</li>
+            <li><b>Where are you today:</b> type the place and address, or tap <i>Use my current location</i> to put the exact point on the map (the address is filled in from OpenStreetMap when empty). Add an “until” time and a note.</li>
+            <li><b>Pickup orders:</b> pause and resume orders.</li>
+            <li><b>Sold out today:</b> switch off products you ran out of.</li>
+          </ul>
+
+          <H3 id="orders">Pickup orders</H3>
+          <P>In a Catalog block, set <i>How visitors order</i> to <i>Pickup orders</i>. Products get an <i>Add</i> button, a <i>View order</i> bar appears, and visitors send their order with their name, phone (optional setting), pickup time (“as soon as possible” or a time after your preparation time) and a note. Prices are always calculated by the server from your catalog.</P>
+          <P>Orders arrive in the <i>Orders</i> tab (with a badge, a push notification if you turned them on, and an optional sound while the tab is open). Move each order through <b>New → Preparing → Ready → Picked up</b>, or cancel it. The customer sees every change on your page (it refreshes on its own), and can also send the order to your WhatsApp if you added a number. Order numbers start again at #1 every day.</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>There is no online payment: customers pay when they pick up.</li>
+              <li>Orders can’t be sent from the editor preview. Exported sites show the catalog with your links instead.</li>
+            </ul>
+          </Warning>
+
+          <H3 id="loyalty">Loyalty cards</H3>
+          <P>Add a <i>Loyalty card</i> block and choose the reward, how many stamps it needs and the stamp icon. A visitor taps <i>Get my card</i>: the card stays in their browser and shows their stamps, a QR code and a short code (like <C>K7Q-2MX</C>).</P>
+          <P>When they pay, open the <i>Loyalty</i> tab and tap <i>Scan QR</i> (it uses your phone or computer camera) or type the code. Then <i>Add stamp</i> (or +2). When the card is full, <i>Give reward</i> uses the stamps (extra stamps carry over). <i>Undo</i> reverts the last change. If you scan the same card again too soon, it asks first (you choose the time in the block). Stamps are saved on the server, so customers can’t add them themselves; their card updates on its own while it is open. Find cards by name or code in the list.</P>
+          <P>A card lives in the browser where it was created. If a customer changes phone or clears their browser data, find their old card by name and keep counting on a new one by hand.</P>
+
+          <H2 id="translate">Translate button</H2>
+          <P>In <i>Settings</i>, choose the <b>Page language</b> (the language you write in) and turn on <b>Translate button (ES / EN)</b> (Pro plan). Your page gets a small ES / EN switch in the top corner. Choosing the other language translates the whole page with <b>Google Translate</b>, in the visitor’s browser. Nothing is stored and you don’t write translations.</P>
+          <Warning>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Translation is automatic, so names of dishes or brand words may come out oddly. Prices, codes and the switch itself are never translated.</li>
+              <li>The page language also sets how dates and times are written (21:00 or 9:00 PM).</li>
+              <li>It uses Google’s free website translator: if Google stops it or it is blocked on a network, the switch does nothing.</li>
+            </ul>
+          </Warning>
 
           <H2 id="plans">Plans</H2>
           <Table
             head={['Plan', 'What it includes']}
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
-              ['Pro · $10/month', 'Up to 10 pages, Embeds, Booking & agenda, Reviews, Surveys, the product Catalog and photo or video backgrounds.'],
+              ['Pro · $10/month', 'Up to 10 pages, Embeds, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, the translate button and photo or video backgrounds.'],
               ['Business', 'Custom number of pages and features, set up with the Otrelink team.'],
             ]}
           />

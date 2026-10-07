@@ -479,3 +479,94 @@ test('blocks that can never be clicked are known', async () => {
   assert.equal(blockTracksClicks({ type: 'map', data: { display: 'always' } }), false);
   assert.equal(blockTracksClicks({ type: 'collection', data: { mode: 'button' } }), true);
 });
+
+test('open status follows weekly hours, overnight ranges and days off', async () => {
+  const { openStatus } = await import('../src/index.js');
+  const d = { timezone: 'America/Caracas', hours: [{ day: 'tue', from: '18:00', to: '02:00' }, { day: 'wed', from: '11:00', to: '15:00' }], dateRules: [] };
+  // Tue 2026-10-06 19:30 Caracas (UTC-4) → open until 02:00 Wed.
+  let s = openStatus(d, new Date('2026-10-06T23:30:00Z'));
+  assert.equal(s.open, true);
+  assert.deepEqual(s.closesAt, { date: '2026-10-07', min: 120 });
+  // Wed 01:00 → still open (tail of Tuesday).
+  assert.equal(openStatus(d, new Date('2026-10-07T05:00:00Z')).open, true);
+  // Wed 03:00 → closed, opens Wed 11:00.
+  s = openStatus(d, new Date('2026-10-07T07:00:00Z'));
+  assert.equal(s.open, false);
+  assert.deepEqual(s.opensAt, { date: '2026-10-07', min: 660 });
+  // A day off on Wednesday moves the next opening to the next Tuesday.
+  s = openStatus({ ...d, dateRules: [{ from: '2026-10-07', to: '2026-10-07', kind: 'closed' }] }, new Date('2026-10-07T07:00:00Z'));
+  assert.deepEqual(s.opensAt, { date: '2026-10-13', min: 1080 });
+});
+
+test('Open / Closed block: the Today override wins', async () => {
+  const { statusInfo, newBlock } = await import('../src/index.js');
+  const b = newBlock('status');
+  assert.equal(statusInfo(b.data, { today: { status: 'closed' } }).open, false);
+  assert.equal(statusInfo(b.data, { today: { status: 'open' } }).text, 'Open now');
+});
+
+test('route stops and today location', async () => {
+  const { currentStop, locationNow, newBlock } = await import('../src/index.js');
+  const stops = [{ id: 'a', day: 'daily', place: 'Plaza', from: '11:00', to: '15:00' }, { id: 'b', day: 'tue', place: 'Campus', from: '17:00', to: '23:00' }];
+  // Tue 18:00 Caracas.
+  const now = new Date('2026-10-06T22:00:00Z');
+  assert.equal(currentStop(stops, 'America/Caracas', now).id, 'b');
+  // Tue 08:00 → next stop today.
+  assert.equal(currentStop(stops, 'America/Caracas', new Date('2026-10-06T12:00:00Z')).id, 'a');
+  const loc = newBlock('location').data;
+  loc.timezone = 'America/Caracas';
+  const route = { id: 'r', type: 'route', enabled: true, data: { stops, timezone: 'America/Caracas' } };
+  // A location set yesterday is not shown: the route is used.
+  const old = { place: 'Old spot', placeAt: '2026-10-05T15:00:00Z' };
+  assert.equal(locationNow(loc, { blocks: [route], today: old }, now).place, 'Campus');
+  assert.equal(locationNow(loc, { blocks: [route], today: { place: 'Park', placeAt: '2026-10-06T20:00:00Z' } }, now).place, 'Park');
+});
+
+test('catalog orders are priced from the block', async () => {
+  const { priceCart, parseExtras, productKey } = await import('../src/index.js');
+  assert.deepEqual(parseExtras('Cheese = 1.50\nBacon +2\nNo onion\nSalsa 0,75'), [
+    { name: 'Cheese', price: 1.5 }, { name: 'Bacon', price: 2 }, { name: 'No onion', price: 0 }, { name: 'Salsa', price: 0.75 },
+  ]);
+  const d = { products: [
+    { id: 'a', name: 'Burger', price: 10, discount: 10, extras: 'Cheese = 1.5', stock: '' },
+    { id: 'b', name: 'Cola', price: 2, stock: '0' },
+    { id: 'c', name: 'Fries', price: 3, stock: '' },
+  ] };
+  const r = priceCart(d, [{ id: 'a', qty: 2, extras: [0, 0, 5] }, { id: 'c', qty: 1, price: 0 }], { blockId: 'k' });
+  assert.equal(r.lines[0].unit, 10.5);
+  assert.equal(r.total, 24);
+  assert.equal(priceCart(d, [{ id: 'b', qty: 1 }]).error, 'sold_out');
+  assert.equal(priceCart(d, [{ id: 'c', qty: 1 }], { blockId: 'k', today: { soldOut: [productKey('k', 'c')] } }).error, 'sold_out');
+  assert.equal(priceCart(d, [{ id: 'c', qty: 0 }]).error, 'invalid_qty');
+  assert.equal(priceCart(d, [{ id: 'zz', qty: 1 }]).error, 'unknown_product');
+  assert.equal(priceCart(d, []).error, 'empty');
+});
+
+test('today state, plan features and loyalty codes are cleaned', async () => {
+  const { sanitizeToday, stripLockedFeatures, parseCardCode, formatCardCode } = await import('../src/index.js');
+  const t = sanitizeToday({ status: 'bogus', lat: '95', lon: '-66.9', until: '25:00', soldOut: ['a', 'a', 3], ordersPaused: 'yes' });
+  assert.equal(t.status, 'auto');
+  assert.equal(t.lat, null);
+  assert.equal(t.lon, -66.9);
+  assert.equal(t.until, '');
+  assert.deepEqual(t.soldOut, ['a', '3']);
+  assert.equal(t.ordersPaused, false);
+  const page = { settings: { translateButton: true }, blocks: [{ type: 'catalog', data: { ordering: 'pickup' } }] };
+  const free = stripLockedFeatures(page, { features: {} });
+  assert.equal(free.blocks[0].data.ordering, 'links');
+  assert.equal(free.settings.translateButton, false);
+  assert.equal(stripLockedFeatures(page, { features: { orders: true, translate: true } }).blocks[0].data.ordering, 'pickup');
+  assert.equal(parseCardCode('OLCARD:K7Q2MX'), 'K7Q2MX');
+  assert.equal(parseCardCode('k7q-2mx'), 'K7Q2MX');
+  assert.equal(parseCardCode('K7Q2M0'), '');
+  assert.equal(formatCardCode('K7Q2MX'), 'K7Q-2MX');
+});
+
+test('translate switch is rendered with the page language', async () => {
+  const { renderPage, createDefaultPage, sanitizePage } = await import('../src/index.js');
+  const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), settings: { language: 'es', translateButton: true } });
+  const r = renderPage(page);
+  assert.ok(r.html.includes('lang="es"') && r.html.includes('data-ol-lang="en"') && r.html.includes('translate="no"'));
+  assert.ok(renderPage(page, { mode: 'export' }).html.includes('data-ol-lang')); // exported sites load Google Translate too
+  assert.ok(!renderPage(sanitizePage({ ...page, settings: { language: 'es' } })).html.includes('data-ol-lang'));
+});

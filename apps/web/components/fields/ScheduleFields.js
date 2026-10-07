@@ -11,7 +11,7 @@ const badRange = (r) => r.from && r.to && (toMin(r.to) || 1440) <= toMin(r.from)
 const SHORT = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 
 /** List of from–to time ranges. */
-export function TimeRanges({ ranges, onChange, max = 8, addLabel = 'Add hours', idPrefix }) {
+export function TimeRanges({ ranges, onChange, max = 8, addLabel = 'Add hours', idPrefix, overnight = false }) {
   const set = (i, patch) => onChange(ranges.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const add = () => {
     const last = ranges[ranges.length - 1];
@@ -30,7 +30,9 @@ export function TimeRanges({ ranges, onChange, max = 8, addLabel = 'Add hours', 
             <Input type="time" aria-label="To" value={r.to} onChange={(e) => set(i, { to: e.target.value })} className="h-9 w-auto min-w-0 flex-1 px-2" />
             <IconButton label="Remove these hours" onClick={() => onChange(ranges.filter((_, j) => j !== i))}><X size={15} /></IconButton>
           </div>
-          {badRange(r) && <p className="text-xs text-danger mt-0.5">The end time must be after the start time.</p>}
+          {badRange(r) && (overnight
+            ? <p className="text-xs text-muted mt-0.5">Ends after midnight, the next day.</p>
+            : <p className="text-xs text-danger mt-0.5">The end time must be after the start time.</p>)}
         </div>
       ))}
       {ranges.length < max && (
@@ -89,7 +91,7 @@ export function WeeklyHoursField({ id, value = [], onChange, field }) {
               </div>
               <div className="min-w-0">
                 <p className={cx('text-[13px] font-semibold leading-9 -mb-0.5', !open && 'text-muted')}>{d.label}{!open && <span className="font-normal"> · Closed</span>}</p>
-                {open && <TimeRanges ranges={ranges} onChange={(r) => setDay(d.value, r)} addLabel="Add a range (break)" />}
+                {open && <TimeRanges ranges={ranges} onChange={(r) => setDay(d.value, r)} addLabel="Add a range (break)" overnight={field.overnight} />}
               </div>
               {open && (
                 <IconButton label={`Copy ${d.label} hours to other days`} onClick={() => { setCopyFrom(d.value); setCopyTo([]); }}><Copy size={15} /></IconButton>

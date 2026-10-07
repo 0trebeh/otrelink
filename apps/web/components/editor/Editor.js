@@ -26,6 +26,9 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
   const [analytics, setAnalytics] = useState(null);
   const [pendingBookings, setPendingBookings] = useState(0);
   const [pendingReviews, setPendingReviews] = useState(0);
+  const [pendingOrders, setPendingOrders] = useState(0);
+  // "Today" state (location, open/closed, sold out): saved on its own, not part of the draft.
+  const [today, setToday] = useState(initialPage.today || null);
   const pageRef = useRef(page);
   pageRef.current = page;
 
@@ -34,8 +37,13 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
 
   // Restore tab from URL hash (#style, #analytics…)
   useEffect(() => {
-    const h = window.location.hash.slice(1);
-    if (sections.some((s) => s.id === h)) setTab(h);
+    const fromHash = () => {
+      const h = window.location.hash.slice(1);
+      if (sections.some((s) => s.id === h)) setTab(h);
+    };
+    fromHash();
+    window.addEventListener('hashchange', fromHash);
+    return () => window.removeEventListener('hashchange', fromHash);
   }, []);
   const go = (id) => {
     setTab(id);
@@ -49,10 +57,12 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
     Promise.all([
       api(`/api/bookings?pageId=${initialPage.id}&count=1`).then((r) => r.pending).catch(() => 0),
       api(`/api/reviews?pageId=${initialPage.id}&count=1`).then((r) => r.pending).catch(() => 0),
-    ]).then(([bookings, reviews]) => {
+      api(`/api/orders?pageId=${initialPage.id}&count=1`).then((r) => r.pending).catch(() => 0),
+    ]).then(([bookings, reviews, orders]) => {
       setPendingBookings(bookings);
       setPendingReviews(reviews);
-      const total = bookings + reviews;
+      setPendingOrders(orders);
+      const total = bookings + reviews + orders;
       if ('setAppBadge' in navigator) (total ? navigator.setAppBadge(total) : navigator.clearAppBadge()).catch(() => {});
     });
   }, [initialPage.id]);
@@ -111,7 +121,9 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
     return () => window.removeEventListener('beforeunload', fn);
   }, [dirty]);
 
-  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, saving, save, pendingBookings, pendingReviews, refreshPending, plan }), [page, set, pageUrl, saved.slug, analytics, dirty, saving, save, pendingBookings, pendingReviews, refreshPending, plan]);
+  const ed = useMemo(() => ({ page, set, pageUrl, savedSlug: saved.slug, analytics, dirty, saving, save, pendingBookings, pendingReviews, pendingOrders, setPendingOrders, refreshPending, plan, today, setToday }), [page, set, pageUrl, saved.slug, analytics, dirty, saving, save, pendingBookings, pendingReviews, pendingOrders, refreshPending, plan, today]);
+  // The preview shows the draft with the live "Today" state.
+  const previewPage = useMemo(() => ({ ...page, today }), [page, today]);
   const Section = section.Component;
   const sectionLocked = (id) => !allowsSection(plan, id);
   const liveUrl = `${pageUrl}/${saved.slug}`;
@@ -178,7 +190,7 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
 
         {/* Desktop preview */}
         <aside className="hidden lg:flex dot-canvas sticky top-16 h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 border-l border-line/70">
-          <PreviewFit page={page} replay={replay} />
+          <PreviewFit page={previewPage} replay={replay} />
           <button type="button" onClick={() => setReplay((r) => r + 1)} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-ink cursor-pointer">
             <RotateCcw size={13} /> Replay entrance animation
           </button>
@@ -204,7 +216,7 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
       {mobilePreview && (
         <div className="lg:hidden fixed inset-0 z-50 dot-canvas flex flex-col items-center justify-center p-4" role="dialog" aria-label="Preview">
           <IconButton label="Close preview" onClick={() => setMobilePreview(false)} className="absolute top-4 right-4 bg-panel size-10"><X size={20} /></IconButton>
-          <PreviewFit page={page} replay={replay} />
+          <PreviewFit page={previewPage} replay={replay} />
         </div>
       )}
     </div>

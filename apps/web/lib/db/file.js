@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -77,7 +77,7 @@ export async function createFileDriver() {
         state.pages = state.pages.filter((p) => p.userId !== id);
         state.assets = state.assets.filter((a) => a.userId !== id);
         state.push = state.push.filter((p) => p.userId !== id);
-        for (const k of ['events', 'bookings', 'responses', 'reviews']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
+        for (const k of ['events', 'bookings', 'responses', 'reviews', 'orders', 'cards']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
         await persist();
       },
     },
@@ -221,6 +221,69 @@ export async function createFileDriver() {
       },
       removeMany: async ({ pageId }) => {
         state.reviews = state.reviews.filter((r) => r.pageId !== pageId);
+        await persist();
+      },
+    },
+    // Pickup orders (newest first in lists).
+    orders: {
+      create: async (o) => {
+        const doc = { id: crypto.randomUUID(), createdAt: now(), ...o };
+        state.orders.push(doc);
+        // Keep the file small: drop orders older than 180 days.
+        if (state.orders.length % 200 === 0) {
+          const cutoff = new Date(Date.now() - 180 * 864e5).toISOString();
+          state.orders = state.orders.filter((x) => x.createdAt >= cutoff);
+        }
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.orders.find((o) => o.id === id)),
+      list: async ({ pageId, userId, statuses, since, limit = 100 } = {}) => clone(state.orders
+        .filter((o) => (!pageId || o.pageId === pageId) && (!userId || o.userId === userId) && (!statuses || statuses.includes(o.status)) && (!since || o.createdAt >= since))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, limit)),
+      count: async ({ pageId, statuses, since }) => state.orders.filter((o) => o.pageId === pageId && (!statuses || statuses.includes(o.status)) && (!since || o.createdAt >= since)).length,
+      update: async (id, patch) => {
+        const i = state.orders.findIndex((o) => o.id === id);
+        if (i < 0) return null;
+        state.orders[i] = { ...state.orders[i], ...patch, updatedAt: now() };
+        await persist();
+        return clone(state.orders[i]);
+      },
+      removeMany: async ({ pageId }) => {
+        state.orders = state.orders.filter((o) => o.pageId !== pageId);
+        await persist();
+      },
+    },
+    // Loyalty cards.
+    cards: {
+      create: async (c) => {
+        if (state.cards.some((x) => x.pageId === c.pageId && x.code === c.code)) throw Object.assign(new Error('code_taken'), { code: 'code_taken' });
+        const doc = { id: crypto.randomUUID(), createdAt: now(), updatedAt: now(), ...c };
+        state.cards.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findById: async (id) => clone(state.cards.find((c) => c.id === id)),
+      findByCode: async (pageId, code) => clone(state.cards.find((c) => c.pageId === pageId && c.code === code)),
+      list: async ({ pageId, blockId, q = '', limit = 50 } = {}) => {
+        const s = q.trim().toLowerCase();
+        const code = s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        return clone(state.cards
+          .filter((c) => c.pageId === pageId && (!blockId || c.blockId === blockId) && (!s || (c.name || '').toLowerCase().includes(s) || c.code.includes(code)))
+          .sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt))
+          .slice(0, limit));
+      },
+      count: async ({ pageId, blockId }) => state.cards.filter((c) => c.pageId === pageId && (!blockId || c.blockId === blockId)).length,
+      update: async (id, patch) => {
+        const i = state.cards.findIndex((c) => c.id === id);
+        if (i < 0) return null;
+        state.cards[i] = { ...state.cards[i], ...patch, updatedAt: now() };
+        await persist();
+        return clone(state.cards[i]);
+      },
+      removeMany: async ({ pageId }) => {
+        state.cards = state.cards.filter((c) => c.pageId !== pageId);
         await persist();
       },
     },

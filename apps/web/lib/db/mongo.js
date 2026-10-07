@@ -23,6 +23,8 @@ export async function createMongoDriver() {
   const pushSubs = db.collection('push_subscriptions');
   const responses = db.collection('survey_responses');
   const reviews = db.collection('reviews');
+  const orders = db.collection('orders');
+  const cards = db.collection('loyalty_cards');
   const limits = db.collection('rate_limits');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
@@ -47,6 +49,11 @@ export async function createMongoDriver() {
     [users, { createdAt: -1 }, {}],
     [responses, { pageId: 1, blockId: 1, createdAt: -1 }, {}],
     [reviews, { pageId: 1, blockId: 1, status: 1, createdAt: -1 }, {}],
+    [orders, { pageId: 1, status: 1, createdAt: -1 }, {}],
+    // Orders are kept 180 days (createdAtDate is a Date copy of createdAt for the TTL).
+    [orders, { createdAtDate: 1 }, { expireAfterSeconds: 180 * 86400 }],
+    [cards, { pageId: 1, code: 1 }, { unique: true }],
+    [cards, { pageId: 1, updatedAt: -1 }, {}],
     // Rate-limit counters delete themselves when their window ends.
     [limits, { expiresAt: 1 }, { expireAfterSeconds: 0 }],
     [users, { verifyTokenHash: 1 }, { sparse: true }],
@@ -127,6 +134,7 @@ export async function createMongoDriver() {
           pages.deleteMany({ userId: id }), assets.deleteMany({ userId: id }), pushSubs.deleteMany({ userId: id }),
           events.deleteMany({ pageId: { $in: pageIds } }), bookings.deleteMany({ pageId: { $in: pageIds } }),
           responses.deleteMany({ pageId: { $in: pageIds } }), reviews.deleteMany({ pageId: { $in: pageIds } }),
+          orders.deleteMany({ pageId: { $in: pageIds } }), cards.deleteMany({ pageId: { $in: pageIds } }),
         ]);
         await users.deleteOne({ _id: id });
       },
@@ -229,6 +237,51 @@ export async function createMongoDriver() {
       update: async (id, patch) => out(await reviews.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
       remove: async (id) => { await reviews.deleteOne({ _id: id }); },
       removeMany: async ({ pageId }) => { await reviews.deleteMany({ pageId }); },
+    },
+    orders: {
+      create: async (o) => {
+        const created = new Date();
+        const doc = { _id: crypto.randomUUID(), createdAt: created.toISOString(), createdAtDate: created, ...o };
+        await orders.insertOne(doc);
+        const { createdAtDate, ...rest } = doc;
+        return out(rest);
+      },
+      findById: async (id) => out(await orders.findOne({ _id: id }, { projection: { createdAtDate: 0 } })),
+      list: async ({ pageId, userId, statuses, since, limit = 100 } = {}) => {
+        const q = {};
+        if (pageId) q.pageId = pageId;
+        if (userId) q.userId = userId;
+        if (statuses) q.status = { $in: statuses };
+        if (since) q.createdAt = { $gte: since };
+        return (await orders.find(q, { projection: { createdAtDate: 0 } }).sort({ createdAt: -1 }).limit(limit).toArray()).map(out);
+      },
+      count: async ({ pageId, statuses, since }) => orders.countDocuments({ pageId, ...(statuses ? { status: { $in: statuses } } : {}), ...(since ? { createdAt: { $gte: since } } : {}) }),
+      update: async (id, patch) => out(await orders.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after', projection: { createdAtDate: 0 } })),
+      removeMany: async ({ pageId }) => { await orders.deleteMany({ pageId }); },
+    },
+    cards: {
+      create: async (c) => {
+        const t = new Date().toISOString();
+        const doc = { _id: crypto.randomUUID(), createdAt: t, updatedAt: t, ...c };
+        await cards.insertOne(doc).catch((err) => { if (err?.code === 11000) throw Object.assign(new Error('code_taken'), { code: 'code_taken' }); throw err; });
+        return out(doc);
+      },
+      findById: async (id) => out(await cards.findOne({ _id: id })),
+      findByCode: async (pageId, code) => out(await cards.findOne({ pageId, code })),
+      list: async ({ pageId, blockId, q = '', limit = 50 } = {}) => {
+        const query = { pageId };
+        if (blockId) query.blockId = blockId;
+        const s = q.trim();
+        if (s) {
+          const code = s.toUpperCase().replace(/[\s-]/g, '').replace(/[^A-Z0-9]/g, '');
+          const rx = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          query.$or = [{ name: { $regex: rx, $options: 'i' } }, ...(code ? [{ code: { $regex: code } }] : [])];
+        }
+        return (await cards.find(query).sort({ updatedAt: -1 }).limit(limit).toArray()).map(out);
+      },
+      count: async ({ pageId, blockId }) => cards.countDocuments({ pageId, ...(blockId ? { blockId } : {}) }),
+      update: async (id, patch) => out(await cards.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
+      removeMany: async ({ pageId }) => { await cards.deleteMany({ pageId }); },
     },
     push: {
       save: async (userId, sub) => {

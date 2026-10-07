@@ -40,6 +40,20 @@ export const fieldInputs = {
       {fieldOptions(field).map((o) => <option key={o.value} value={o.value}>{o.label.charAt(0).toUpperCase() + o.label.slice(1)}</option>)}
     </Select>
   ),
+  // Several values as chips (e.g. product tags).
+  tags: ({ value = [], onChange, field, id }) => (
+    <div id={id} className="flex flex-wrap gap-1.5" role="group">
+      {fieldOptions(field).map((o) => {
+        const on = value.includes(o.value);
+        return (
+          <button key={o.value} type="button" aria-pressed={on} onClick={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
+            className={`h-8 px-3 rounded-full border text-[13px] font-medium cursor-pointer ${on ? 'border-accent bg-accent-soft text-accent-ink' : 'border-line bg-panel text-muted hover:text-ink'}`}>
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  ),
   choice: ChoiceField,
   imageAdjust: ImageAdjustField,
   font: FontField,

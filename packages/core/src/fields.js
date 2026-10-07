@@ -196,6 +196,14 @@ export const fieldTypes = {
       }).filter(Boolean);
     },
   },
+  // Several values picked from `options` (shown as chips), e.g. product tags.
+  tags: {
+    default: [],
+    sanitize: (v, f) => {
+      const allowed = fieldOptions(f).map((o) => o.value);
+      return Array.isArray(v) ? [...new Set(v.filter((x) => allowed.includes(x)))] : [];
+    },
+  },
   // A repeatable group of sub-fields, e.g. accordion items or gallery images.
   list: {
     default: [],

@@ -13,6 +13,7 @@
     "./src/standalone.js"
   ],
   "dependencies": {
+    "qrcode-generator": "^2.0.4",
     "simple-icons": "^16.0.0"
   }
 }

@@ -16,6 +16,10 @@ export const PLAN_FEATURES = {
   reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'] },
   survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'] },
   catalog: { label: 'Product catalog', blocks: ['catalog'] },
+  orders: { label: 'Pickup orders', sections: ['orders'] },
+  location: { label: 'Location, route & open status', blocks: ['location', 'route', 'status'], sections: ['today'] },
+  loyalty: { label: 'Loyalty cards', blocks: ['loyalty'], sections: ['loyalty'] },
+  translate: { label: 'Translate button' },
   mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'] },
 };
 
@@ -76,6 +80,21 @@ export function countLockedBlocks(blocks = [], plan) {
   const walk = (list) => { for (const b of list || []) { if (!allowsBlock(plan, b.type)) n++; if (b.children) walk(b.children); } };
   walk(blocks);
   return n;
+}
+
+/** Turn off plan features inside a page the plan doesn't allow (pickup orders, translate button). */
+export function stripLockedFeatures(page, plan) {
+  const orders = Boolean(plan?.features?.orders);
+  const fix = (list) => (list || []).map((b) => ({
+    ...b,
+    ...(b.type === 'catalog' && b.data?.ordering === 'pickup' && !orders ? { data: { ...b.data, ordering: 'links' } } : {}),
+    ...(b.children ? { children: fix(b.children) } : {}),
+  }));
+  return {
+    ...page,
+    blocks: fix(page.blocks),
+    settings: { ...page.settings, ...(plan?.features?.translate ? {} : { translateButton: false }) },
+  };
 }
 
 /** Remove blocks the plan doesn't allow (used for the public page). */

@@ -80,7 +80,7 @@ const tzOf = (data) => (isValidTimeZone(data.timezone) ? data.timezone : 'UTC');
 
 /** Kinds of special dates. */
 export const DATE_RULE_KINDS = {
-  closed: { label: 'Closed', help: 'No bookings on these days' },
+  closed: { label: 'Closed', help: 'Closed all day' },
   block: { label: 'Block hours', help: 'Your usual hours, except these times' },
   open: { label: 'Special hours', help: 'Only these hours (replaces your usual hours, also on days you are normally closed)' },
 };

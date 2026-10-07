@@ -45,6 +45,10 @@ import survey from './survey.js';
 import reviews from './reviews.js';
 import embed from './embed.js';
 import catalog from './catalog.js';
+import status from './status.js';
+import location from './location.js';
+import route from './route.js';
+import loyalty from './loyalty.js';
 
 export const blockTypes = createRegistry('blockTypes', [
   link,
@@ -62,6 +66,10 @@ export const blockTypes = createRegistry('blockTypes', [
   map,
   contact,
   catalog,
+  status,
+  location,
+  route,
+  loyalty,
   booking,
   survey,
   reviews,
@@ -133,6 +141,10 @@ const STYLE_GROUPS = {
   survey: ['button', 'card', 'radius'],
   reviews: ['button', 'card', 'radius'],
   vcard: ['button', 'card', 'radius'],
+  status: (d) => (d.style === 'card' ? ['card', 'radius'] : ['card']),
+  location: ['card', 'radius'],
+  route: ['card', 'radius'],
+  loyalty: ['card', 'radius'],
 };
 
 /** Style groups that affect a block (see STYLE_GROUPS). */
@@ -195,6 +207,9 @@ const CLICKABLE = {
   map: (d) => d.display === 'button',
   collection: (d) => d.mode === 'button',
   catalog: (d) => d.display === 'button' || has(d.whatsapp) || (d.products || []).some((p) => p.url),
+  status: false, loyalty: false,
+  location: (d) => d.directions,
+  route: (d) => d.directions,
 };
 export function blockTracksClicks(block) {
   const rule = CLICKABLE[block?.type];

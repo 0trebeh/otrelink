@@ -6,7 +6,9 @@
 //   blocks:  [{ id, type, enabled, data: {...}, options: { animation, showFrom, showUntil }, children?: [...] }],
 //            (children only on container types such as Collection, nested up to MAX_DEPTH)
 //   design:  { theme, ...design fields, wallpaper: { type, ...wallpaper fields } },
-//   settings:{ published, seoTitle, seoDescription, ogImage, hideFooter, noSelect, noRightClick, sensitive, sensitiveMessage }
+//   settings:{ published, language, translateButton, seoTitle, seoDescription, ogImage, hideFooter, noSelect, noRightClick, sensitive, sensitiveMessage }
+//   today:   { status, place, address, lat, lon, note, until, placeAt, soldOut, ordersPaused, updatedAt }
+//            set from the dashboard "Today" panel, saved apart from the rest (see sanitizeToday)
 // }
 
 import { blockTypes, commonBlockFields, blockStyleFields } from './blocks/index.js';
@@ -27,6 +29,10 @@ export const profileFields = [
 
 export const settingsFields = [
   { key: 'published', type: 'toggle', label: 'Page is public', default: true, help: 'When off, only you can see it in the dashboard.' },
+  { key: 'language', type: 'select', label: 'Page language', default: 'en', options: [{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }],
+    help: 'The language your page is written in.' },
+  { key: 'translateButton', type: 'toggle', label: 'Translate button (ES / EN)', default: false,
+    help: 'Visitors can read your page in the other language. The text is translated automatically by Google Translate, in their browser.' },
   { key: 'seoTitle', type: 'text', label: 'SEO title', max: 70, help: 'Browser tab and search results. Defaults to your title.' },
   { key: 'seoDescription', type: 'textarea', label: 'SEO description', max: 200 },
   { key: 'ogImage', type: 'image', label: 'Sharing image', help: 'Shown when your link is shared on social media.' },
@@ -187,5 +193,29 @@ export function createDefaultPage({ slug, title }) {
     ],
     design,
     settings: defaultsFor(settingsFields),
+  };
+}
+
+// ── Today (dashboard "Today" panel) ──────────────────────────
+export const TODAY_STATUSES = ['auto', 'open', 'closed'];
+const coord = (v, max) => { const n = Number(v); return v !== null && v !== '' && v !== undefined && Number.isFinite(n) && Math.abs(n) <= max ? Math.round(n * 1e5) / 1e5 : null; };
+const oneLine = (v, max) => String(v ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, max);
+const iso = (v) => (v && !Number.isNaN(new Date(v).getTime()) ? new Date(v).toISOString() : '');
+
+/** Clean the "Today" state: live location, open/closed override, sold-out products, paused orders. */
+export function sanitizeToday(input) {
+  const t = input && typeof input === 'object' ? input : {};
+  return {
+    status: TODAY_STATUSES.includes(t.status) ? t.status : 'auto',
+    place: oneLine(t.place, 80),
+    address: oneLine(t.address, 200),
+    lat: coord(t.lat, 90),
+    lon: coord(t.lon, 180),
+    note: oneLine(t.note, 160),
+    until: /^([01]\d|2[0-3]):[0-5]\d$/.test(t.until || '') ? t.until : '',
+    placeAt: iso(t.placeAt), // when the location was set (it is shown until the end of that day)
+    soldOut: Array.isArray(t.soldOut) ? [...new Set(t.soldOut.map((x) => String(x).slice(0, 40)).filter(Boolean))].slice(0, 300) : [],
+    ordersPaused: t.ordersPaused === true,
+    updatedAt: iso(t.updatedAt),
   };
 }

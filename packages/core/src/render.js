@@ -13,6 +13,7 @@ import { socialHref, socialIcon, socials } from './socials.js';
 import { esc, safeUrl, miniMarkdown } from './util/html.js';
 import { verifiedSvg } from './icons.js';
 import { flattenBlocks } from './tree.js';
+import { PAGE_LANGUAGES, pageLanguage, otherLanguage, setupTranslate } from './translate.js';
 
 const BASE_CSS = `
 .ol-root{position:relative;min-height:100%;font-family:var(--ol-body-font);font-size:var(--ol-body-size);color:var(--ol-text-color);-webkit-font-smoothing:antialiased;isolation:isolate}
@@ -67,6 +68,12 @@ const BASE_CSS = `
 .ol-root .ol-gate div{background:#fff;color:#111;border-radius:20px;padding:24px;max-width:340px;text-align:center;font-family:system-ui,sans-serif}
 .ol-root .ol-gate p{margin:0 0 16px;line-height:1.5}
 .ol-root .ol-gate button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:12px 22px;background:#111;color:#fff;cursor:pointer}
+.ol-root .ol-lang{position:absolute;top:12px;right:12px;z-index:5;display:inline-flex;padding:3px;gap:2px;border-radius:999px;background:var(--ol-surface);box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.ol-root .ol-lang[hidden]{display:none}
+.ol-root .ol-lang button{position:relative;font:600 12px/1 system-ui,sans-serif;letter-spacing:.03em;border:0;border-radius:999px;padding:6px 10px;background:transparent;color:var(--ol-surface-fg);opacity:.7;cursor:pointer}
+.ol-root .ol-lang button[aria-pressed="true"]{background:var(--ol-surface-fg);color:var(--ol-surface);opacity:1}
+.ol-root .ol-lang[aria-busy] button[aria-pressed="true"]{animation:ol-lang-wait 1s ease-in-out infinite alternate}
+@keyframes ol-lang-wait{to{opacity:.3}}
 @media (prefers-reduced-motion:reduce){.ol-root *{animation:none!important;transition:none!important}}
 `;
 
@@ -139,7 +146,7 @@ export function renderPage(page, opts = {}) {
       usedTypes.add(mod.type);
       const anim = block.options?.animation && block.options.animation !== 'none' ? block.options.animation : '';
       if (anim) usedAnims.add(anim);
-      const ctx = { blockId: block.id, design: d, page, mode, depth, container, apiBase: opts.apiBase ?? '', liveUrl: opts.liveUrl || '' };
+      const ctx = { blockId: block.id, design: d, page, mode, depth, container, apiBase: opts.apiBase ?? '', liveUrl: opts.liveUrl || '', now };
       if (mod.container) {
         const me = { type: mod.type, id: block.id, layout: block.data?.layout };
         ctx.children = (block.children || [])
@@ -174,8 +181,13 @@ export function renderPage(page, opts = {}) {
 
   const entrance = animate && d.entrance !== 'none' ? `ol-enter-${d.entrance}` : '';
   const protect = [page.settings?.noSelect && 'ol-noselect', page.settings?.noRightClick && 'ol-nomenu'].filter(Boolean).join(' ');
-  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}" data-mode="${mode}">`
-    + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>`
+  // Translate switch: Google Translate in the visitor's browser (see translate.js).
+  const lang = pageLanguage(page);
+  const langSwitch = page.settings?.translateButton
+    ? `<nav class="ol-lang notranslate" aria-label="Language" translate="no">${[lang, otherLanguage(lang)].map((l) => `<button type="button" data-ol-lang="${l}" lang="${l}" aria-pressed="${l === lang}" title="${esc(PAGE_LANGUAGES[l].label)}">${PAGE_LANGUAGES[l].short}</button>`).join('')}</nav>`
+    : '';
+  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}" data-mode="${mode}" lang="${lang}">`
+    + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>${langSwitch}`
     + `<main class="ol-main">${renderProfile(page, d)}<section class="ol-blocks">${blocksHtml}</section>${renderSocials(page, d, 'bottom')}${footer}</main>`
     + `${gate}</div>`;
 
@@ -245,6 +257,7 @@ export function applyColorScheme(doc, scheme) {
 export function hydratePage(container, page, opts = {}) {
   // The dashboard preview lives inside the dashboard document: it must not change it.
   if (opts.colorScheme !== false) applyColorScheme(container.ownerDocument, colorSchemeOf(resolveDesign(page.design)));
+  if (opts.mode === 'live' && container.ownerDocument?.documentElement) container.ownerDocument.documentElement.lang = pageLanguage(page);
   // Stagger entrance animations.
   container.querySelectorAll('.ol-enter').forEach((el, i) => {
     el.style.animationDelay = `${Math.min(i, 14) * 55}ms`;
@@ -256,7 +269,7 @@ export function hydratePage(container, page, opts = {}) {
     const mod = blockTypes.get(el.dataset.blockType);
     const block = byId.get(el.dataset.blockId);
     if (mod?.hydrate && block) {
-      try { mod.hydrate(el, block.data, { blockId: block.id, mode: opts.mode }); } catch (err) { console.error(err); }
+      try { mod.hydrate(el, block.data, { blockId: block.id, mode: opts.mode, page, apiBase: opts.apiBase ?? '' }); } catch (err) { console.error(err); }
     }
   }
 
@@ -283,7 +296,9 @@ export function hydratePage(container, page, opts = {}) {
   const noDrag = root?.classList.contains('ol-noselect') || noMenu;
   if (noMenu) container.addEventListener('contextmenu', onMenu);
   if (noDrag) container.addEventListener('dragstart', onDrag);
+  const stopTranslate = setupTranslate(container, page);
   return () => {
+    stopTranslate();
     container.removeEventListener('click', onClick);
     container.removeEventListener('contextmenu', onMenu);
     container.removeEventListener('dragstart', onDrag);

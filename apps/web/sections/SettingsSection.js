@@ -7,6 +7,7 @@ import { settingsFields } from '@otrelink/core';
 import { api, errorMessage } from '@/lib/client';
 import { Panel, Button, Input, cx } from '@/components/ui';
 import FieldList from '@/components/fields/FieldList';
+import { UpgradeNote } from '@/components/PlanLock';
 
 function SlugField({ ed }) {
   const { page, set } = ed;
@@ -58,6 +59,7 @@ function ShareCard({ url }) {
 
 export default function SettingsSection({ ed }) {
   const { page, set } = ed;
+  const canTranslate = Boolean(ed.plan?.features?.translate);
   const router = useRouter();
   const fileRef = useRef(null);
   const [importErr, setImportErr] = useState('');
@@ -97,7 +99,8 @@ export default function SettingsSection({ ed }) {
       <Panel title="Page settings">
         <div className="space-y-4">
           <SlugField ed={ed} />
-          <FieldList fields={settingsFields} values={page.settings} onChange={(k, v) => set((p) => ({ ...p, settings: { ...p.settings, [k]: v } }), `settings:${k}`)} />
+          <FieldList fields={canTranslate ? settingsFields : settingsFields.filter((f) => f.key !== 'translateButton')} values={page.settings} onChange={(k, v) => set((p) => ({ ...p, settings: { ...p.settings, [k]: v } }), `settings:${k}`)} />
+          {!canTranslate && <UpgradeNote>The translate button (ES / EN) is a Pro feature.</UpgradeNote>}
         </div>
       </Panel>
       <Panel title="Download as website" description="A .zip with index.html, style.css, script.js and your images and PDFs. Open index.html on any computer: no server or database needed. Uses the last saved version.">
