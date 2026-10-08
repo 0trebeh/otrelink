@@ -136,7 +136,7 @@ const CATALOG_CSS = `.ol-root .ol-catalog{container-type:inline-size;display:fle
 .ol-root .ol-cat-stock{font-size:.72em;font-weight:700;opacity:.7}
 .ol-root .ol-cat-stock.is-low{color:#d97706;opacity:1}
 .ol-root .ol-cat-stock.is-out{color:#dc2626;opacity:1}
-.ol-root .ol-cat-buy{margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:999px;font-weight:700;font-size:.85em;text-decoration:none;background:var(--ol-surface-fg);color:var(--ol-surface)!important;transition:opacity .15s}
+.ol-root .ol-cat-buy{margin-top:6px;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:0 14px;border-radius:999px;font-weight:700;font-size:.85em;text-decoration:none;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))!important;transition:opacity .15s}
 .ol-root a.ol-cat-buy:hover{opacity:.85}
 .ol-root .ol-cat-buy svg{flex:none}
 .ol-root .ol-cat-buy[aria-disabled]{opacity:.35;cursor:not-allowed}
@@ -146,7 +146,7 @@ const CATALOG_CSS = `.ol-root .ol-catalog{container-type:inline-size;display:fle
 .ol-root .ol-cat-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px;margin:0 -2px}
 .ol-root .ol-cat-tabs::-webkit-scrollbar{display:none}
 .ol-root .ol-cat-tab{flex:none;font:inherit;font-size:.85em;font-weight:700;border:0;border-radius:999px;padding:8px 14px;cursor:pointer;background:var(--ol-surface);color:var(--ol-surface-fg)}
-.ol-root .ol-cat-tab[aria-pressed="true"]{background:var(--ol-surface-fg);color:var(--ol-surface)}
+.ol-root .ol-cat-tab[aria-pressed="true"]{background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))}
 .ol-root .ol-cat-sec{display:flex;flex-direction:column;gap:8px}
 .ol-root .ol-cat-sec[hidden]{display:none}
 .ol-root .ol-cat-sec+.ol-cat-sec{margin-top:6px}
@@ -157,7 +157,7 @@ const CATALOG_CSS = `.ol-root .ol-catalog{container-type:inline-size;display:fle
 .ol-root .ol-cat-extras{margin:0;font-size:.74em;opacity:.75}
 .ol-root .ol-cat-paused{margin:0;padding:12px 14px;border-radius:var(--ol-surface-radius);background:#fef3c7;color:#92400e;font-weight:600;font-size:.9em;text-align:center}
 .ol-root button.ol-cat-buy{font:inherit;font-weight:700;font-size:.85em;border:0;cursor:pointer}
-.ol-root .ol-cat-count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ol-surface);color:var(--ol-surface-fg);font-size:.8em;display:inline-grid;place-items:center}
+.ol-root .ol-cat-count{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--ol-accent-fg,var(--ol-surface));color:var(--ol-accent,var(--ol-surface-fg));font-size:.8em;display:inline-grid;place-items:center}
 .ol-root .ol-cat-count[hidden]{display:none}` + ORDER_CSS;
 
 const pickup = { key: 'ordering', equals: 'pickup' };

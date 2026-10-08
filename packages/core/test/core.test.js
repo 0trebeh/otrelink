@@ -86,7 +86,7 @@ test('header layout styles target the root element', () => {
 });
 
 test('docs: every CSS variable written by designCss is documented (and vice versa)', () => {
-  const written = [...designCss(resolveDesign({})).matchAll(/(--ol-[\w-]+):/g)].map((m) => m[1]);
+  const written = [...designCss(resolveDesign({ accentColor: '#111111', accentTextColor: '#ffffff' })).matchAll(/(--ol-[\w-]+):/g)].map((m) => m[1]);
   const documented = cssVariables.map((v) => v.name);
   assert.deepEqual([...documented].sort(), [...written].sort());
 });
@@ -708,4 +708,21 @@ test('24 templates build valid pages', async () => {
     assert.ok(renderPage({ id: 'x', slug: 'x', ...page }).html.includes('ol-root'), t.id);
   }
   assert.equal(buildTemplatePage('nope'), null);
+});
+
+test('page accent color (Cards & surfaces) reaches catalog buttons, overridable per block', async () => {
+  const { designCss, resolveDesign, defaultDesign, renderPage, newBlock } = await import('../src/index.js');
+  const plain = designCss(resolveDesign(defaultDesign()));
+  assert.ok(!plain.includes('--ol-accent'), 'no accent var when empty');
+  const { sanitizePage } = await import('../src/index.js');
+  const d = sanitizePage({ profile: { title: 'x' }, blocks: [], socials: [], design: { ...defaultDesign(), accentColor: '#E11D48', accentTextColor: '#ffffff' } }).design;
+  assert.equal(d.accentColor, '#e11d48');
+  assert.equal(sanitizePage({ profile: { title: 'x' }, blocks: [], socials: [], design: { accentColor: 'nope' } }).design.accentColor, '');
+  const css = designCss(d);
+  assert.ok(css.includes('--ol-accent:#e11d48;') && css.includes('--ol-accent-fg:#ffffff;'));
+  const cat = newBlock('catalog', { display: 'always', products: [{ id: 'p1', name: 'Taco', price: 3, url: 'https://example.com' }] });
+  cat.options = { ...cat.options, stAccentColor: '#00ff00' };
+  const r = renderPage({ id: 'x', slug: 'x', profile: { title: 'x' }, socials: [], blocks: [cat], design: d });
+  assert.ok(r.css.includes('.ol-cat-buy{') && /\.ol-cat-buy\{[^}]*var\(--ol-accent,var\(--ol-surface-fg\)\)/.test(r.css));
+  assert.ok(r.html.includes('--ol-accent:#00ff00'), 'block override');
 });

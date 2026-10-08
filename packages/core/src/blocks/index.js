@@ -117,7 +117,7 @@ export const blockStyleFields = [
   { key: 'stSurfaceTextColor', group: 'card', type: 'color', label: 'Card text color', default: '', allowEmpty: true },
   { key: 'stTextColor', group: 'text', type: 'color', label: 'Text color', default: '', allowEmpty: true, },
   // Highlights inside a block (e.g. the date badges of the Events calendar), apart from the card colors.
-  { key: 'stAccentColor', group: 'accent', type: 'color', label: 'Accent color', default: '', allowEmpty: true, help: 'Date badges, buttons and the selected day. Empty = the card text color.' },
+  { key: 'stAccentColor', group: 'accent', type: 'color', label: 'Accent color', default: '', allowEmpty: true, help: 'Buy / Order buttons, date badges and the selected day. Empty = the page accent color (Design → Cards & surfaces).' },
   { key: 'stAccentTextColor', group: 'accent', type: 'color', label: 'Accent text color', default: '', allowEmpty: true },
 ];
 
@@ -147,7 +147,7 @@ const STYLE_GROUPS = {
   pdf: ['button', 'card', 'radius'],
   faq: ['card', 'radius'],
   countdown: ['card', 'radius'],
-  catalog: (d) => (showsButton(d) ? ['button', 'card', 'radius'] : ['card', 'radius']),
+  catalog: (d) => (showsButton(d) ? ['button', 'card', 'accent', 'radius'] : ['card', 'accent', 'radius']),
   booking: ['button', 'card', 'radius'],
   survey: ['button', 'card', 'radius'],
   reviews: ['button', 'card', 'radius'],

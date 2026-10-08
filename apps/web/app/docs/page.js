@@ -175,7 +175,7 @@ export default function DocsPage() {
               ['Style → Buttons', `${buttonStyles.list().length} styles (${buttonStyles.list().map((s) => s.label).join(', ')}), radius, colors, border, shadow, height, hover effect (${buttonHovers.list().map((h) => h.label).join(', ')}), alignment and text case.`],
               ['Style → Typography', `${fonts.list().length} fonts for title and body, colors, sizes and weight.`],
               ['Style → Header', 'Layout (Classic, Hero = big cover photo, Left aligned), avatar shape/size/border and social icons position, style and color.'],
-              ['Style → Cards & surfaces', 'Background, text color and radius of cards (text, FAQ, countdown) and embeds.'],
+              ['Style → Cards & surfaces', 'Background, text color and radius of cards (text, FAQ, countdown) and embeds, plus the accent color (and its text color) used by catalog Buy / Order / Add buttons, the selected category tab, the cart bar, event date badges and the selected calendar day. Empty accent = the card text color. A block can override it in its own Style → Accent.'],
               ['Style → Layout & motion', `Content width, spacing, top padding and entrance animation (${entranceAnimations.list().map((a) => a.label).join(', ')}).`],
               ['Style → Custom CSS', 'Your own CSS on top of everything. See below.'],
               ['Profile', `Picture, title, bio, verified badge and social icons (${socials.list().length} platforms).`],

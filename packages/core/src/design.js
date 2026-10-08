@@ -78,6 +78,9 @@ export const designGroups = [
       { key: 'surfaceColor', type: 'color', label: 'Card color', default: '#ffffffcc' },
       { key: 'surfaceTextColor', type: 'color', label: 'Card text color', default: '#111111' },
       { key: 'surfaceRadius', type: 'range', label: 'Card radius', min: 0, max: 32, default: 16, unit: 'px' },
+      { key: 'accentColor', type: 'color', label: 'Accent color', default: '', allowEmpty: true, emptyBadge: 'Auto', emptyText: 'Same as the card text',
+        help: 'Buy / Order buttons in the catalog, event date badges and the selected calendar day. Empty = the card text color.' },
+      { key: 'accentTextColor', type: 'color', label: 'Accent text color', default: '', allowEmpty: true, emptyBadge: 'Auto', emptyText: 'Same as the card color' },
     ],
   },
   {
@@ -150,6 +153,8 @@ export function designCss(d) {
     + `--ol-avatar-size:${d.avatarSize}px;--ol-avatar-bw:${d.avatarBorderWidth}px;--ol-avatar-bc:${d.avatarBorderColor};`
     + `--ol-social-color:${d.socialsColor};--ol-social-size:${d.socialsSize}px;`
     + `--ol-surface:${d.surfaceColor};--ol-surface-fg:${d.surfaceTextColor};--ol-surface-radius:${d.surfaceRadius}px;`
+    // Accent: only when set, so blocks fall back to their own card text color.
+    + (d.accentColor ? `--ol-accent:${d.accentColor};` : '') + (d.accentTextColor ? `--ol-accent-fg:${d.accentTextColor};` : '')
     + `--ol-max-width:${d.maxWidth}px;--ol-gap:${d.gap}px;--ol-pad-top:${d.paddingTop}px;`
     + `color-scheme:${colorSchemeOf(d) === 'dark' ? 'dark' : 'only light'};`
     + `}`;
@@ -219,6 +224,8 @@ export const cssVariables = [
   { name: '--ol-surface', setting: 'surfaceColor', description: 'Card background (text cards, FAQ, countdown…).' },
   { name: '--ol-surface-fg', setting: 'surfaceTextColor', description: 'Text color on cards.' },
   { name: '--ol-surface-radius', setting: 'surfaceRadius', description: 'Corner radius of cards, images and embeds.' },
+  { name: '--ol-accent', setting: 'accentColor', description: 'Accent color: catalog Buy / Order buttons, event date badges, selected calendar day (falls back to the card text color).' },
+  { name: '--ol-accent-fg', setting: 'accentTextColor', description: 'Text on the accent color (falls back to the card color).' },
   { name: '--ol-max-width', setting: 'maxWidth', description: 'Maximum width of the content column.' },
   { name: '--ol-gap', setting: 'gap', description: 'Space between blocks.' },
   { name: '--ol-pad-top', setting: 'paddingTop', description: 'Space above the profile.' },

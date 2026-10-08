@@ -303,8 +303,8 @@ export const ORDER_CSS = `
 @keyframes ol-cart-pop{40%{transform:scale(1.08)}}
 .ol-root .ol-cart-bar{position:fixed;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));z-index:40;display:flex;justify-content:center;padding:0 16px;pointer-events:none}
 .ol-root .ol-cart-bar[hidden]{display:none}
-.ol-root .ol-cart-open{pointer-events:auto;width:100%;max-width:calc(var(--ol-max-width) - 32px);display:flex;align-items:center;gap:10px;font:inherit;font-weight:700;border:0;border-radius:999px;padding:14px 18px;cursor:pointer;background:var(--ol-surface-fg);color:var(--ol-surface);box-shadow:0 10px 30px -8px rgba(0,0,0,.45);animation:ol-cart-up .25s ease}
-.ol-root .ol-cart-n{min-width:24px;height:24px;border-radius:999px;display:grid;place-items:center;font-size:.8em;background:var(--ol-surface);color:var(--ol-surface-fg)}
+.ol-root .ol-cart-open{pointer-events:auto;width:100%;max-width:calc(var(--ol-max-width) - 32px);display:flex;align-items:center;gap:10px;font:inherit;font-weight:700;border:0;border-radius:999px;padding:14px 18px;cursor:pointer;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface));box-shadow:0 10px 30px -8px rgba(0,0,0,.45);animation:ol-cart-up .25s ease}
+.ol-root .ol-cart-n{min-width:24px;height:24px;border-radius:999px;display:grid;place-items:center;font-size:.8em;background:var(--ol-accent-fg,var(--ol-surface));color:var(--ol-accent,var(--ol-surface-fg))}
 .ol-root .ol-cart-label{flex:1;text-align:left}
 @keyframes ol-cart-up{from{transform:translateY(20px);opacity:0}}
 html.ol-cart-lock,html.ol-cart-lock body{overflow:hidden}

@@ -27,20 +27,20 @@ export default function ColorField({ value, onChange, id, field = {} }) {
     <div className="flex items-center gap-2">
       <label className="relative size-10 shrink-0 rounded-xl border border-line overflow-hidden cursor-pointer" style={{ backgroundImage: 'conic-gradient(#ddd 25%, #fff 0 50%, #ddd 0 75%, #fff 0)', backgroundSize: '10px 10px' }}>
         <span className="absolute inset-0" style={{ background: transparent || empty ? 'transparent' : value }} />
-        {empty && <span className="absolute inset-0 grid place-items-center text-[10px] font-semibold text-muted bg-panel/80" aria-hidden="true">Page</span>}
+        {empty && <span className="absolute inset-0 grid place-items-center text-[10px] font-semibold text-muted bg-panel/80" aria-hidden="true">{field.emptyBadge || 'Page'}</span>}
         <input type="color" value={rgb} onChange={(e) => emit(e.target.value, alpha)} className="absolute inset-0 opacity-0 cursor-pointer" aria-label="Pick color" />
       </label>
       <input
         id={id}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={field.allowEmpty ? 'Page color' : undefined}
+        placeholder={field.allowEmpty ? (field.emptyBadge || 'Page color') : undefined}
         onBlur={() => (/^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(text) || text === 'transparent' || (field.allowEmpty && text === '') ? onChange(text) : setText(value))}
         className="w-28 h-10 rounded-xl border border-line bg-panel px-2.5 text-sm font-mono focus:border-accent focus:outline-none"
         spellCheck={false}
       />
       {empty ? (
-        <span className="flex-1 text-xs text-muted">Same as the page</span>
+        <span className="flex-1 text-xs text-muted">{field.emptyText || 'Same as the page'}</span>
       ) : (
         <>
           <input type="range" min="0" max="100" value={alpha} onChange={(e) => emit(rgb, Number(e.target.value))} aria-label="Opacity" className="flex-1 min-w-0" />
@@ -48,7 +48,7 @@ export default function ColorField({ value, onChange, id, field = {} }) {
         </>
       )}
       {field.allowEmpty && !empty && (
-        <button type="button" onClick={() => onChange('')} className="text-xs font-semibold text-muted hover:text-ink cursor-pointer shrink-0" title="Use the page color">Reset</button>
+        <button type="button" onClick={() => onChange('')} className="text-xs font-semibold text-muted hover:text-ink cursor-pointer shrink-0" title={field.emptyText || 'Use the page color'}>Reset</button>
       )}
     </div>
   );
