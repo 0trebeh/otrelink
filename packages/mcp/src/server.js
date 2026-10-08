@@ -6,6 +6,7 @@ import { z } from 'zod';
 import {
   blockTypes, themes, applyTheme, allowsBlock, allowsWallpaper, featureForWallpaper, featureForBlock,
   designFields, cloneBlock, socials, sanitizeSlug, productKey, TEMPLATES,
+  palettes, applyPalette, paletteFromColor, sanitizePalette,
 } from '@otrelink/core';
 import { createClient, OtrelinkError } from './client.js';
 import {
@@ -25,7 +26,7 @@ Typical flow:
 3. To add content: list_block_types → get_block_type (fields and defaults) → add_block.
    Blocks inside a "collection" use parentId. Positions use index, beforeId or afterId.
 4. get_page shows the outline with block ids; use them in update_block, move_block, remove_block.
-5. Look: list_themes + set_theme, or get_design_options + update_design.
+5. Look: list_themes + set_theme, list_palettes + apply_palette (colors only), or get_design_options + update_design.
 Changes are saved right away and go live if the page is published. Images must be URLs:
 use upload_file for local files. Don't invent block fields: unknown ones are ignored.
 If the owner has the page open in the dashboard with unsaved changes, saving there can overwrite yours.`;
@@ -390,6 +391,36 @@ export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0
     if (wp && !allowsWallpaper(await plan(), wp)) return fail(`The plan doesn’t include "${wp}" backgrounds (feature "${featureForWallpaper(wp)}").`);
     const { page: saved } = await editPage(page, (p) => { p.design = applyTheme(p.design || {}, theme); });
     return text(`Theme "${t.label}" applied to ${saved.slug}.`);
+  });
+
+  tool('list_palettes', {
+    title: 'List color palettes',
+    description: 'Color palette presets for apply_palette: background, cards, text, buttons and accent colors.',
+    inputSchema: { mode: z.enum(['light', 'dark']).optional() },
+    annotations: READ,
+  }, async ({ mode }) => json(palettes.list().filter((x) => !mode || x.dark === (mode === 'dark')).map((x) => ({ id: x.id, label: x.label, dark: x.dark, colors: x.colors }))));
+
+  tool('apply_palette', {
+    title: 'Apply color palette',
+    description: 'Recolor a page (background, buttons, text, cards, accent) keeping its fonts, button shapes and background type. Use a preset id (list_palettes), your own colors, or one brand color (fromColor + mode).',
+    inputSchema: {
+      page: pageRef,
+      palette: z.string().optional().describe('Preset id from list_palettes.'),
+      colors: z.object({
+        bg: z.string(), bg2: z.string().optional(), surface: z.string().optional(), text: z.string(), primary: z.string(), accent: z.string().optional(),
+      }).optional().describe('Your own palette as #rrggbb: bg (background), bg2, surface (cards), text, primary (buttons), accent.'),
+      fromColor: z.string().optional().describe('Make a palette from one #rrggbb brand color.'),
+      mode: z.enum(['light', 'dark']).optional().describe('With fromColor. Default light.'),
+    },
+    annotations: WRITE,
+  }, async ({ page, palette, colors, fromColor, mode = 'light' }) => {
+    let pal;
+    if (palette) { pal = palettes.get(palette); if (!pal) return fail(`Unknown palette "${palette}". Use list_palettes.`); }
+    else if (colors) { pal = sanitizePalette({ id: 'custom', name: 'Custom', colors }); if (!pal) return fail('colors needs at least bg, text and primary as #rrggbb.'); }
+    else if (fromColor) pal = paletteFromColor(fromColor, mode);
+    else return fail('Send palette, colors or fromColor.');
+    const { page: saved } = await editPage(page, (p) => { p.design = applyPalette(p.design || {}, pal); });
+    return json(pal.colors, `Palette "${pal.label || pal.name || pal.id}" applied to ${saved.slug}.`);
   });
 
   tool('update_design', {

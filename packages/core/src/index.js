@@ -20,6 +20,7 @@ export * from './animations.js';
 export * from './buttons/index.js';
 export * from './wallpapers/index.js';
 export * from './themes.js';
+export * from './palettes.js';
 export * from './design.js';
 export * from './blocks/index.js';
 export * from './tree.js';

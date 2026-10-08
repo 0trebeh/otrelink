@@ -60,9 +60,9 @@ test('exposes every tool, with instructions', async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
-    'add_block', 'check_slug', 'create_page', 'delete_page', 'duplicate_block', 'get_account', 'get_analytics',
+    'add_block', 'apply_palette', 'check_slug', 'create_page', 'delete_page', 'duplicate_block', 'get_account', 'get_analytics',
     'get_block_type', 'get_design_options', 'get_page', 'get_today', 'list_block_types', 'list_orders', 'list_pages',
-    'list_templates', 'list_themes', 'move_block', 'publish_page', 'remove_block', 'set_theme', 'update_block',
+    'list_palettes', 'list_templates', 'list_themes', 'move_block', 'publish_page', 'remove_block', 'set_theme', 'update_block',
     'update_design', 'update_page', 'update_today', 'upload_file',
   ]);
   assert.ok(tools.find((t) => t.name === 'delete_page').annotations.destructiveHint);
@@ -228,4 +228,22 @@ test('API errors come back as readable tool errors', async () => {
   const r = await call('list_pages');
   assert.equal(r.isError, true);
   assert.match(r.text, /read-only/);
+});
+
+test('palettes: list and apply (preset, own colors, from one color)', async () => {
+  const api = fakeApi();
+  const { call } = await connect(api);
+  await call('create_page', { slug: 'pal', template: 'businesscard' });
+  const list = JSON.parse((await call('list_palettes', { mode: 'dark' })).text);
+  assert.ok(list.length >= 6 && list.every((x) => x.dark));
+  await call('apply_palette', { page: 'pal', palette: 'midnight' });
+  let d = [...api.pages.values()][0].design;
+  assert.deepEqual([d.palette, d.buttonColor, d.titleFont], ['midnight', '#6d8bff', 'manrope']);
+  await call('apply_palette', { page: 'pal', colors: { bg: '#ffffff', text: '#111111', primary: '#ff0000' } });
+  assert.equal([...api.pages.values()][0].design.buttonColor, '#ff0000');
+  await call('apply_palette', { page: 'pal', fromColor: '#0ea5e9', mode: 'dark' });
+  d = [...api.pages.values()][0].design;
+  assert.equal(d.palette, 'from-0ea5e9-dark');
+  assert.equal((await call('apply_palette', { page: 'pal', palette: 'nope' })).isError, true);
+  assert.equal((await call('apply_palette', { page: 'pal' })).isError, true);
 });

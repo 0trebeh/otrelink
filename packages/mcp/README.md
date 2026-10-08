@@ -98,6 +98,8 @@ Same `mcpServers` block as Claude Desktop, in `.cursor/mcp.json` (or your client
 | Tool | What it does |
 |---|---|
 | `set_theme` | Apply a theme preset |
+| `list_palettes` | Color palette presets (light and dark) |
+| `apply_palette` | Recolor a page: a preset, your own colors, or one brand color |
 | `update_design` | Change colors, fonts, buttons, accent, background… |
 
 **Business**

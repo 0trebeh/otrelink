@@ -739,3 +739,46 @@ test('API access (tokens & MCP) is Business only, and the admin can turn it off'
   const g = groupedFeatures().find((x) => x.id === 'integrations');
   assert.deepEqual(g.features, [{ key: 'api', label: 'API tokens & MCP', free: false, business: true }]);
 });
+
+test('color palettes: presets are readable, apply recolors without touching fonts or shapes', async () => {
+  const { palettes, applyPalette, paletteFromColor, sanitizePalette, sanitizePaletteList, contrastRatio, applyTheme, defaultDesign, sanitizePage, MAX_CUSTOM_PALETTES } = await import('../src/index.js');
+  assert.ok(palettes.list().length >= 20);
+  for (const pal of palettes.list()) {
+    const d = applyPalette(applyTheme(defaultDesign(), 'air'), pal.id);
+    assert.ok(contrastRatio(d.titleColor, pal.colors.bg) >= 4.5, `${pal.id} text`);
+    assert.ok(contrastRatio(d.textColor, pal.colors.bg) >= 3, `${pal.id} muted text`);
+    assert.ok(contrastRatio(d.surfaceTextColor, pal.colors.surface) >= 4.5, `${pal.id} cards`);
+    assert.ok(contrastRatio(d.buttonTextColor, d.buttonColor) >= 3, `${pal.id} buttons`);
+    assert.ok(contrastRatio(d.accentTextColor, d.accentColor) >= 3, `${pal.id} accent`);
+  }
+  // Keeps fonts, button style, background type; changes colors of each background type.
+  const luxe = applyTheme(defaultDesign(), 'luxe');
+  const d = applyPalette(luxe, 'ocean-breeze');
+  assert.equal(d.titleFont, luxe.titleFont);
+  assert.equal(d.buttonStyle, 'double');
+  assert.equal(d.wallpaper.type, luxe.wallpaper.type);
+  assert.equal(d.wallpaper.from, '#eef8fb');
+  assert.equal(d.palette, 'ocean-breeze');
+  assert.equal(applyPalette({ wallpaper: { type: 'pattern', bg: '#000', fg: '#111' } }, 'mint').wallpaper.bg, '#effbf6');
+  assert.equal(applyPalette({ wallpaper: { type: 'aurora' } }, 'royal').wallpaper.c1, '#c77dff');
+  assert.equal(applyPalette({ wallpaper: { type: 'solid' } }, 'nope').wallpaper.color, undefined, 'unknown id: unchanged');
+  // Card transparency is kept.
+  assert.equal(applyPalette({ surfaceColor: '#ffffff26', wallpaper: { type: 'solid' } }, 'midnight').surfaceColor, '#141b3326');
+  // Saved in the page design.
+  const page = sanitizePage({ design: d });
+  assert.equal(page.design.palette, 'ocean-breeze');
+  // From one color, light and dark.
+  for (const mode of ['light', 'dark']) {
+    const g = paletteFromColor('#e11d48', mode);
+    const x = applyPalette(defaultDesign(), g);
+    assert.ok(contrastRatio(x.titleColor, g.colors.bg) >= 4.5, mode);
+    assert.equal(g.dark, mode === 'dark');
+  }
+  // Custom palettes.
+  assert.equal(sanitizePalette({ colors: { bg: 'red' } }), null);
+  const c = sanitizePalette({ name: 'Mine\n', colors: { bg: '#FFF', text: '#111', primary: '#f00' } });
+  assert.deepEqual([c.name, c.colors.bg, c.colors.accent], ['Mine', '#ffffff', '#ff0000']);
+  assert.ok(c.colors.bg2 && c.colors.surface);
+  const many = Array.from({ length: 40 }, (_, i) => ({ id: `p${i}`, colors: { bg: '#fff', text: '#000', primary: '#00f' } }));
+  assert.equal(sanitizePaletteList([...many, many[0]]).length, MAX_CUSTOM_PALETTES);
+});

@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import { themes, applyTheme, googleFontsHref, resolveDesign } from '@otrelink/core';
 import { Panel, cx } from '@/components/ui';
 import { tileCss } from './tiles';
+import PalettesPanel from './PalettesPanel';
 
 export default function ThemeSection({ ed }) {
   const { page, set } = ed;
@@ -12,6 +13,7 @@ export default function ThemeSection({ ed }) {
   const fontsHref = useMemo(() => googleFontsHref(list.flatMap((t) => [t.design.titleFont, t.design.bodyFont].filter(Boolean))), [list]);
 
   return (
+    <div className="grid gap-5">
     <Panel title="Theme" description="Start from a preset, then fine-tune anything in Wallpaper and Style.">
       {fontsHref && <link rel="stylesheet" href={fontsHref} />}
       <style>{css}</style>
@@ -40,5 +42,7 @@ export default function ThemeSection({ ed }) {
         })}
       </div>
     </Panel>
+    <PalettesPanel ed={ed} />
+    </div>
   );
 }

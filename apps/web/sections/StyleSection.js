@@ -18,7 +18,7 @@ export default function StyleSection({ ed }) {
           <FieldList
             fields={g.fields}
             values={page.design}
-            onChange={(k, v) => set((p) => ({ ...p, design: { ...p.design, theme: 'custom', [k]: v } }), `design:${k}`)}
+            onChange={(k, v) => set((p) => ({ ...p, design: { ...p.design, theme: 'custom', ...(/Color$/.test(k) ? { palette: '' } : {}), [k]: v } }), `design:${k}`)}
           />
           {g.id === 'advanced' && (
             <a href="/docs#custom-css" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 mt-3 text-[13px] font-semibold text-accent-ink hover:underline">

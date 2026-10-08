@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import {
-  blockTypes, themes, wallpapers, buttonStyles, buttonHovers, fonts, socials, attentionAnimations, entranceAnimations,
+  blockTypes, themes, palettes, wallpapers, buttonStyles, buttonHovers, fonts, socials, attentionAnimations, entranceAnimations,
   designGroups, cssVariables, cssElements, cssModifiers, cssRecipes, pageStructure, icon,
 } from '@otrelink/core';
 import { Logo, CoreIcon } from '@/components/ui';
@@ -184,6 +184,7 @@ export default function DocsPage() {
             head={['Section', 'What it does']}
             rows={[
               ['Theme', `${themes.list().length} presets (${themes.list().map((t) => t.label).join(', ')}). Picking a theme resets colors, fonts and buttons to that preset; your Custom CSS and entrance animation are kept.`],
+              ['Theme → Color palettes', `${palettes.list().length} palettes (light and dark) that recolor the background, buttons, text, cards and accent in one click, keeping your fonts, button shapes and background type. Press Create to make your own: pick six colors or start from one brand color (light or dark), then Save & apply. Your palettes are saved to your account and can be used on all your pages.`],
               ['Wallpaper', `${wallpapers.list().length} background types: ${wallpapers.list().map((w) => w.label).join(', ')}. When text becomes hard to read you get a one-click fix.`],
               ['Style → Buttons', `${buttonStyles.list().length} styles (${buttonStyles.list().map((s) => s.label).join(', ')}), radius, colors, border, shadow, height, hover effect (${buttonHovers.list().map((h) => h.label).join(', ')}), alignment and text case.`],
               ['Style → Typography', `${fonts.list().length} fonts for title and body, colors, sizes and weight.`],
@@ -488,7 +489,7 @@ export default function DocsPage() {
               ['get_account, list_block_types, get_block_type, list_themes, list_templates, get_design_options', 'Learn your plan and every block, theme, template and design option.'],
               ['list_pages, get_page, create_page, update_page, publish_page, delete_page, check_slug', 'Create pages (empty or from a template), change the profile, socials, settings and slug, publish or hide, delete (it must confirm).'],
               ['add_block, update_block, move_block, remove_block, duplicate_block', 'Build the page block by block, inside collections too.'],
-              ['set_theme, update_design', 'Change the look: theme, colors, fonts, buttons, accent, background.'],
+              ['set_theme, list_palettes, apply_palette, update_design', 'Change the look: theme, color palette (a preset, your colors or one brand color), fonts, buttons, accent, background.'],
               ['get_analytics, list_orders, get_today, update_today', 'Read visits and orders; change open/closed, today’s location and sold-out products.'],
               ['upload_file', 'Upload an image or PDF from your computer.'],
             ]}

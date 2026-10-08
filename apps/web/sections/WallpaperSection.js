@@ -18,14 +18,14 @@ export default function WallpaperSection({ ed }) {
     return tileCss(`wp-${w.id}`, { ...page.design, wallpaper: values });
   }).join('\n'), [current, page.design]);
 
-  const setWallpaper = (next, key) => set((p) => ({ ...p, design: { ...p.design, theme: 'custom', wallpaper: next } }), key);
+  const setWallpaper = (next, key) => set((p) => ({ ...p, design: { ...p.design, theme: 'custom', palette: '', wallpaper: next } }), key);
 
   const base = wallpaperBaseColor(current);
   const lowContrast = base && contrastRatio(base, page.design.titleColor) < 3;
   const fixText = () => {
     const dark = contrastRatio(base, '#111111') >= contrastRatio(base, '#ffffff');
     const ink = dark ? '#111111' : '#ffffff';
-    set((p) => ({ ...p, design: { ...p.design, theme: 'custom', titleColor: ink, textColor: dark ? '#333333' : '#f2f2f2', socialsColor: ink } }));
+    set((p) => ({ ...p, design: { ...p.design, theme: 'custom', palette: '', titleColor: ink, textColor: dark ? '#333333' : '#f2f2f2', socialsColor: ink } }));
   };
 
   return (

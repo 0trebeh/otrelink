@@ -118,6 +118,8 @@ export function sanitizeWallpaper(w = {}) {
 export function sanitizeDesign(input = {}) {
   return {
     theme: typeof input.theme === 'string' ? input.theme.slice(0, 40) : 'custom',
+    // Last color palette applied (dashboard → Theme → Color palettes), '' after manual color edits.
+    palette: typeof input.palette === 'string' ? input.palette.replace(/[^\w-]/g, '').slice(0, 40) : '',
     ...sanitizeFields(designFields, input),
     wallpaper: sanitizeWallpaper(input.wallpaper),
   };
