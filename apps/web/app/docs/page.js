@@ -40,6 +40,7 @@ const toc = [
   { id: 'invoices', label: 'Invoices' },
   { id: 'translate', label: 'Translate button' },
   { id: 'plans', label: 'Plans' },
+  { id: 'api', label: 'API tokens' },
   { id: 'sharing', label: 'Sharing & analytics' },
   { id: 'data', label: 'Backup & data' },
   { id: 'shortcuts', label: 'Keyboard shortcuts' },
@@ -438,11 +439,32 @@ export default function DocsPage() {
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
               ['Pro · $10/month', 'Up to 10 pages, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, the translate button and photo or video backgrounds.'],
-              ['Business', 'Custom number of pages and features, set up with the Otrelink team (each feature can be turned on or off, even the Code block).'],
+              ['Business', 'Custom number of pages and features, set up with the Otrelink team (each feature can be turned on or off, even the Code block), plus API tokens for your own tools and AI assistants (MCP).'],
             ]}
           />
           <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal; you can cancel any time and keep Pro until the end of the period you paid. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>
           <P><b>Your invoices:</b> every subscription payment appears under <i>Billing history</i> on the plan page, with a PDF invoice to download.</P>
+
+          <H2 id="api">API tokens</H2>
+          <P>On the <b>Business</b> plan you can let your own scripts, automations or an AI assistant (through an MCP server) work on your pages without sharing your password. Open <i>Your pages → API</i> (or <C>/dashboard/api</C>) and press <i>New token</i>: give it a name, choose <i>Read &amp; write</i> or <i>Read only</i>, and when it expires (30, 90 or 365 days, or never). The token (<C>otl_…</C>) is shown <b>once</b>: copy it and keep it like a password. You can have up to 10 tokens and revoke any of them at once.</P>
+          <P>Send it in the <C>Authorization</C> header. A token acts as you, with your plan&apos;s limits (pages, locked blocks):</P>
+          <pre className="rounded-2xl bg-ink text-white/90 text-[12.5px] font-mono p-4 overflow-x-auto mb-4 max-w-[68ch]"><code>{'curl https://YOUR-OTRELINK/api/pages \\\n  -H "Authorization: Bearer otl_YOUR_TOKEN"'}</code></pre>
+          <Table
+            head={['Route', 'What it does']}
+            rows={[
+              ['GET /api/auth/me', 'Who the token belongs to and their plan.'],
+              ['GET /api/pages', 'Your pages.'],
+              ['POST /api/pages', 'Create a page: { slug, title } or { slug, template } (a template id, like "tacotruck").'],
+              ['GET /api/pages/:id', 'One page with its blocks, design and settings.'],
+              ['PUT /api/pages/:id', 'Save a page (send the whole page, like the editor does).'],
+              ['DELETE /api/pages/:id', 'Delete a page.'],
+              ['GET, PATCH /api/pages/:id/today', 'Read or change “today” (open/closed, where the truck is…).'],
+              ['GET /api/pages/:id/analytics', 'Visits and clicks.'],
+              ['GET /api/slug-check?slug=…', 'Whether a username is free.'],
+              ['POST /api/assets', 'Upload an image or PDF (multipart field "file").'],
+            ]}
+          />
+          <Note><b>Read only</b> tokens can only use GET. Each token can make up to 120 requests per minute. Tokens can&apos;t change your account, password, billing, orders, bookings or other tokens; those still need you signed in. Requests with a token never use your browser session.</Note>
 
           <H2 id="sharing">Sharing &amp; analytics</H2>
           <P>In <i>Settings</i> you can copy your link, download a QR code, change your username, add an SEO title, description and sharing image, hide the page, hide the footer, or show a sensitive-content warning.</P>

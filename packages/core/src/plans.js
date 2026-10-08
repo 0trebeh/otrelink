@@ -15,11 +15,13 @@ export const FEATURE_GROUPS = [
   { id: 'activity', label: 'Bookings & visitors' },
   { id: 'business', label: 'Shop & food business' },
   { id: 'page', label: 'Page & design' },
+  { id: 'integrations', label: 'Integrations' },
 ];
 
 /**
  * Features that plans can turn on or off. `free: true` = included in Free too
- * (Business plans can still turn it off).
+ * (Business plans can still turn it off). `business: true` = only the Business
+ * plan has it (not Pro).
  */
 export const PLAN_FEATURES = {
   // Content blocks
@@ -40,24 +42,27 @@ export const PLAN_FEATURES = {
   // Page & design
   translate: { label: 'Translate button', group: 'page' },
   mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'], group: 'page' },
+  // Integrations
+  api: { label: 'API tokens & MCP', group: 'integrations', business: true },
 };
 
 /** [{ id, label, features: [{ key, label, free }] }] — for lists grouped by kind. */
 export const groupedFeatures = () => FEATURE_GROUPS.map((g) => ({
   ...g,
-  features: Object.entries(PLAN_FEATURES).filter(([, f]) => f.group === g.id).map(([key, f]) => ({ key, label: f.label, free: Boolean(f.free) })),
+  features: Object.entries(PLAN_FEATURES).filter(([, f]) => f.group === g.id).map(([key, f]) => ({ key, label: f.label, free: Boolean(f.free), business: Boolean(f.business) })),
 })).filter((g) => g.features.length);
 
 const ALL_ON = Object.fromEntries(Object.keys(PLAN_FEATURES).map((k) => [k, true]));
 const FREE_ONLY = Object.fromEntries(Object.entries(PLAN_FEATURES).map(([k, f]) => [k, Boolean(f.free)]));
+const PRO_ALL = Object.fromEntries(Object.entries(PLAN_FEATURES).map(([k, f]) => [k, !f.business]));
 
 export const PLANS = {
   free: { id: 'free', label: 'Free', price: 0, maxPages: 1, features: FREE_ONLY,
     tagline: 'One page with links, socials and the basic blocks.' },
-  pro: { id: 'pro', label: 'Pro', price: 10, maxPages: 10, features: ALL_ON,
-    tagline: 'Up to 10 pages and every feature.' },
+  pro: { id: 'pro', label: 'Pro', price: 10, maxPages: 10, features: PRO_ALL,
+    tagline: 'Up to 10 pages and every page feature.' },
   business: { id: 'business', label: 'Business', price: null, maxPages: 50, features: ALL_ON, custom: true,
-    tagline: 'Limits and price made for your team.' },
+    tagline: 'Limits and price made for your team, plus API access.' },
 };
 
 export const PLAN_IDS = Object.keys(PLANS);

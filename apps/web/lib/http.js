@@ -13,7 +13,7 @@ export function handler(fn) {
     try {
       return await fn(req, ctx);
     } catch (err) {
-      if (err instanceof HttpError) {
+      if (err instanceof HttpError || err?.isHttp) {
         const res = error(err.status, err.code, err.retryAfter ? { retryAfter: err.retryAfter } : {});
         if (err.retryAfter) res.headers.set('Retry-After', String(err.retryAfter));
         return res;
@@ -125,6 +125,12 @@ const tooMany = (reset) => Object.assign(new HttpError(429, 'too_many_requests')
  */
 export async function rateLimit(req, name, limit, windowMs, keyPart) {
   const { count, reset } = await counter(`${name}:${keyPart ?? clientIp(req)}`, windowMs, true);
+  if (count > limit) throw tooMany(reset);
+}
+
+/** Count one call for a fixed key (not the IP), e.g. an API token. Throws 429 over `limit`. */
+export async function rateLimitKey(name, keyPart, limit, windowMs) {
+  const { count, reset } = await counter(`${name}:${keyPart}`, windowMs, true);
   if (count > limit) throw tooMany(reset);
 }
 

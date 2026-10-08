@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [], tokens: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -78,6 +78,7 @@ export async function createFileDriver() {
         state.assets = state.assets.filter((a) => a.userId !== id);
         state.push = state.push.filter((p) => p.userId !== id);
         state.payments = state.payments.filter((p) => p.userId !== id);
+        state.tokens = state.tokens.filter((t) => t.userId !== id);
         for (const k of ['events', 'bookings', 'responses', 'reviews', 'orders', 'cards', 'invoices']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
         await persist();
       },
@@ -301,6 +302,31 @@ export async function createFileDriver() {
       },
       findById: async (id) => clone(state.payments.find((x) => x.id === id)),
       listByUser: async (userId) => clone(state.payments.filter((x) => x.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))),
+    },
+    // Personal API tokens (only the hash is stored).
+    tokens: {
+      create: async (t) => {
+        const doc = { id: crypto.randomUUID(), createdAt: now(), lastUsedAt: null, ...t };
+        state.tokens.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findByHash: async (hash) => clone(state.tokens.find((t) => hash && t.hash === hash)),
+      listByUser: async (userId) => clone(state.tokens.filter((t) => t.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))),
+      countByUser: async (userId) => state.tokens.filter((t) => t.userId === userId).length,
+      touch: async (id) => {
+        const t = state.tokens.find((x) => x.id === id);
+        if (!t) return;
+        t.lastUsedAt = now();
+        await persist();
+      },
+      remove: async (id, userId) => {
+        const before = state.tokens.length;
+        state.tokens = state.tokens.filter((t) => !(t.id === id && t.userId === userId));
+        if (state.tokens.length === before) return false;
+        await persist();
+        return true;
+      },
     },
     // Loyalty cards.
     cards: {

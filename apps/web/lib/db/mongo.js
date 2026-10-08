@@ -29,6 +29,7 @@ export async function createMongoDriver() {
   const payments = db.collection('payments');
   const counters = db.collection('counters');
   const limits = db.collection('rate_limits');
+  const tokens = db.collection('api_tokens');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
 
@@ -64,6 +65,8 @@ export async function createMongoDriver() {
     [limits, { expiresAt: 1 }, { expireAfterSeconds: 0 }],
     [users, { verifyTokenHash: 1 }, { sparse: true }],
     [users, { pendingSlug: 1 }, { sparse: true }],
+    [tokens, { hash: 1 }, { unique: true }],
+    [tokens, { userId: 1, createdAt: -1 }, {}],
   ];
   const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
   results.forEach((r, i) => {
@@ -142,6 +145,7 @@ export async function createMongoDriver() {
           responses.deleteMany({ pageId: { $in: pageIds } }), reviews.deleteMany({ pageId: { $in: pageIds } }),
           orders.deleteMany({ pageId: { $in: pageIds } }), cards.deleteMany({ pageId: { $in: pageIds } }),
           invoices.deleteMany({ pageId: { $in: pageIds } }), payments.deleteMany({ userId: id }),
+          tokens.deleteMany({ userId: id }),
         ]);
         await users.deleteOne({ _id: id });
       },
@@ -295,6 +299,18 @@ export async function createMongoDriver() {
       },
       findById: async (id) => out(await payments.findOne({ _id: id })),
       listByUser: async (userId) => (await payments.find({ userId }).sort({ createdAt: -1 }).limit(200).toArray()).map(out),
+    },
+    tokens: {
+      create: async (t) => {
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), lastUsedAt: null, ...t };
+        await tokens.insertOne(doc);
+        return out(doc);
+      },
+      findByHash: async (hash) => (hash ? out(await tokens.findOne({ hash })) : null),
+      listByUser: async (userId) => (await tokens.find({ userId }).sort({ createdAt: -1 }).limit(100).toArray()).map(out),
+      countByUser: async (userId) => tokens.countDocuments({ userId }),
+      touch: async (id) => { await tokens.updateOne({ _id: id }, { $set: { lastUsedAt: new Date().toISOString() } }); },
+      remove: async (id, userId) => (await tokens.deleteOne({ _id: id, userId })).deletedCount === 1,
     },
     cards: {
       create: async (c) => {

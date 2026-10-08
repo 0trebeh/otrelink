@@ -726,3 +726,16 @@ test('page accent color (Cards & surfaces) reaches catalog buttons, overridable 
   assert.ok(r.css.includes('.ol-cat-buy{') && /\.ol-cat-buy\{[^}]*var\(--ol-accent,var\(--ol-surface-fg\)\)/.test(r.css));
   assert.ok(r.html.includes('--ol-accent:#00ff00'), 'block override');
 });
+
+test('API access (tokens & MCP) is Business only, and the admin can turn it off', async () => {
+  const { resolvePlan, PLANS, groupedFeatures, sanitizeLimits } = await import('../src/index.js');
+  assert.equal(PLANS.free.features.api, false);
+  assert.equal(PLANS.pro.features.api, false);
+  assert.equal(resolvePlan({ id: 'legacy' }).features.api, false);
+  assert.equal(resolvePlan({ plan: 'business' }).features.api, true);
+  assert.equal(resolvePlan({ plan: 'business', limits: sanitizeLimits({ features: { api: false } }) }).features.api, false);
+  // Pro keeps every other feature.
+  assert.ok(Object.entries(PLANS.pro.features).every(([k, v]) => k === 'api' || v));
+  const g = groupedFeatures().find((x) => x.id === 'integrations');
+  assert.deepEqual(g.features, [{ key: 'api', label: 'API tokens & MCP', free: false, business: true }]);
+});

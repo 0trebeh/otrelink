@@ -61,7 +61,7 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
     // Plan features, grouped by kind (a heading row before each group).
     ...groupedFeatures().flatMap((g) => [
       { label: g.label, heading: true },
-      ...g.features.map((f) => ({ label: f.label, values: [f.free, true, true] })),
+      ...g.features.map((f) => ({ label: f.label, values: [f.free, !f.business, true] })),
     ]),
   ];
 
