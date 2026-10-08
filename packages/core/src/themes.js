@@ -173,4 +173,84 @@ export const themes = createRegistry('themes', [
       avatarBorderWidth: 4, avatarBorderColor: '#ffffff',
     },
   },
+  {
+    id: 'ocean', label: 'Ocean',
+    // Deep teal water with frosted glass buttons.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'linear', from: '#0ea5b7', via: '#0b6b8f', to: '#0b2545', angle: 170 },
+      buttonStyle: 'glass', buttonColor: '#ffffff', buttonTextColor: '#ffffff', buttonRadius: 14, buttonHover: 'lift',
+      titleFont: 'outfit', bodyFont: 'dm-sans', titleWeight: '700', titleColor: '#ffffff', textColor: '#d4f3f7', socialsColor: '#ffffff',
+      surfaceColor: '#ffffff21', surfaceTextColor: '#ffffff', surfaceRadius: 16, headerLayout: 'classic',
+      avatarBorderWidth: 3, avatarBorderColor: '#7dd3e0',
+    },
+  },
+  {
+    id: 'forest', label: 'Forest',
+    // Pine green with cream buttons and a bookish serif.
+    design: {
+      wallpaper: { type: 'grain', from: '#2f4a36', to: '#16261b', amount: 18 },
+      buttonStyle: 'fill', buttonColor: '#f3ead3', buttonTextColor: '#1d3324', buttonRadius: 10, buttonBorderWidth: 0, buttonHover: 'lift',
+      buttonShadowColor: '#00000040',
+      titleFont: 'fraunces', bodyFont: 'lora', titleWeight: '600', titleColor: '#f3ead3', textColor: '#c9d6c4', socialsColor: '#e7c873',
+      surfaceColor: '#24392a', surfaceTextColor: '#f3ead3', surfaceRadius: 12, headerLayout: 'classic',
+      avatarBorderWidth: 3, avatarBorderColor: '#e7c873',
+    },
+  },
+  {
+    id: 'corporate', label: 'Corporate',
+    // Calm and professional: slate background, navy buttons, left-aligned header.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'linear', from: '#f8fafc', via: 'transparent', to: '#e2e8f0', angle: 180 },
+      buttonStyle: 'fill', buttonColor: '#0f2a4a', buttonTextColor: '#ffffff', buttonBorderWidth: 0, buttonRadius: 10, buttonHover: 'lift',
+      buttonShadowColor: '#0f2a4a33',
+      titleFont: 'manrope', bodyFont: 'inter', titleWeight: '800', titleColor: '#0f172a', textColor: '#475569', socialsColor: '#0f2a4a',
+      surfaceColor: '#ffffff', surfaceTextColor: '#0f172a', surfaceRadius: 12, headerLayout: 'left', avatarShape: 'rounded',
+    },
+  },
+  {
+    id: 'candy', label: 'Candy',
+    // Pastel pink and mint, round sticker buttons.
+    design: {
+      wallpaper: { type: 'pattern', pattern: 'dots', bg: '#ffe4ef', fg: '#ffc2da', size: 22 },
+      buttonStyle: 'sticker', buttonColor: '#ff7eb6', buttonTextColor: '#ffffff', buttonShadowColor: '#ff7eb666', buttonRadius: 40, buttonHover: 'grow',
+      titleFont: 'pacifico', bodyFont: 'poppins', titleWeight: '400', titleSize: 34, titleColor: '#d6336c', textColor: '#7a2e52', socialsColor: '#d6336c',
+      surfaceColor: '#ffffff', surfaceTextColor: '#5c2140', surfaceRadius: 22, headerLayout: 'classic',
+      avatarBorderWidth: 4, avatarBorderColor: '#9ef0d0',
+    },
+  },
+  {
+    id: 'luxe', label: 'Luxe',
+    // Black and gold, double-line buttons and an elegant serif.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'radial', from: '#26211a', via: 'transparent', to: '#0b0a08', angle: 0 },
+      buttonStyle: 'double', buttonColor: '#0b0a08', buttonTextColor: '#e9c77b', buttonBorderColor: '#c9a24d', buttonBorderWidth: 1, buttonRadius: 2,
+      buttonHover: 'dim', buttonTransform: 'uppercase',
+      titleFont: 'playfair', bodyFont: 'dm-sans', titleWeight: '600', titleColor: '#e9c77b', textColor: '#bfb5a3', socialsColor: '#c9a24d',
+      surfaceColor: '#15130f', surfaceTextColor: '#efe6d2', surfaceRadius: 4, headerLayout: 'classic',
+      avatarBorderWidth: 2, avatarBorderColor: '#c9a24d',
+    },
+  },
+  {
+    id: 'mono', label: 'Mono',
+    // Editorial black and white: dashed buttons on a fine grid.
+    design: {
+      wallpaper: { type: 'pattern', pattern: 'grid', bg: '#ffffff', fg: '#efefef', size: 24 },
+      buttonStyle: 'dashed', buttonColor: '#111111', buttonTextColor: '#ffffff', buttonBorderWidth: 2, buttonRadius: 0, buttonHover: 'shift',
+      buttonAlign: 'left', buttonTransform: 'uppercase',
+      titleFont: 'space-grotesk', bodyFont: 'jetbrains-mono', titleWeight: '700', titleColor: '#111111', textColor: '#444444', socialsColor: '#111111',
+      surfaceColor: '#f6f6f6', surfaceTextColor: '#111111', surfaceRadius: 0, headerLayout: 'left', avatarShape: 'square',
+    },
+  },
+  {
+    id: 'citrus', label: 'Citrus',
+    // Juicy orange to lime gradient with gradient buttons.
+    design: {
+      wallpaper: { type: 'gradient', kind: 'linear', from: '#fff3c4', via: '#ffd6a5', to: '#d9f99d', angle: 150 },
+      buttonStyle: 'gradient', buttonColor: '#ff6b35', buttonBorderColor: '#f7b801', buttonTextColor: '#ffffff', buttonRadius: 16, buttonHover: 'grow',
+      buttonShadowColor: '#ff6b3540',
+      titleFont: 'bricolage', bodyFont: 'outfit', titleWeight: '800', titleColor: '#3d1f00', textColor: '#5c3a12', socialsColor: '#e85d04',
+      surfaceColor: '#ffffffcc', surfaceTextColor: '#3d1f00', surfaceRadius: 18, headerLayout: 'classic',
+      avatarBorderWidth: 4, avatarBorderColor: '#ffffff',
+    },
+  },
 ]);

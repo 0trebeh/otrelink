@@ -36,6 +36,9 @@ export default {
     return `<div class="ol-contact ol-contact-${d.layout}">${out.join('')}</div>`;
   },
   css: `.ol-root .ol-contact{display:flex;flex-direction:column;gap:var(--ol-gap)}
-.ol-root .ol-contact-row{flex-direction:row}.ol-root .ol-contact-row .ol-btn{flex:1;min-width:0}
+.ol-root .ol-contact-row{flex-direction:row}
+.ol-root .ol-contact-row .ol-btn{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;gap:6px;padding:12px 8px;text-align:center;border-radius:min(var(--ol-btn-radius),20px);font-size:.86em;line-height:1.2}
+.ol-root .ol-contact-row .ol-btn-label{flex:0 0 auto;align-items:center;overflow-wrap:normal;word-break:normal;hyphens:auto;max-width:100%}
+.ol-root .ol-contact-row .ol-btn-icon{width:auto}
 .ol-root .ol-contact-row .ol-btn-spacer{display:none}`,
 };

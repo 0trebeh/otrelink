@@ -164,7 +164,7 @@ export default function DocsPage() {
 
           {/* ── Customizing ── */}
           <H2 id="templates">Templates</H2>
-          <P>20 ready-made pages (minimal, content creator, musician, photographer, restaurant, food truck, bakery, online store, coach, developer, real estate, fitness, salon, podcast, conference, nonprofit, wedding, artist, teacher and business card), filtered by category. Click one to see a live preview, then <i>Use as the base of this page</i> (editor → <i>Templates</i>): it replaces your blocks and design, and with <i>Keep my profile</i> on your title, bio, picture and social icons stay. Nothing is saved until you press <b>Save</b>, and Ctrl+Z undoes it. You can also pick a template when you create a new page (<i>New page → Templates</i>).</P>
+          <P>24 ready-made pages (minimal, content creator, musician, photographer, streamer, restaurant, food truck, taco truck, bakery, online store, coach, developer, real estate, fitness, salon, clinic, podcast, conference, tours &amp; travel, nonprofit, wedding, artist, teacher and business card), filtered by category. Click one to see a live preview, then <i>Use as the base of this page</i> (editor → <i>Templates</i>): it replaces your blocks and design, and with <i>Keep my profile</i> on your title, bio, picture and social icons stay. Nothing is saved until you press <b>Save</b>, and Ctrl+Z undoes it. You can also pick a template when you create a new page (<i>New page → Templates</i>).</P>
 
           <H2 id="customizing">Customizing</H2>
           <Table
