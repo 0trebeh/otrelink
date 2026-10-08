@@ -1,8 +1,8 @@
 // Map block: a place on a map, in two flavours.
 //  • Google Maps (embed, no key needed). Its look can change with color
 //    filters: grayscale, dark, sepia, night… (the map itself is Google's).
-//  • Styled map: OpenStreetMap data with map styles (light, dark, voyager,
-//    satellite, topographic), your own marker color and controls. Drawn with
+//  • Styled map: map styles (light, dark, streets, minimal, satellite,
+//    topographic) from tile servers that need no API key, your own marker color and controls. Drawn with
 //    Leaflet inside a sandboxed frame, so it works the same on the page, in the
 //    dashboard preview and in exported sites. It needs the place's coordinates,
 //    found from the address in the dashboard (or typed by hand).
@@ -18,16 +18,23 @@ const LEAFLET = {
 };
 
 const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-const CARTO = `${OSM} &copy; <a href="https://carto.com/attributions">CARTO</a>`;
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const esri = (path) => `${ESRI}${path}/MapServer/tile/{z}/{y}/{x}`;
+const ESRI_CANVAS = 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community';
 
-/** Map styles of the styled map (tile servers that need no key). */
+/**
+ * Map styles of the styled map. All tile servers work without an API key
+ * (Esri's public basemaps and OpenTopoMap). `labels` = a second layer with the
+ * place names on top; `native` = the deepest zoom the server has (Leaflet
+ * enlarges beyond it).
+ */
 export const MAP_STYLES = {
-  light: { label: 'Light', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attribution: CARTO, sub: 'abcd', max: 20, preview: '#f5f3ef,#dfe6ea' },
-  dark: { label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attribution: CARTO, sub: 'abcd', max: 20, preview: '#262626,#3b3f46', dark: true },
-  voyager: { label: 'Voyager', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attribution: CARTO, sub: 'abcd', max: 20, preview: '#f2efe9,#aad3df,#f6cf86' },
-  minimal: { label: 'Minimal', url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', attribution: CARTO, sub: 'abcd', max: 20, preview: '#fafafa,#e8e8e8' },
-  satellite: { label: 'Satellite', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attribution: 'Tiles &copy; Esri &mdash; Esri, Maxar, Earthstar Geographics', max: 19, preview: '#2f4a2b,#5d6b45,#3c5d7a', dark: true },
-  topo: { label: 'Topographic', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: `${OSM}, SRTM | &copy; <a href="https://opentopomap.org">OpenTopoMap</a>`, sub: 'abc', max: 17, preview: '#e9e4c7,#b9d29a,#c8a77a' },
+  light: { label: 'Light', url: esri('Canvas/World_Light_Gray_Base'), labels: esri('Canvas/World_Light_Gray_Reference'), attribution: ESRI_CANVAS, native: 16, max: 19, preview: '#f5f3ef,#dfe6ea' },
+  dark: { label: 'Dark', url: esri('Canvas/World_Dark_Gray_Base'), labels: esri('Canvas/World_Dark_Gray_Reference'), attribution: ESRI_CANVAS, native: 16, max: 19, preview: '#262626,#3b3f46', dark: true },
+  voyager: { label: 'Streets', url: esri('World_Street_Map'), attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, USGS, &copy; OpenStreetMap contributors', native: 19, max: 19, preview: '#f2efe9,#aad3df,#f6cf86' },
+  minimal: { label: 'Minimal', url: esri('Canvas/World_Light_Gray_Base'), attribution: ESRI_CANVAS, native: 16, max: 19, preview: '#fafafa,#e8e8e8' },
+  satellite: { label: 'Satellite', url: esri('World_Imagery'), labels: esri('Reference/World_Boundaries_and_Places'), attribution: 'Tiles &copy; Esri &mdash; Esri, Maxar, Earthstar Geographics', native: 19, max: 19, preview: '#2f4a2b,#5d6b45,#3c5d7a', dark: true },
+  topo: { label: 'Topographic', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attribution: `${OSM}, SRTM | &copy; <a href="https://opentopomap.org">OpenTopoMap</a>`, sub: 'abc', native: 17, max: 17, preview: '#e9e4c7,#b9d29a,#c8a77a' },
 };
 
 /** Color filters for the Google Maps embed. */
@@ -49,7 +56,7 @@ export function styledMapDoc(d, { color = '#111111' } = {}) {
   const style = MAP_STYLES[d.mapStyle] || MAP_STYLES.light;
   const cfg = {
     lat: d.point.lat, lon: d.point.lon, zoom: Number(d.zoom) || 15,
-    tiles: style.url, attribution: style.attribution, sub: style.sub || 'abc', max: style.max,
+    tiles: style.url, labels: style.labels || '', attribution: style.attribution, sub: style.sub || 'abc', max: style.max, native: style.native || style.max,
     color: d.markerColor || color, marker: d.marker, label: d.markerLabel || '',
     zoomControl: d.zoomControl !== false, scroll: Boolean(d.scrollZoom), drag: d.dragging !== false,
   };
@@ -65,7 +72,8 @@ export function styledMapDoc(d, { color = '#111111' } = {}) {
     + `<script src="${LEAFLET.js}" integrity="${LEAFLET.jsSri}" crossorigin=""></script>`
     + `<script>(function(){var c=${json};if(!window.L){document.body.innerHTML='<p style="font:14px system-ui;padding:16px;color:#666">The map could not be loaded.</p>';return}`
     + 'var m=L.map("m",{zoomControl:c.zoomControl,scrollWheelZoom:c.scroll,dragging:c.drag,tap:c.drag,attributionControl:true}).setView([c.lat,c.lon],c.zoom);'
-    + 'L.tileLayer(c.tiles,{subdomains:c.sub,maxZoom:c.max,attribution:c.attribution,detectRetina:true}).addTo(m);'
+    + 'L.tileLayer(c.tiles,{subdomains:c.sub,maxZoom:c.max,maxNativeZoom:c.native,attribution:c.attribution}).addTo(m);'
+    + 'if(c.labels)L.tileLayer(c.labels,{maxZoom:c.max,maxNativeZoom:c.native}).addTo(m);'
     + 'm.attributionControl.setPrefix(false);'
     + 'var h=c.marker==="dot"?\'<div class="dot" style="background:\'+c.color+\';--c:\'+c.color+\'"></div>\''
     + ':\'<div class="pin"><svg width="30" height="42" viewBox="0 0 30 42"><path d="M15 0C6.7 0 0 6.6 0 14.8 0 25.9 15 42 15 42s15-16.1 15-27.2C30 6.6 23.3 0 15 0z" fill="\'+c.color+\'"/><circle cx="15" cy="14.5" r="5.5" fill="#fff"/></svg></div>\';'
@@ -93,7 +101,7 @@ export default {
     { key: 'provider', type: 'choice', label: 'Map', default: 'google', options: [
       { value: 'google', label: 'Google Maps', preview: preview('#e8eaed,#aadaff,#fde293') },
       { value: 'styled', label: 'Styled map', preview: preview('#262626,#3b3f46,#f6cf86') },
-    ], help: 'Styled map: OpenStreetMap with map styles, your marker color and more control.' },
+    ], help: 'Styled map: map styles that need no API key, your marker color and more control.' },
     { key: 'googleStyle', type: 'choice', label: 'Colors', default: 'normal', showIf: providerIs('google'),
       options: Object.entries(GOOGLE_FILTERS).map(([value, f]) => ({ value, label: f.label, preview: preview(f.preview) })),
       help: 'A color filter over the Google map (the map, its labels and photos get the same tint).' },
