@@ -18,7 +18,7 @@ export const TOKEN_RATE_LIMIT = 120;
 
 /**
  * Routes a token may call, with the methods. Everything else (account, billing,
- * admin, the token routes themselves, orders, bookings…) needs the browser session.
+ * admin, the token routes themselves, changing orders, bookings…) needs the browser session.
  * `write` tokens may use every method listed; `read` tokens only GET.
  */
 export const TOKEN_ROUTES = [
@@ -29,6 +29,7 @@ export const TOKEN_ROUTES = [
   { path: /^\/api\/pages\/[^/]+\/analytics$/, methods: ['GET'], label: 'GET /api/pages/:id/analytics' },
   { path: /^\/api\/slug-check$/, methods: ['GET'], label: 'GET /api/slug-check' },
   { path: /^\/api\/assets$/, methods: ['POST'], label: 'POST /api/assets' },
+  { path: /^\/api\/orders$/, methods: ['GET'], label: 'GET /api/orders' },
 ];
 
 /** Whether a token may call `method path`. `scope` = 'read' | 'write'. */

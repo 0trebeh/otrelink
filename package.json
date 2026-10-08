@@ -18,7 +18,8 @@
     "build:web": "npm run build -w @otrelink/web",
     "build:page": "npm run build -w @otrelink/page",
     "start": "npm run start -w @otrelink/web",
-    "test": "node --test packages/core/test/*.test.js"
+    "test": "node --test packages/core/test/*.test.js packages/mcp/test/*.test.js",
+    "mcp": "node packages/mcp/src/index.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

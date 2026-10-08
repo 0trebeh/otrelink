@@ -1,0 +1,26 @@
+{
+  "name": "@otrelink/mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MCP server for Otrelink: lets an AI assistant create and edit your Otrelink pages with a personal API token (Business plan).",
+  "type": "module",
+  "main": "./src/server.js",
+  "bin": {
+    "otrelink-mcp": "./src/index.js"
+  },
+  "exports": {
+    ".": "./src/server.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.1",
+    "@otrelink/core": "*",
+    "zod": "4.6.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
