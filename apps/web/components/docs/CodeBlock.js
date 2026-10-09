@@ -6,7 +6,7 @@ import { Check, Copy } from 'lucide-react';
 export default function CodeBlock({ code, label = 'CSS', wrap = false }) {
   const [copied, setCopied] = useState(false);
   return (
-    <div className="relative rounded-2xl bg-ink text-[#e8e8f0] overflow-hidden min-w-0 max-w-full">
+    <div className="relative rounded-2xl code-surface overflow-hidden min-w-0 max-w-full">
       <div className="flex items-center justify-between px-4 h-9 border-b border-white/10 text-xs text-white/50">
         <span>{label}</span>
         <button

@@ -138,13 +138,13 @@ export default function ApiTokensPage({ user, origin, routes, expiryDays, rateLi
             <h2 className="font-display text-lg font-bold tracking-tight">How to use it</h2>
             <p className="text-sm text-muted mt-1">Send the token in the <code className="font-mono text-ink">Authorization</code> header. It acts as you, with your plan&apos;s limits.</p>
             <div className="mt-3 relative">
-              <pre className="rounded-2xl bg-ink text-white/90 text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{example}</code></pre>
+              <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{example}</code></pre>
               <div className="absolute top-2 right-2"><CopyButton text={example} label="Copy" /></div>
             </div>
             <h3 className="font-semibold mt-5 text-sm">Connect an AI assistant (MCP)</h3>
             <p className="text-sm text-muted mt-1">Claude Desktop, Claude Code or Cursor can build and edit your pages for you with the Otrelink MCP server (<code className="font-mono text-ink">packages/mcp</code>). Add this to your assistant&apos;s MCP settings (in Claude Desktop: Settings → Developer → Edit Config) and restart it. See <a href="/docs#mcp" className="underline">the docs</a>.</p>
             <div className="mt-3 relative">
-              <pre className="rounded-2xl bg-ink text-white/90 text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{mcpConfig}</code></pre>
+              <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{mcpConfig}</code></pre>
               <div className="absolute top-2 right-2"><CopyButton text={mcpConfig} label="Copy" /></div>
             </div>
             <h3 className="font-semibold mt-5 text-sm">What a token can do</h3>

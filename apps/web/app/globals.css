@@ -85,3 +85,11 @@ html[data-theme="dark"] .dot-canvas {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Code samples (docs, API page): always a dark surface with light text, in both themes.
+   (bg-ink turns light in dark mode, so it can't be used for code.) */
+.code-surface { background: #17171f; color: #e8e8f0; }
+html[data-theme="dark"] .code-surface { background: #0c0c10; box-shadow: inset 0 0 0 1px #2c2c36; }
+
+/* Docs search: words found in the section you jumped to. */
+::highlight(ol-docs-search) { background-color: rgb(250 204 21 / .45); color: inherit; }

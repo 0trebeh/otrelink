@@ -5,6 +5,8 @@ import {
 } from '@otrelink/core';
 import { Logo, CoreIcon } from '@/components/ui';
 import CodeBlock from '@/components/docs/CodeBlock';
+import DocsSearch from '@/components/docs/DocsSearch';
+import DocsToc from '@/components/docs/DocsToc';
 
 export const metadata = {
   title: 'Docs — Otrelink',
@@ -111,11 +113,12 @@ export default function DocsPage() {
     <div className="min-h-screen">
       <header className="sticky top-0 z-20 bg-canvas/90 backdrop-blur border-b border-line/70">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-4 sm:px-8">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Link href="/"><Logo /></Link>
-            <span className="text-muted text-sm">Docs</span>
+            <span className="text-muted text-sm hidden md:inline">Docs</span>
           </div>
-          <Link href="/dashboard" className="h-9 px-4 inline-flex items-center rounded-full bg-ink text-white text-sm font-semibold">Open dashboard</Link>
+          <div className="flex-1 min-w-0 max-w-sm mx-3 sm:mx-6"><DocsSearch /></div>
+          <Link href="/dashboard" className="shrink-0 h-9 px-4 inline-flex items-center rounded-full bg-ink text-white text-sm font-semibold"><span className="hidden sm:inline">Open dashboard</span><span className="sm:hidden">Dashboard</span></Link>
         </div>
         <nav className="lg:hidden flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none]" aria-label="Docs sections">
           {toc.filter((t) => !t.sub).map((t) => (
@@ -124,18 +127,12 @@ export default function DocsPage() {
         </nav>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-12">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-12">
         <nav className="hidden lg:block sticky top-20 self-start py-8" aria-label="Docs sections">
-          <ul className="space-y-0.5 text-sm">
-            {toc.map((t) => (
-              <li key={t.id}>
-                <a href={`#${t.id}`} className={`block py-1.5 rounded-lg hover:text-ink ${t.sub ? 'pl-4 text-muted text-[13px]' : 'font-medium text-ink/80'}`}>{t.label}</a>
-              </li>
-            ))}
-          </ul>
+          <DocsToc items={toc} />
         </nav>
 
-        <main className="py-8 pb-24 min-w-0">
+        <main id="docs-content" className="py-8 pb-24 min-w-0">
           <h1 className="font-display text-5xl font-extrabold tracking-tight">Otrelink docs</h1>
           <P>Everything you need to build your page: how blocks work, every styling option, and a complete reference for custom CSS.</P>
 
@@ -461,7 +458,7 @@ export default function DocsPage() {
           <H2 id="api">API tokens</H2>
           <P>On the <b>Business</b> plan you can let your own scripts, automations or an AI assistant (through an MCP server) work on your pages without sharing your password. Open <i>Your pages → API</i> (or <C>/dashboard/api</C>) and press <i>New token</i>: give it a name, choose <i>Read &amp; write</i> or <i>Read only</i>, and when it expires (30, 90 or 365 days, or never). The token (<C>otl_…</C>) is shown <b>once</b>: copy it and keep it like a password. You can have up to 10 tokens and revoke any of them at once.</P>
           <P>Send it in the <C>Authorization</C> header. A token acts as you, with your plan&apos;s limits (pages, locked blocks):</P>
-          <pre className="rounded-2xl bg-ink text-white/90 text-[12.5px] font-mono p-4 overflow-x-auto mb-4 max-w-[68ch]"><code>{'curl https://YOUR-OTRELINK/api/pages \\\n  -H "Authorization: Bearer otl_YOUR_TOKEN"'}</code></pre>
+          <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 overflow-x-auto mb-4 max-w-[68ch]"><code>{'curl https://YOUR-OTRELINK/api/pages \\\n  -H "Authorization: Bearer otl_YOUR_TOKEN"'}</code></pre>
           <Table
             head={['Route', 'What it does']}
             rows={[
@@ -482,7 +479,7 @@ export default function DocsPage() {
 
           <H3 id="mcp">AI assistants (MCP)</H3>
           <P>With an API token, an AI assistant that supports MCP (Claude Desktop, Claude Code, Cursor…) can work on your pages for you: “create a page from the restaurant template, call it Café Luna and use the Forest theme”, “add a FAQ with our hours”, “today the truck is at Plaza Altamira until 10 pm and the al pastor is sold out”. The server is in <C>packages/mcp</C>; run <C>npm install</C> once, then add it to your assistant with your Otrelink address and token (<i>API → Connect an AI assistant</i> has the exact config to copy):</P>
-          <pre className="rounded-2xl bg-ink text-white/90 text-[12.5px] font-mono p-4 overflow-x-auto mb-4 max-w-[68ch]"><code>{MCP_EXAMPLE}</code></pre>
+          <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 overflow-x-auto mb-4 max-w-[68ch]"><code>{MCP_EXAMPLE}</code></pre>
           <Table
             head={['Tools', 'What the assistant can do']}
             rows={[
