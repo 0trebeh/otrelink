@@ -136,3 +136,11 @@ npm test -w @otrelink/mcp
 ```
 
 The tests run every tool against an in-memory API (no server needed).
+
+## Next step: remote access
+
+Today the server runs on each user's computer (stdio). The next step is to publish it so anyone can connect from claude.ai or other apps with just a URL, without installing anything:
+
+1. **Serve it over HTTP**: add an endpoint (e.g. `https://your-otrelink.com/mcp`) that uses the SDK's *Streamable HTTP* transport instead of stdio. The tools stay the same.
+2. **Sign in with OAuth instead of pasting a token**: the user clicks *Connect*, logs in to Otrelink and approves access. Otrelink acts as the OAuth 2.1 server (PKCE + dynamic client registration) and issues a token linked to that user, still limited to the Business plan.
+3. **Deploy it** with the Otrelink app (Render) or as a separate service. Each request uses the caller's token, so every user only sees their own pages.
