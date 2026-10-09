@@ -16,7 +16,7 @@ function encode(obj, prefix = '', out = new URLSearchParams()) {
 }
 
 async function stripe(path, params = null, method = 'POST') {
-  const res = await fetch(`https://api.stripe.com/v1${path}`, {
+  const res = await fetch(`${config.stripeApiBase}/v1${path}`, {
     method,
     headers: { Authorization: `Bearer ${config.stripeSecretKey}`, ...(params ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}) },
     body: params ? encode(params) : undefined,
@@ -49,6 +49,22 @@ export async function createPortal({ customerId, origin }) {
 }
 
 export const getSubscription = (id) => stripe(`/subscriptions/${encodeURIComponent(id)}`, null, 'GET');
+
+// The Pro price (amount and currency), read once.
+let priceCache = null;
+export async function getProPrice() {
+  if (priceCache && priceCache.id === config.stripePriceId) return priceCache;
+  const p = await stripe(`/prices/${encodeURIComponent(config.stripePriceId)}`, null, 'GET');
+  priceCache = { id: p.id, amount: p.unit_amount, currency: p.currency };
+  return priceCache;
+}
+
+/**
+ * Credit on the customer's Stripe balance (in cents): Stripe uses it on the next
+ * invoices before charging the card. Used for referral free months.
+ */
+export const addCustomerCredit = (customerId, cents, currency, description) =>
+  stripe(`/customers/${encodeURIComponent(customerId)}/balance_transactions`, { amount: -Math.abs(Math.round(cents)), currency, description });
 export const cancelSubscription = (id) => stripe(`/subscriptions/${encodeURIComponent(id)}`, null, 'DELETE');
 
 /** Verify the Stripe-Signature header. Returns the parsed event or throws. */

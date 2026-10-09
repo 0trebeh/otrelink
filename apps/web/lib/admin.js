@@ -28,6 +28,9 @@ export function toAdminUser(u, extra = {}) {
   return {
     id: u.id, email: u.email, name: u.name || '', createdAt: u.createdAt,
     plan: u.plan || null, // null = account from before plans (works as Pro)
+    // Referrals: Pro for free until (from inviting people), and who invited this account.
+    proTrialUntil: u.proTrial?.until || null,
+    referredBy: u.referredBy || null,
     effectivePlan: { id: p.id, label: p.label, maxPages: p.maxPages, features: p.features },
     // Every feature a Business plan can turn on or off (the admin app shows a switch for each).
     featureLabels: Object.fromEntries(Object.entries(PLAN_FEATURES).map(([k, f]) => [k, f.label])),

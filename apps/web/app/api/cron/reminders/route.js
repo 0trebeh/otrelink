@@ -10,6 +10,7 @@ import { pushToUser } from '@/lib/notify';
 import { whenText, emailVisitor } from '@/lib/bookings';
 import { handler, json, error } from '@/lib/http';
 import { downgradeEnded } from '@/lib/billing';
+import { endProTrials } from '@/lib/referrals';
 
 const LONGEST = Math.max(...Object.values(REMINDER_PRESETS).flatMap((p) => p.minutes), 0);
 
@@ -57,7 +58,9 @@ async function run(req) {
   }
   // Cancelled subscriptions whose paid period ended go back to their previous plan.
   const downgraded = await downgradeEnded(db, new Date(now)).catch((err) => { console.error('[otrelink] downgrade failed:', err); return 0; });
-  return json({ ok: true, checked: upcoming.length, reminded: sent, downgraded, at: new Date(now).toISOString() });
+  // Free Pro given by referrals that has ended → back to Free.
+  const trialsEnded = await endProTrials(db, new Date(now)).catch((err) => { console.error('[otrelink] free Pro end failed:', err); return 0; });
+  return json({ ok: true, checked: upcoming.length, reminded: sent, downgraded, trialsEnded, at: new Date(now).toISOString() });
 }
 
 export const GET = handler(run);

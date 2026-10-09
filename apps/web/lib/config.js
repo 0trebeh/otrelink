@@ -27,6 +27,9 @@ export const config = {
   paypalPlanId: process.env.PAYPAL_PLAN_ID || '', // monthly Pro plan (P-…)
   paypalWebhookId: process.env.PAYPAL_WEBHOOK_ID || '',
   paypalMode: process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox',
+  // Tests only: point the payment APIs at a local mock (leave empty in real use).
+  stripeApiBase: (process.env.STRIPE_API_BASE || 'https://api.stripe.com').replace(/\/$/, ''),
+  paypalApiBase: (process.env.PAYPAL_API_BASE || '').replace(/\/$/, ''),
   businessContactEmail: process.env.BUSINESS_CONTACT_EMAIL || '',
   // Your details on the subscription invoices users download (Plan page)
   billingCompanyName: process.env.BILLING_COMPANY_NAME || 'Otrelink',

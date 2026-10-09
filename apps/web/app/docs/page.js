@@ -42,6 +42,7 @@ const toc = [
   { id: 'invoices', label: 'Invoices' },
   { id: 'translate', label: 'Translate button' },
   { id: 'plans', label: 'Plans' },
+  { id: 'referrals', label: 'Invite friends', sub: true },
   { id: 'api', label: 'API tokens' },
   { id: 'mcp', label: 'AI assistants (MCP)', sub: true },
   { id: 'sharing', label: 'Sharing & analytics' },
@@ -454,6 +455,19 @@ export default function DocsPage() {
           />
           <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal; you can cancel any time and keep Pro until the end of the period you paid. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>
           <P><b>Your invoices:</b> every subscription payment appears under <i>Billing history</i> on the plan page, with a PDF invoice to download.</P>
+
+          <H2 id="referrals">Invite friends</H2>
+          <P>Every account has its own invite link in <i>Your pages → Invite</i> (or <C>/dashboard/referrals</C>). Copy or share it; whoever creates an account with it counts as your invite. The page shows who joined (with the email partly hidden), who subscribed and the months you earned.</P>
+          <P>An invite counts when the friend makes their <b>first Pro payment</b> or moves to <b>Business</b>. You are rewarded only if they signed up while a campaign was running; each campaign has start and end dates, and may limit how many rewards one person can get.</P>
+          <Table
+            head={['Your plan', 'Your reward']}
+            rows={[
+              ['Free', 'Months of Pro for free (1 by default). They add up; when they end you go back to Free, unless you subscribed.'],
+              ['Pro', 'Free months of your subscription. Card: credit on your account that pays your next invoices. PayPal: your next payments are refunded. If you don’t have a subscription yet, they wait until you subscribe.'],
+              ['Business', 'Your invites are counted, but there is no automatic reward.'],
+            ]}
+          />
+          <P>Inviting yourself (the same email, with dots or <C>+tags</C>) doesn’t count, and each new account can only be invited once.</P>
 
           <H2 id="api">API tokens</H2>
           <P>On the <b>Business</b> plan you can let your own scripts, automations or an AI assistant (through an MCP server) work on your pages without sharing your password. Open <i>Your pages → API</i> (or <C>/dashboard/api</C>) and press <i>New token</i>: give it a name, choose <i>Read &amp; write</i> or <i>Read only</i>, and when it expires (30, 90 or 365 days, or never). The token (<C>otl_…</C>) is shown <b>once</b>: copy it and keep it like a password. You can have up to 10 tokens and revoke any of them at once.</P>

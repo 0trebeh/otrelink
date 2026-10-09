@@ -6,6 +6,7 @@ import { completeVerification } from '@/lib/verify';
 import * as stripe from '@/lib/billing/stripe';
 import * as paypal from '@/lib/billing/paypal';
 import { handler, json, error, readJson } from '@/lib/http';
+import { qualifyReferral } from '@/lib/referrals';
 
 async function load(params) {
   const db = await getDb();
@@ -49,6 +50,8 @@ export const PATCH = handler(async (req, { params }) => {
   if (body.plan !== undefined) {
     if (!PLAN_IDS.includes(body.plan)) return error(400, 'invalid_plan');
     patch.plan = body.plan;
+    // A plan set by hand replaces free Pro from referrals.
+    if (user.proTrial) patch.proTrial = null;
   }
   if (body.limits !== undefined) patch.limits = sanitizeLimits(body.limits);
   if (body.banned !== undefined) {
@@ -67,6 +70,8 @@ export const PATCH = handler(async (req, { params }) => {
     }
   }
   const updated = await db.users.update(user.id, patch);
+  // Moving a referred account to Business counts as subscribing.
+  if (patch.plan === 'business' && user.plan !== 'business') await qualifyReferral(db, user.id, 'admin').catch((err) => console.error('[otrelink] referral qualify failed:', err));
   return json({ user: await details(db, updated) });
 });
 

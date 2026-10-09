@@ -4,7 +4,7 @@ import GlobalAnalytics from './GlobalAnalytics';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock, Menu, X, BookOpen, LayoutTemplate, KeyRound } from 'lucide-react';
+import { Plus, ExternalLink, LogOut, Loader2, Sparkles, Lock, Menu, X, BookOpen, LayoutTemplate, KeyRound, Gift } from 'lucide-react';
 import { TEMPLATES } from '@otrelink/core';
 import TemplatePicker from './TemplatePicker';
 import { api, errorMessage } from '@/lib/client';
@@ -60,6 +60,7 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
           </Link>
           <InstallButton />
           <ThemeToggle />
+          <Link href="/dashboard/referrals" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold hover:bg-panel"><Gift size={14} /> Invite</Link>
           {user.plan.features.api && <Link href="/dashboard/api" className="h-8 px-3 inline-flex items-center gap-1.5 rounded-full text-[13px] font-semibold hover:bg-panel"><KeyRound size={14} /> API</Link>}
           <Link href="/docs" className="h-8 px-3 inline-flex items-center rounded-full text-[13px] font-semibold hover:bg-panel">Docs</Link>
           <Button size="sm" variant="ghost" onClick={logout}><LogOut size={15} /> Log out</Button>
@@ -180,6 +181,7 @@ function MobileMenu({ user, onLogout }) {
           </Link>
           <InstallButton className="!w-full !justify-start !h-11 !px-3 !rounded-xl !text-[15px] !font-medium !border-0 !bg-transparent hover:!bg-soft !gap-3" />
           <ThemeMenuItem className={item} />
+          <Link href="/dashboard/referrals" className={item} onClick={() => setOpen(false)}><Gift size={17} /> Invite friends</Link>
           {user.plan.features.api && <Link href="/dashboard/api" className={item} onClick={() => setOpen(false)}><KeyRound size={17} /> API tokens</Link>}
           <Link href="/docs" className={item} onClick={() => setOpen(false)}><BookOpen size={17} /> Docs</Link>
           <button type="button" className={item} onClick={() => { setOpen(false); onLogout(); }}><LogOut size={17} /> Log out</button>

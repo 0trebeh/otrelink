@@ -82,6 +82,9 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
         <h1 className="font-display text-4xl font-extrabold tracking-tight mt-4">Plans</h1>
         <p className="text-muted mt-1">You are on <b className="text-ink">{plan.label}</b> · {pagesUsed} of {plan.maxPages} page{plan.maxPages === 1 ? '' : 's'} used.</p>
 
+        {user.proTrialUntil && (
+          <p className="mt-5 rounded-2xl bg-teal/10 text-teal px-4 py-3 text-sm">You have <b>Pro for free until {fmtDate(user.proTrialUntil)}</b> thanks to your invites. Subscribe before then to keep Pro without a break; otherwise you go back to Free.</p>
+        )}
         {paid === 'error' && <p className="mt-5 rounded-2xl bg-danger/10 text-danger px-4 py-3 text-sm">The payment could not be confirmed. If you were charged, it will appear in a few minutes; otherwise try again.</p>}
         {(paid === 'stripe' || paid === 'paypal') && (
           <p className="mt-5 rounded-2xl bg-teal/10 px-4 py-3 text-sm inline-flex items-center gap-2" role="status">
@@ -120,13 +123,13 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
               <section key={c.id} className={cx('rounded-3xl bg-panel border p-6 flex flex-col', c.id === 'pro' ? 'border-accent shadow-[0_10px_40px_-20px_rgba(124,58,237,.6)]' : 'border-line/70')}>
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="font-display text-xl font-bold">{p.label}</h2>
-                  {current && <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-ink text-white">Current</span>}
+                  {current && <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-ink text-white">{c.id === 'pro' && user.proTrialUntil ? 'Free for now' : 'Current'}</span>}
                   {!current && c.id === 'pro' && <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-accent-soft text-accent-ink">Popular</span>}
                 </div>
                 <p className="mt-3"><span className="font-display text-4xl font-extrabold">{c.price}</span> <span className="text-sm text-muted">{c.period}</span></p>
                 <p className="text-sm text-muted mt-2 flex-1">{p.tagline}</p>
                 <div className="mt-5 grid gap-2">
-                  {c.id === 'pro' && !current && !subscribed && (
+                  {c.id === 'pro' && (!current || user.proTrialUntil) && !subscribed && (
                     <>
                       {payments.stripe && (
                         <Button variant="primary" onClick={() => go('stripe', '/api/billing/stripe/checkout')} disabled={!!busy}>

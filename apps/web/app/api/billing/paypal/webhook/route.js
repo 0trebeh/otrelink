@@ -5,6 +5,7 @@
 import { getDb } from '@/lib/db';
 import { verifyWebhook, getSubscription, stateFromSubscription } from '@/lib/billing/paypal';
 import { billingPatch } from '@/lib/billing';
+import { qualifyReferral, refundPaypalIfCredit } from '@/lib/referrals';
 
 export async function POST(req) {
   const raw = await req.text();
@@ -22,13 +23,16 @@ export async function POST(req) {
     if (user) await db.users.update(user.id, billingPatch(user, stateFromSubscription(sub)));
     // Each completed payment is recorded (users download its PDF invoice from the Plan page).
     if (user && event.event_type === 'PAYMENT.SALE.COMPLETED' && r.id && Number(r.amount?.total) > 0) {
-      await db.payments.record({
+      const payment = await db.payments.record({
         userId: user.id, provider: 'paypal', providerId: r.id,
         amount: Number(r.amount.total), currency: String(r.amount.currency || 'USD').toUpperCase(),
         periodStart: r.create_time || null,
         periodEnd: sub.billing_info?.next_billing_time || null,
         description: 'Otrelink Pro — monthly subscription',
       });
+      // Free months from referrals: this payment is refunded. Then: the payer's own referral qualifies.
+      await refundPaypalIfCredit(db, user, payment).catch((err) => console.error('[otrelink] referral refund failed:', err));
+      await qualifyReferral(db, user.id, 'paypal').catch((err) => console.error('[otrelink] referral qualify failed:', err));
     }
     return Response.json({ received: true });
   } catch (err) {

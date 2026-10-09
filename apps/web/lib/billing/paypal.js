@@ -2,7 +2,7 @@
 import { config } from '../config.js';
 
 export const paypalConfigured = () => Boolean(config.paypalClientId && config.paypalClientSecret && config.paypalPlanId);
-const base = () => (config.paypalMode === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com');
+const base = () => config.paypalApiBase || (config.paypalMode === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com');
 
 let cached = { token: '', exp: 0 };
 async function token() {
@@ -53,6 +53,10 @@ export async function createSubscription({ user, origin }) {
 export const getSubscription = (id) => paypal(`/v1/billing/subscriptions/${encodeURIComponent(id)}`);
 export const cancelSubscription = (id, reason = 'Cancelled by the user') =>
   paypal(`/v1/billing/subscriptions/${encodeURIComponent(id)}/cancel`, { reason });
+
+/** Refund a subscription payment in full (referral free months). */
+export const refundSale = (saleId, note) =>
+  paypal(`/v1/payments/sale/${encodeURIComponent(saleId)}/refund`, { description: String(note || '').slice(0, 255) });
 
 /** Ask PayPal whether a webhook call is genuine. */
 export async function verifyWebhook(headers, rawBody) {

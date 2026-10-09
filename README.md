@@ -55,6 +55,7 @@ npm run dev
 | `STRIPE_*` · `PAYPAL_*` · `BUSINESS_CONTACT_EMAIL` | Pagos → ver **Planes y pagos** |
 | `BILLING_COMPANY_NAME` · `BILLING_COMPANY_DETAILS` | Tu empresa en las facturas PDF de suscripción (detalles en varias líneas con `\n`) |
 | `BILLING_INVOICE_PREFIX` · `BILLING_INVOICE_FOOTER` | Prefijo del número (p. ej. `OTR-`) y pie de esas facturas |
+| `STRIPE_API_BASE` · `PAYPAL_API_BASE` | Solo para pruebas: apuntar Stripe/PayPal a un servidor simulado (no definir en producción) |
 
 `apps/page/.env`
 
@@ -152,6 +153,7 @@ El control aparece solo en el panel Style.
 - **Ajustes**: cambiar el usuario (comprueba disponibilidad), SEO y Open Graph, menú de navegación para páginas largas, botón de traducción ES/EN (Google Translate), ocultar el pie de página, bloquear selección y clic derecho, aviso de contenido sensible, página privada, código QR, y exportar (sitio estático) o importar en JSON.
 - **Analíticas**: visitas, visitantes únicos, clics, CTR, gráfico diario, bloques y redes más clicados, referrers, dispositivos, países, ciudades y horas/días con más visitas.
 - **API tokens y MCP** (plan Business): scripts y asistentes de IA pueden crear y editar páginas.
+- **Referidos**: cada cuenta tiene su link de invitación; el admin crea campañas con fechas y recompensa (ver **Referidos**).
 - **Varias páginas** por cuenta según el plan (Free 1, Pro 10, Business lo que asigne el admin).
 - **Docs** para usuarios en `/docs` (bloques, CSS personalizado con variables y clases, planes, API…).
 
@@ -179,7 +181,7 @@ Variables de entorno (en `apps/web`):
 | `CRON_SECRET` | Clave larga aleatoria que protege `/api/cron/reminders` |
 | `RESEND_API_KEY` · `EMAIL_FROM` | Opcional: correos al visitante vía [Resend](https://resend.com) |
 
-**Recordatorios con cron-job.org:** crea un job que llame cada 1–5 min a `https://TU-APP/api/cron/reminders` (GET) con la cabecera `Authorization: Bearer <CRON_SECRET>` (o `?key=<CRON_SECRET>`). Responde `{ ok, checked, reminded }`. En Render gratis, además mantiene el servicio despierto.
+**Recordatorios con cron-job.org:** crea un job que llame cada 1–5 min a `https://TU-APP/api/cron/reminders` (GET) con la cabecera `Authorization: Bearer <CRON_SECRET>` (o `?key=<CRON_SECRET>`). Responde `{ ok, checked, reminded, downgraded, trialsEnded }`. En Render gratis, además mantiene el servicio despierto.
 
 Notas: las reservas se guardan en UTC y un índice único (`slotKey`) evita reservas dobles. Push solo funciona en el build de producción (el service worker no se registra en `dev`); en iOS hay que instalar la app en la pantalla de inicio (16.4+).
 
@@ -234,6 +236,18 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 
 Si cancelan, conservan Pro hasta el final del periodo pagado; el cron (`/api/cron/reminders`) los pasa luego a su plan anterior. `BUSINESS_CONTACT_EMAIL` es el correo del botón "Contact us".
 
+## 🎁 Referidos
+
+- Cada usuario (Free, Pro o Business) tiene un link `https://TU-APP/register?ref=CÓDIGO` en **Dashboard → Invite** (`/dashboard/referrals`). El registro guarda el código 30 días en el navegador.
+- Un referido **cuenta** cuando el invitado hace su **primer pago de Pro** (webhook `invoice.paid` de Stripe o `PAYMENT.SALE.COMPLETED` de PayPal) o cuando el admin lo pasa a **Business**.
+- Solo hay recompensa si se registró mientras corría una **campaña** (Otrelink-Admin → *Referrals*: fechas de inicio y fin, meses, máximo por persona, activar/apagar):
+  - **Pro** → `freeMonths` meses gratis. Stripe: crédito en el saldo del cliente (precio × meses). PayPal: se reembolsan sus próximos pagos. Sin suscripción, esperan a que se suscriba.
+  - **Free** → `freeUserMonths` meses de Pro gratis (1 por defecto, se acumulan). El cron lo devuelve a Free al terminar, salvo que se haya suscrito.
+  - **Business** → se cuenta, sin recompensa automática.
+- No cuentan las auto-invitaciones (mismo correo, con puntos o `+tag`) y cada cuenta solo puede ser invitada una vez.
+- Reglas en `packages/core/src/referrals.js`; lado servidor en `apps/web/lib/referrals.js`.
+- ⚠️ Para que el crédito de Stripe y los reembolsos de PayPal funcionen hacen falta las claves reales (la de PayPal debe permitir reembolsos). Probar primero en sandbox / modo test.
+
 ## 🛡️ Administración (Otrelink-Admin)
 
 Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de esta app, protegida con `ADMIN_API_KEY` (24+ caracteres; vacío = API apagada). Ver su README.
@@ -262,12 +276,16 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 | GET · POST | `/api/bookings/calendar` | ✔ | Link privado del calendario · regenerarlo |
 | GET | `/api/calendar/:token` | — | Feed `.ics` |
 | POST | `/api/push/subscribe` · `unsubscribe` · `test` | ✔ | Notificaciones push |
-| GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes y bajar de plan suscripciones terminadas |
+| GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes, bajar de plan suscripciones terminadas y terminar el Pro gratis de referidos |
 | POST | `/api/billing/stripe/checkout` · `portal` | ✔ | Pagar Pro con tarjeta · gestionar suscripción |
 | POST | `/api/billing/paypal/checkout` · `cancel` | ✔ | Pagar Pro con PayPal · cancelar |
 | POST | `/api/billing/stripe/webhook` · `/api/billing/paypal/webhook` | firma | Avisos de Stripe / PayPal |
 | GET | `/api/admin/stats` · `/api/admin/users` | `ADMIN_API_KEY` | Admin: estadísticas · usuarios |
 | GET · PATCH · DELETE | `/api/admin/users/:id` | `ADMIN_API_KEY` | Admin: ver, cambiar plan/límites, banear, borrar |
+| GET | `/api/referrals` | ✔ | Link, campaña activa e invitados del usuario |
+| GET | `/api/admin/referrals` | `ADMIN_API_KEY` | Admin: campañas con estadísticas y últimos referidos |
+| POST | `/api/admin/referrals/campaigns` | `ADMIN_API_KEY` | Admin: crear campaña |
+| PATCH · DELETE | `/api/admin/referrals/campaigns/:id` | `ADMIN_API_KEY` | Admin: editar · borrar campaña |
 | POST | `/api/public/survey` | — | Enviar respuestas de una encuesta (CORS, rate limit) |
 | GET · DELETE | `/api/responses?pageId&blockId` · `&format=csv` | ✔ | Conteos · listar · CSV · borrar todas |
 | DELETE | `/api/responses/:id` | ✔ | Borrar una respuesta |

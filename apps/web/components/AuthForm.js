@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Gift } from 'lucide-react';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Input, Logo } from './ui';
 
@@ -13,6 +13,17 @@ export default function AuthForm({ mode, pageUrl }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [slugState, setSlugState] = useState(null);
+  // Referral code from …/register?ref=CODE (kept on this browser for 30 days if they come back later).
+  const [ref, setRef] = useState('');
+  useEffect(() => {
+    if (!isRegister) return;
+    const fromUrl = new URLSearchParams(window.location.search).get('ref');
+    try {
+      if (fromUrl) localStorage.setItem('ol-ref', JSON.stringify({ code: fromUrl, at: Date.now() }));
+      const saved = JSON.parse(localStorage.getItem('ol-ref') || 'null');
+      if (saved && Date.now() - saved.at < 30 * 864e5) setRef(saved.code);
+    } catch { if (fromUrl) setRef(fromUrl); }
+  }, [isRegister]);
   const up = (k) => (e) => setForm((f) => ({ ...f, [k]: k === 'slug' ? e.target.value.toLowerCase().replace(/\s/g, '') : e.target.value }));
 
   useEffect(() => {
@@ -25,7 +36,8 @@ export default function AuthForm({ mode, pageUrl }) {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
-      const r = await api(`/api/auth/${mode}`, { method: 'POST', body: form });
+      const r = await api(`/api/auth/${mode}`, { method: 'POST', body: isRegister && ref ? { ...form, ref } : form });
+      if (isRegister) { try { localStorage.removeItem('ol-ref'); } catch { /* ignore */ } }
       router.push(r.pageId ? `/dashboard/${r.pageId}` : '/dashboard');
       router.refresh();
     } catch (e2) {
@@ -40,6 +52,9 @@ export default function AuthForm({ mode, pageUrl }) {
         <Link href="/" className="inline-block mb-8"><Logo /></Link>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">{isRegister ? 'Claim your link' : 'Welcome back'}</h1>
         <p className="text-muted mt-1 mb-6">{isRegister ? 'Free, and ready in under a minute.' : 'Log in to edit your pages.'}</p>
+        {isRegister && ref && (
+          <p className="-mt-3 mb-5 inline-flex items-center gap-2 rounded-full bg-accent-soft text-accent-ink px-3 py-1.5 text-sm font-medium"><Gift size={15} /> A friend invited you to Otrelink</p>
+        )}
         <form onSubmit={submit} className="space-y-3">
           {isRegister && (
             <div>

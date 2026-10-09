@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [], tokens: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [], tokens: [], referrals: [], referralCampaigns: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -41,10 +41,13 @@ export async function createFileDriver() {
         return clone(doc);
       },
       findBySubscription: async (id) => clone(state.users.find((u) => id && u.billing?.subscriptionId === id)),
+      findByReferralCode: async (code) => clone(state.users.find((u) => code && u.referralCode === code)),
       // Username reserved by an account that hasn't confirmed its email (until its link expires).
       findByPendingSlug: async (slug) => clone(state.users.find((u) => slug && u.pendingSlug === slug && u.verifyExpires > now())),
       findByVerifyToken: async (hash) => clone(state.users.find((u) => hash && u.verifyTokenHash === hash)),
       // Cancelled subscriptions whose paid period is over (still on Pro).
+      // Free accounts given Pro by a referral, whose free time is over.
+      listProTrialEnded: async (nowIso) => clone(state.users.filter((u) => u.plan === 'pro' && u.proTrial?.until && u.proTrial.until <= nowIso)),
       listBillingEnded: async (nowIso) => clone(state.users.filter((u) => u.plan === 'pro' && u.billing?.status === 'canceled'
         && !u.billing.downgraded && u.billing.endsAt && u.billing.endsAt <= nowIso)),
       // Admin: search + filters. plan 'pro' includes accounts from before plans (no plan field).
@@ -79,6 +82,7 @@ export async function createFileDriver() {
         state.push = state.push.filter((p) => p.userId !== id);
         state.payments = state.payments.filter((p) => p.userId !== id);
         state.tokens = state.tokens.filter((t) => t.userId !== id);
+        state.referrals = state.referrals.filter((r) => r.referrerId !== id && r.refereeId !== id);
         for (const k of ['events', 'bookings', 'responses', 'reviews', 'orders', 'cards', 'invoices']) state[k] = state[k].filter((x) => !pageIds.has(x.pageId));
         await persist();
       },
@@ -301,7 +305,61 @@ export async function createFileDriver() {
         return clone(doc);
       },
       findById: async (id) => clone(state.payments.find((x) => x.id === id)),
+      update: async (id, patch) => {
+        const p = state.payments.find((x) => x.id === id);
+        if (!p) return null;
+        Object.assign(p, patch);
+        await persist();
+        return clone(p);
+      },
       listByUser: async (userId) => clone(state.payments.filter((x) => x.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))),
+    },
+    // Referral program: who invited whom, and the campaigns that give free months.
+    referrals: {
+      create: async (r) => {
+        // One referral per new account.
+        const found = state.referrals.find((x) => x.refereeId === r.refereeId);
+        if (found) return clone(found);
+        const doc = { id: crypto.randomUUID(), createdAt: now(), status: 'pending', months: 0, appliedMonths: 0, ...r };
+        state.referrals.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      findByReferee: async (refereeId) => clone(state.referrals.find((r) => r.refereeId === refereeId)),
+      listByReferrer: async (referrerId) => clone(state.referrals.filter((r) => r.referrerId === referrerId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))),
+      countRewarded: async ({ referrerId, campaignId }) => state.referrals.filter((r) => r.referrerId === referrerId && r.campaignId === campaignId && r.status === 'rewarded').length,
+      update: async (id, patch) => {
+        const r = state.referrals.find((x) => x.id === id);
+        if (!r) return null;
+        Object.assign(r, patch, { updatedAt: now() });
+        await persist();
+        return clone(r);
+      },
+      list: async ({ status = '', limit = 200 } = {}) => clone(state.referrals.filter((r) => !status || r.status === status)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit)),
+    },
+    referralCampaigns: {
+      list: async () => clone([...state.referralCampaigns].sort((a, b) => b.startsAt.localeCompare(a.startsAt))),
+      findById: async (id) => clone(state.referralCampaigns.find((c) => c.id === id)),
+      create: async (c) => {
+        const doc = { id: crypto.randomUUID(), createdAt: now(), ...c };
+        state.referralCampaigns.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      update: async (id, patch) => {
+        const c = state.referralCampaigns.find((x) => x.id === id);
+        if (!c) return null;
+        Object.assign(c, patch, { updatedAt: now() });
+        await persist();
+        return clone(c);
+      },
+      remove: async (id) => {
+        const before = state.referralCampaigns.length;
+        state.referralCampaigns = state.referralCampaigns.filter((c) => c.id !== id);
+        await persist();
+        return state.referralCampaigns.length < before;
+      },
     },
     // Personal API tokens (only the hash is stored).
     tokens: {

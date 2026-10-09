@@ -5,6 +5,7 @@
 import { getDb } from '@/lib/db';
 import { verifyWebhook, getSubscription, stateFromSubscription } from '@/lib/billing/stripe';
 import { billingPatch } from '@/lib/billing';
+import { qualifyReferral, applyStripeCredit } from '@/lib/referrals';
 
 export async function POST(req) {
   const raw = await req.text();
@@ -40,11 +41,17 @@ export async function POST(req) {
           periodEnd: period?.end ? new Date(period.end * 1000).toISOString() : null,
           description: 'Otrelink Pro — monthly subscription',
         });
+        // First real payment of someone who signed up with a referral link.
+        await qualifyReferral(db, user.id, 'stripe').catch((err) => console.error('[otrelink] referral qualify failed:', err));
       }
     }
     if (sub) {
       const user = (userId && await db.users.findById(userId)) || await db.users.findBySubscription(sub.id);
-      if (user) await db.users.update(user.id, billingPatch(user, stateFromSubscription(sub)));
+      if (user) {
+        const updated = await db.users.update(user.id, billingPatch(user, stateFromSubscription(sub)));
+        // Free months earned before subscribing become Stripe credit now.
+        if (updated) await applyStripeCredit(db, updated).catch((err) => console.error('[otrelink] referral credit failed:', err));
+      }
       else console.warn('[otrelink] Stripe webhook: no user for subscription', sub.id);
     }
     return Response.json({ received: true });

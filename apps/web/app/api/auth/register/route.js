@@ -5,6 +5,7 @@ import { createSession, publicUser } from '@/lib/auth';
 import { handler, json, error, readJson, rateLimit } from '@/lib/http';
 import { newVerification, sendVerificationEmail, verificationEnabled } from '@/lib/verify';
 import { publicOrigin } from '@/lib/origin';
+import { recordSignup } from '@/lib/referrals';
 
 export const POST = handler(async (req) => {
   await rateLimit(req, 'register', 15, 15 * 60 * 1000);
@@ -33,6 +34,8 @@ export const POST = handler(async (req) => {
     // No page until the email is confirmed: keep the chosen username for then.
     ...(verify ? { ...verify.patch, pendingSlug: slug, pendingTitle: name || `@${slug}` } : {}),
   });
+  // Signed up with someone's referral link (…/register?ref=CODE).
+  if (body.ref) await recordSignup(db, user, body.ref);
   if (verify) {
     await sendVerificationEmail({ email, name, token: verify.token, origin: publicOrigin(req) });
     await createSession(user);

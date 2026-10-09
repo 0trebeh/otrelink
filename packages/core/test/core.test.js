@@ -817,3 +817,50 @@ test('motion: more entrances, per-block entrance, speed, background motion, pres
   shiny.options.animation = 'shine';
   assert.ok(renderPage(sanitizePage({ ...base, blocks: [shiny] })).css.includes('@keyframes ol-shine'));
 });
+
+test('referrals: campaigns by dates, rewards only for Pro, limits, masks and month allocation', async () => {
+  const { sanitizeCampaign, activeCampaign, campaignActive, rewardFor, referralStats, pendingMonths, allocateMonths, makeReferralCode, cleanReferralCode, sameMailbox, maskEmail } = await import('../src/index.js');
+  assert.equal(sanitizeCampaign({ startsAt: '2026-10-10', endsAt: '2026-10-01' }), null);
+  const c = sanitizeCampaign({ name: 'Fall\n', startsAt: '2026-10-01', endsAt: '2026-10-31', freeMonths: 40, maxPerReferrer: -2 });
+  assert.deepEqual([c.name, c.freeMonths, c.maxPerReferrer, c.endsAt], ['Fall', 12, 0, '2026-10-31T23:59:59.999Z']);
+  assert.ok(campaignActive(c, new Date('2026-10-31T20:00:00Z')));
+  assert.ok(!campaignActive(c, new Date('2026-11-01T00:00:01Z')));
+  assert.ok(!campaignActive({ ...c, enabled: false }, new Date('2026-10-15')));
+  const big = { ...c, id: 'b', freeMonths: 3 };
+  assert.equal(activeCampaign([{ ...c, id: 'a', freeMonths: 1 }, big], new Date('2026-10-15')).id, 'b');
+  assert.equal(activeCampaign([big], new Date('2027-01-01')), null);
+
+  assert.deepEqual(rewardFor({ referrer: { plan: 'pro' }, campaign: big }), { status: 'rewarded', months: 3, kind: 'credit' });
+  assert.deepEqual(rewardFor({ referrer: {}, campaign: big }), { status: 'rewarded', months: 3, kind: 'credit' }, 'legacy accounts are Pro');
+  assert.deepEqual(rewardFor({ referrer: { plan: 'free' }, campaign: big }), { status: 'rewarded', months: 1, kind: 'pro-trial' }, 'Free → 1 month of Pro');
+  assert.equal(rewardFor({ referrer: { plan: 'free' }, campaign: { ...big, freeUserMonths: 2 } }).months, 2);
+  assert.equal(c.freeUserMonths, 1);
+  assert.equal(rewardFor({ referrer: { plan: 'business' }, campaign: big }).reason, 'not_pro');
+  assert.equal(rewardFor({ referrer: { plan: 'pro' }, campaign: null }).reason, 'no_campaign');
+  assert.equal(rewardFor({ referrer: { plan: 'pro', banned: true }, campaign: big }).reason, 'banned');
+  assert.equal(rewardFor({ referrer: { plan: 'pro' }, campaign: { ...big, maxPerReferrer: 2 }, rewardedInCampaign: 2 }).reason, 'limit');
+
+  const list = [
+    { id: '1', status: 'rewarded', months: 2, appliedMonths: 1, qualifiedAt: '2026-10-02' },
+    { id: '2', status: 'rewarded', months: 3, appliedMonths: 0, qualifiedAt: '2026-10-05' },
+    { id: '3', status: 'qualified', months: 0 },
+    { id: '4', status: 'pending' },
+  ];
+  assert.equal(pendingMonths(list), 4);
+  assert.equal(pendingMonths([...list, { id: '5', status: 'rewarded', kind: 'pro-trial', months: 1 }]), 4, 'Pro months given to Free accounts are not credit');
+  assert.deepEqual(referralStats(list), { signedUp: 4, subscribed: 3, monthsEarned: 5, monthsApplied: 1, monthsPending: 4 });
+  assert.deepEqual(allocateMonths(list, 2), [{ id: '1', appliedMonths: 2 }, { id: '2', appliedMonths: 1 }]);
+  assert.deepEqual(allocateMonths(list, 10), [{ id: '1', appliedMonths: 2 }, { id: '2', appliedMonths: 3 }]);
+
+  assert.match(makeReferralCode(), /^[A-HJKMNP-Z2-9]{8}$/);
+  assert.equal(cleanReferralCode(' ab7k-2qxm '), 'AB7K2QXM');
+  assert.ok(sameMailbox('Ana.Ruiz+x@gmail.com', 'anaruiz@googlemail.com'));
+  assert.ok(!sameMailbox('ana@empresa.com', 'ana2@empresa.com'));
+  assert.equal(maskEmail('juana@gmail.com'), 'ju***@gmail.com');
+  assert.equal(maskEmail('a@b.co'), 'a***@b.co');
+  const { extendProTrial } = await import('../src/index.js');
+  const now = new Date('2026-10-09T12:00:00Z');
+  assert.equal(extendProTrial(null, 1, now), '2026-11-09T12:00:00.000Z');
+  assert.equal(extendProTrial('2026-11-09T12:00:00.000Z', 1, now), '2026-12-09T12:00:00.000Z', 'stacks');
+  assert.equal(extendProTrial('2026-01-01T00:00:00.000Z', 1, now), '2026-11-09T12:00:00.000Z', 'expired → from now');
+});

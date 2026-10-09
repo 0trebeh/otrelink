@@ -30,6 +30,8 @@ export async function createMongoDriver() {
   const counters = db.collection('counters');
   const limits = db.collection('rate_limits');
   const tokens = db.collection('api_tokens');
+  const referrals = db.collection('referrals');
+  const campaigns = db.collection('referral_campaigns');
 
   console.log(`[otrelink] MongoDB connected (database "${config.mongoDb}")`);
 
@@ -66,6 +68,11 @@ export async function createMongoDriver() {
     [users, { verifyTokenHash: 1 }, { sparse: true }],
     [users, { pendingSlug: 1 }, { sparse: true }],
     [tokens, { hash: 1 }, { unique: true }],
+    [users, { referralCode: 1 }, { unique: true, sparse: true }],
+    [users, { 'proTrial.until': 1 }, { sparse: true }],
+    [referrals, { refereeId: 1 }, { unique: true }],
+    [referrals, { referrerId: 1, createdAt: -1 }, {}],
+    [referrals, { createdAt: -1 }, {}],
     [tokens, { userId: 1, createdAt: -1 }, {}],
   ];
   const results = await Promise.allSettled(indexes.map(([col, keys, opts]) => col.createIndex(keys, opts)));
@@ -93,10 +100,12 @@ export async function createMongoDriver() {
         return out(doc);
       },
       findBySubscription: async (id) => (id ? out(await users.findOne({ 'billing.subscriptionId': id })) : null),
+      findByReferralCode: async (code) => (code ? out(await users.findOne({ referralCode: code })) : null),
       // Username reserved by an account that hasn't confirmed its email (until its link expires).
       findByPendingSlug: async (slug) => (slug ? out(await users.findOne({ pendingSlug: slug, verifyExpires: { $gt: new Date().toISOString() } })) : null),
       findByVerifyToken: async (hash) => (hash ? out(await users.findOne({ verifyTokenHash: hash })) : null),
       // Cancelled subscriptions whose paid period is over (still on Pro).
+      listProTrialEnded: async (nowIso) => (await users.find({ plan: 'pro', 'proTrial.until': { $lte: nowIso } }).limit(500).toArray()).map(out),
       listBillingEnded: async (nowIso) => (await users.find({
         plan: 'pro', 'billing.status': 'canceled', 'billing.downgraded': { $ne: true }, 'billing.endsAt': { $lte: nowIso },
       }).limit(500).toArray()).map(out),
@@ -146,6 +155,7 @@ export async function createMongoDriver() {
           orders.deleteMany({ pageId: { $in: pageIds } }), cards.deleteMany({ pageId: { $in: pageIds } }),
           invoices.deleteMany({ pageId: { $in: pageIds } }), payments.deleteMany({ userId: id }),
           tokens.deleteMany({ userId: id }),
+          referrals.deleteMany({ $or: [{ referrerId: id }, { refereeId: id }] }),
         ]);
         await users.deleteOne({ _id: id });
       },
@@ -298,7 +308,34 @@ export async function createMongoDriver() {
         return out(doc);
       },
       findById: async (id) => out(await payments.findOne({ _id: id })),
+      update: async (id, patch) => out(await payments.findOneAndUpdate({ _id: id }, { $set: patch }, { returnDocument: 'after' })),
       listByUser: async (userId) => (await payments.find({ userId }).sort({ createdAt: -1 }).limit(200).toArray()).map(out),
+    },
+    referrals: {
+      create: async (r) => {
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), status: 'pending', months: 0, appliedMonths: 0, ...r };
+        try { await referrals.insertOne(doc); } catch (err) {
+          if (err?.code === 11000) return out(await referrals.findOne({ refereeId: r.refereeId }));
+          throw err;
+        }
+        return out(doc);
+      },
+      findByReferee: async (refereeId) => out(await referrals.findOne({ refereeId })),
+      listByReferrer: async (referrerId) => (await referrals.find({ referrerId }).sort({ createdAt: -1 }).limit(500).toArray()).map(out),
+      countRewarded: async ({ referrerId, campaignId }) => referrals.countDocuments({ referrerId, campaignId, status: 'rewarded' }),
+      update: async (id, patch) => out(await referrals.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
+      list: async ({ status = '', limit = 200 } = {}) => (await referrals.find(status ? { status } : {}).sort({ createdAt: -1 }).limit(limit).toArray()).map(out),
+    },
+    referralCampaigns: {
+      list: async () => (await campaigns.find({}).sort({ startsAt: -1 }).limit(200).toArray()).map(out),
+      findById: async (id) => out(await campaigns.findOne({ _id: id })),
+      create: async (c) => {
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...c };
+        await campaigns.insertOne(doc);
+        return out(doc);
+      },
+      update: async (id, patch) => out(await campaigns.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
+      remove: async (id) => (await campaigns.deleteOne({ _id: id })).deletedCount === 1,
     },
     tokens: {
       create: async (t) => {
