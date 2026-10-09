@@ -257,9 +257,6 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 ## 🗺️ Próximos pasos
 
 - [ ] Login social (Google / GitHub)
-- [ ] Roles (admin / user)
-- [ ] Modo oscuro del dashboard
 - [ ] Bloques con integraciones (YouTube/Spotify/Instagram feed)
 - [ ] Notificaciones por email al alcanzar N clics
-- [ ] API pública con tokens para terceros
-- [ ] Render en servidor de la página pública para un SEO más completo
+- [ ] Configuracion de subdominios
