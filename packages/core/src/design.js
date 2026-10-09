@@ -10,7 +10,7 @@
 
 import { buttonStyles, buttonHovers } from './buttons/index.js';
 import { fonts } from './fonts.js';
-import { entranceAnimations } from './animations.js';
+import { entranceAnimations, backgroundMotions, ENTRANCE_SPEEDS } from './animations.js';
 import { wallpapers } from './wallpapers/index.js';
 import { defaultsFor, sanitizeFields } from './fields.js';
 
@@ -90,7 +90,17 @@ export const designGroups = [
       { key: 'maxWidth', type: 'range', label: 'Content width', min: 360, max: 760, step: 10, default: 580, unit: 'px' },
       { key: 'gap', type: 'range', label: 'Space between blocks', min: 4, max: 32, default: 14, unit: 'px' },
       { key: 'paddingTop', type: 'range', label: 'Top padding', min: 8, max: 140, step: 4, default: 48, unit: 'px' },
-      { key: 'entrance', type: 'select', label: 'Entrance animation', default: 'fade-up', options: () => entranceAnimations.options() },
+      { key: 'entrance', type: 'select', label: 'Entrance animation', default: 'fade-up', options: () => entranceAnimations.options(),
+        help: 'How the page appears. Any block can have its own: open it → Animation & schedule → Entrance.' },
+      { key: 'entranceSpeed', type: 'select', label: 'Entrance speed', default: 'normal', options: ENTRANCE_SPEEDS.map(({ value, label }) => ({ value, label })),
+        showIf: { key: 'entrance', notEquals: 'none' } },
+      { key: 'entranceStagger', type: 'range', label: 'Delay between blocks', min: 0, max: 200, step: 5, default: 55, unit: 'ms',
+        showIf: { key: 'entrance', notEquals: 'none' } },
+      { key: 'entranceOnScroll', type: 'toggle', label: 'Animate blocks as they scroll into view', default: false,
+        help: 'Blocks further down the page appear when visitors reach them, instead of all at once.' },
+      { key: 'backgroundMotion', type: 'select', label: 'Background motion', default: 'none', options: () => backgroundMotions.options(),
+        help: 'Slow movement of the background. “Flow” works with gradient backgrounds.' },
+      { key: 'buttonPress', type: 'toggle', label: 'Press effect on tap', default: false, help: 'Buttons shrink a little when tapped or clicked.' },
     ],
   },
   {
@@ -158,6 +168,7 @@ export function designCss(d) {
     // Accent: only when set, so blocks fall back to their own card text color.
     + (d.accentColor ? `--ol-accent:${d.accentColor};` : '') + (d.accentTextColor ? `--ol-accent-fg:${d.accentTextColor};` : '')
     + `--ol-max-width:${d.maxWidth}px;--ol-gap:${d.gap}px;--ol-pad-top:${d.paddingTop}px;`
+    + `--ol-enter-speed:${(ENTRANCE_SPEEDS.find((x) => x.value === d.entranceSpeed) || ENTRANCE_SPEEDS[1]).factor};`
     + `color-scheme:${colorSchemeOf(d) === 'dark' ? 'dark' : 'only light'};`
     + `}`;
 }
@@ -227,6 +238,7 @@ export const cssVariables = [
   { name: '--ol-surface-fg', setting: 'surfaceTextColor', description: 'Text color on cards.' },
   { name: '--ol-surface-radius', setting: 'surfaceRadius', description: 'Corner radius of cards, images and embeds.' },
   { name: '--ol-accent', setting: 'accentColor', description: 'Accent color: catalog Buy / Order buttons, event date badges, selected calendar day (falls back to the card text color).' },
+  { name: '--ol-enter-speed', setting: 'entranceSpeed', description: 'Entrance animation speed factor (1 = normal, 1.6 = slow, 0.6 = fast).' },
   { name: '--ol-accent-fg', setting: 'accentTextColor', description: 'Text on the accent color (falls back to the card color).' },
   { name: '--ol-max-width', setting: 'maxWidth', description: 'Maximum width of the content column.' },
   { name: '--ol-gap', setting: 'gap', description: 'Space between blocks.' },

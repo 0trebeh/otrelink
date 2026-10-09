@@ -122,5 +122,11 @@ export const buttonHovers = createRegistry('buttonHovers', [
   { id: 'shift', label: 'Shift', css: `${S}:hover{transform:translate(-2px,-2px)}` },
   { id: 'glow', label: 'Glow', css: `${S}:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--ol-btn-bg) 35%,transparent)}` },
   { id: 'dim', label: 'Dim', css: `${S}:hover{opacity:.82}` },
+  { id: 'press', label: 'Press', css: `${S}:hover{transform:scale(.975)}` },
+  { id: 'tilt', label: 'Tilt', css: `${S}:hover{transform:rotate(-1.2deg) scale(1.01)}` },
+  { id: 'bounce', label: 'Bounce', css: `@keyframes ol-h-bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}70%{transform:translateY(-1px)}}${S}:hover{animation:ol-h-bounce .5s ease}` },
+  { id: 'wiggle', label: 'Wiggle', css: `@keyframes ol-h-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}${S}:hover{animation:ol-h-wiggle .4s ease}` },
+  { id: 'shine', label: 'Shine', css: `${S}{overflow:hidden}${S}::after{content:"";position:absolute;inset:0;width:40%;pointer-events:none;transform:translateX(-150%) skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transition:transform .6s ease}${S}:hover::after{transform:translateX(300%) skewX(-20deg)}` },
+  { id: 'invert', label: 'Swap colors', css: `${S}:hover{background:var(--ol-btn-fg)!important;color:var(--ol-btn-bg)!important}` },
   { id: 'none', label: 'None', css: '' },
 ]);

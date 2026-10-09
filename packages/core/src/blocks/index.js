@@ -19,7 +19,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { createRegistry } from '../util/registry.js';
-import { attentionAnimations } from '../animations.js';
+import { attentionAnimations, entranceAnimations } from '../animations.js';
 import { buttonStyles } from '../buttons/index.js';
 
 import link from './link.js';
@@ -89,6 +89,8 @@ export const blockTypes = createRegistry('blockTypes', [
 /** Settings every block has, regardless of type (shown in an "Advanced" area). */
 export const commonBlockFields = [
   { key: 'animation', type: 'select', label: 'Attention animation', default: 'none', options: () => attentionAnimations.options() },
+  { key: 'enter', type: 'select', label: 'Entrance', default: '', help: 'How this block appears. “Same as the page” uses Style → Layout & motion.',
+    options: () => [{ value: '', label: 'Same as the page' }, ...entranceAnimations.options()] },
   { key: 'showFrom', type: 'datetime', label: 'Show from', help: 'Leave empty to show right away.' },
   { key: 'showUntil', type: 'datetime', label: 'Hide after', help: 'Leave empty to never hide.' },
   { key: 'navLabel', type: 'text', label: 'Menu label (optional)', max: 60,

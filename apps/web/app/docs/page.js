@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import {
-  blockTypes, themes, palettes, wallpapers, buttonStyles, buttonHovers, fonts, socials, attentionAnimations, entranceAnimations,
+  blockTypes, themes, palettes, wallpapers, buttonStyles, buttonHovers, fonts, socials, attentionAnimations, entranceAnimations, backgroundMotions,
   designGroups, cssVariables, cssElements, cssModifiers, cssRecipes, pageStructure, icon,
 } from '@otrelink/core';
 import { Logo, CoreIcon } from '@/components/ui';
@@ -152,7 +152,7 @@ export default function DocsPage() {
 
           {/* ── Blocks ── */}
           <H2 id="blocks">Blocks</H2>
-          <P>Blocks are the pieces of your page. Every block also has <i>Animation &amp; schedule</i> options: an attention animation, and dates to show it from or hide it after (scheduled blocks are dimmed in the preview and hidden on the public page outside their dates).</P>
+          <P>Blocks are the pieces of your page. Every block also has <i>Animation &amp; schedule</i> options: an attention animation (it loops to draw the eye), its own entrance animation (or “Same as the page”, or none), and dates to show it from or hide it after (scheduled blocks are dimmed in the preview and hidden on the public page outside their dates).</P>
           <P><b>Block style:</b> open a block and use <i>Style</i> to give it its own look: button style, button, text, border and shadow colors, corner radius, card colors and text color (plus opacity and blur for Glass). Anything left as “Same as the page” keeps your page design. A collection&apos;s style also applies to the blocks inside it, unless they have their own. Styled blocks get the class <C>.ol-styled</C> (and <C>.ol-bs-&lt;style&gt;</C> when they change the button style).</P>
           {categories.map((cat) => (
             <div key={cat} className="mb-6">
@@ -190,7 +190,7 @@ export default function DocsPage() {
               ['Style → Typography', `${fonts.list().length} fonts for title and body, colors, sizes and weight.`],
               ['Style → Header', 'Layout (Classic, Hero = big cover photo, Left aligned), avatar shape/size/border and social icons position, style and color.'],
               ['Style → Cards & surfaces', 'Background, text color and radius of cards (text, FAQ, countdown) and embeds, plus the accent color (and its text color) used by catalog Buy / Order / Add buttons, the selected category tab, the cart bar, event date badges and the selected calendar day. Empty accent = the card text color. A block can override it in its own Style → Accent.'],
-              ['Style → Layout & motion', `Content width, spacing, top padding and entrance animation (${entranceAnimations.list().map((a) => a.label).join(', ')}).`],
+              ['Style → Layout & motion', `Content width, spacing and top padding. Entrance animation (${entranceAnimations.list().filter((a) => a.id !== 'none').map((a) => a.label).join(', ')}) with its speed (slow, normal, fast) and the delay between blocks; “Animate blocks as they scroll into view” makes blocks further down appear when visitors reach them. Background motion (${backgroundMotions.list().filter((a) => a.id !== 'none').map((a) => a.label).join(', ')}) and a press effect when buttons are tapped. Visitors whose device asks for reduced motion see no animations.`],
               ['Style → Custom CSS', 'Your own CSS on top of everything. See below.'],
               ['Profile', `Picture, title, bio, verified badge and social icons (${socials.list().length} platforms).`],
             ]}

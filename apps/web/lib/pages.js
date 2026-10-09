@@ -1,10 +1,11 @@
 // Page helpers shared by API routes.
-import { sanitizePage, sanitizeToday, stripPrivateFields, stripLockedBlocks, stripLockedFeatures, allowsWallpaper } from '@otrelink/core';
+import { sanitizePage, sanitizeToday, stripPrivateFields, stripLockedBlocks, stripLockedFeatures, allowsWallpaper, resolveDesign } from '@otrelink/core';
 
 /** Shape returned to the dashboard. */
 export const toDashboardPage = (p) => ({
   id: p.id, slug: p.slug, profile: p.profile, socials: p.socials, blocks: p.blocks,
-  design: p.design, settings: p.settings, createdAt: p.createdAt, updatedAt: p.updatedAt,
+  // New design options get their default values on pages saved before they existed.
+  design: resolveDesign(p.design || {}), settings: p.settings, createdAt: p.createdAt, updatedAt: p.updatedAt,
   today: sanitizeToday(p.today),
 });
 

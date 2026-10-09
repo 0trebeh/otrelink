@@ -6,7 +6,7 @@ import { adjustedImg } from './util/image.js';
 import { blockTypes, blockStyleOf, blockStyleGroups } from './blocks/index.js';
 import { buttonStyles, buttonHovers, scopedButtonCss } from './buttons/index.js';
 import { wallpapers } from './wallpapers/index.js';
-import { attentionAnimations, entranceAnimations } from './animations.js';
+import { attentionAnimations, entranceAnimations, backgroundMotions, PRESS_CSS } from './animations.js';
 import { googleFontsHref } from './fonts.js';
 import { designCss, resolveDesign, colorSchemeOf } from './design.js';
 import { socialHref, socialIcon, socials } from './socials.js';
@@ -158,6 +158,7 @@ export function renderPage(page, opts = {}) {
   const d = resolveDesign(page.design);
   const usedTypes = new Set();
   const usedAnims = new Set();
+  const usedEntrances = new Set(); // entrance animations chosen by single blocks
   const usedBlockButtons = new Set(); // button styles used by blocks with their own style
   // Navigation menu: blocks it lists get an id to jump to (and to link to: page#section).
   const nav = navItems(page, (b) => b.enabled && blockTypes.has(b.type) && (mode === 'preview' || !isScheduledOut(b, now)));
@@ -191,7 +192,11 @@ export function renderPage(page, opts = {}) {
       // A block's own style: CSS variables on its wrapper (+ a class for its button style).
       const own = blockStyleOf(block.options, blockStyleGroups(block));
       if (own?.buttonStyle) usedBlockButtons.add(`${own.buttonStyle}:${depth}`);
-      const cls = ['ol-block', `ol-b-${mod.type}`, depth === 0 && 'ol-enter', anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled',
+      // Entrance: the page's (top-level blocks), or the block's own (any level), or none.
+      const ownEnter = animate && block.options?.enter && entranceAnimations.has(block.options.enter) ? block.options.enter : '';
+      if (ownEnter && ownEnter !== 'none') usedEntrances.add(ownEnter);
+      const enters = ownEnter ? ownEnter !== 'none' : depth === 0;
+      const cls = ['ol-block', `ol-b-${mod.type}`, enters && 'ol-enter', ownEnter && ownEnter !== 'none' && `ol-in-${ownEnter}`, anim && `ol-anim-${anim}`, scheduledOut && 'ol-block-scheduled',
         own && 'ol-styled', own?.buttonStyle && `ol-bs-${own.buttonStyle}`].filter(Boolean).join(' ');
       const style = own?.vars ? ` style="${esc(own.vars)}"` : '';
       const anchor = anchors.get(block.id);
@@ -209,6 +214,10 @@ export function renderPage(page, opts = {}) {
     : '';
 
   const entrance = animate && d.entrance !== 'none' ? `ol-enter-${d.entrance}` : '';
+  let bgMotion = animate && d.backgroundMotion && d.backgroundMotion !== 'none' ? backgroundMotions.get(d.backgroundMotion) : null;
+  // Some motions only suit some backgrounds (e.g. "Flow" needs a gradient).
+  if (bgMotion?.wallpapers && !bgMotion.wallpapers.includes(d.wallpaper.type)) bgMotion = null;
+  const motionCls = [bgMotion && `ol-bgm-${bgMotion.id}`, d.buttonPress && 'ol-press'].filter(Boolean).join(' ');
   const protect = [page.settings?.noSelect && 'ol-noselect', page.settings?.noRightClick && 'ol-nomenu'].filter(Boolean).join(' ');
   // Translate switch: Google Translate in the visitor's browser (see translate.js).
   const lang = pageLanguage(page);
@@ -229,7 +238,7 @@ export function renderPage(page, opts = {}) {
       + (nav.length ? `<a href="#" class="ol-nav-top" data-ol-nav="top">${icon('arrowUp', 15)}Back to top</a>` : '')
       + '</nav></div>'
     : '';
-  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${protect ? ` ${protect}` : ''}${showNav ? ` has-nav${navRight ? ' has-nav-right' : ''}` : ''}" data-mode="${mode}" lang="${lang}">`
+  const html = `<div class="ol-root ol-layout-${d.headerLayout} ${entrance}${motionCls ? ` ${motionCls}` : ''}${protect ? ` ${protect}` : ''}${showNav ? ` has-nav${navRight ? ' has-nav-right' : ''}` : ''}" data-mode="${mode}" lang="${lang}">`
     + `<div class="ol-bg" aria-hidden="true">${wp.html ? wp.html(d.wallpaper) : ''}</div>${langSwitch}${navHtml}`
     + `<main class="ol-main">${renderProfile(page, d)}<section class="ol-blocks">${blocksHtml}</section>${renderSocials(page, d, 'bottom')}${footer}</main>`
     + `${gate}</div>`;
@@ -241,6 +250,9 @@ export function renderPage(page, opts = {}) {
     buttonStyles.resolve(d.buttonStyle).css,
     buttonHovers.resolve(d.buttonHover).css,
     entrance ? entranceAnimations.resolve(d.entrance).css : '',
+    ...[...usedEntrances].filter((e) => !entrance || e !== d.entrance).map((e) => entranceAnimations.get(e)?.css || ''),
+    bgMotion?.css || '',
+    d.buttonPress ? PRESS_CSS : '',
     ...[...usedTypes].map((t) => blockTypes.get(t).css || ''),
     ...[...usedAnims].map((a) => attentionAnimations.get(a)?.css || ''),
     // Deeper blocks repeat .ol-styled so a block inside a styled collection wins over it.
@@ -301,10 +313,58 @@ export function hydratePage(container, page, opts = {}) {
   // The dashboard preview lives inside the dashboard document: it must not change it.
   if (opts.colorScheme !== false) applyColorScheme(container.ownerDocument, colorSchemeOf(resolveDesign(page.design)));
   if (opts.mode === 'live' && container.ownerDocument?.documentElement) container.ownerDocument.documentElement.lang = pageLanguage(page);
-  // Stagger entrance animations.
-  container.querySelectorAll('.ol-enter').forEach((el, i) => {
-    el.style.animationDelay = `${Math.min(i, 14) * 55}ms`;
-  });
+  const cleanups = [];
+  // Stagger entrance animations (Style → Layout & motion → Delay between blocks).
+  const design = resolveDesign(page.design);
+  const step = Number.isFinite(Number(design.entranceStagger)) ? Number(design.entranceStagger) : 55;
+  const entering = [...container.querySelectorAll('.ol-enter')];
+  entering.forEach((el, i) => { el.style.animationDelay = `${Math.min(i, 14) * step}ms`; });
+  const win = container.ownerDocument?.defaultView;
+  const reduceMotion = win?.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  // Animate on scroll: blocks below the fold wait (paused on their first frame) until
+  // they reach the screen. Checked on scroll, so fast scrolls and jumps reveal them too.
+  if (design.entranceOnScroll && !reduceMotion && win && entering.length) {
+    const edge = () => (win.innerHeight || 800) * 0.92;
+    let waiting = entering.filter((el) => el.getBoundingClientRect().top > edge());
+    for (const el of waiting) el.style.animationPlayState = 'paused';
+    let raf = 0;
+    const reveal = () => {
+      raf = 0;
+      let n = 0;
+      waiting = waiting.filter((el) => {
+        if (el.getBoundingClientRect().top > edge()) return true;
+        // Blocks that appear together still come in one after another.
+        el.style.animationDelay = `${Math.min(n++, 6) * step}ms`;
+        el.style.animationPlayState = 'running';
+        return false;
+      });
+      if (!waiting.length) stop();
+    };
+    const onScroll = () => { if (!raf) raf = win.requestAnimationFrame(reveal); };
+    const stop = () => { win.removeEventListener('scroll', onScroll); win.removeEventListener('resize', onScroll); if (raf) win.cancelAnimationFrame(raf); };
+    if (waiting.length) {
+      win.addEventListener('scroll', onScroll, { passive: true });
+      win.addEventListener('resize', onScroll, { passive: true });
+      cleanups.push(stop);
+    }
+  }
+  // Background parallax: --ol-scroll goes 0 → 1 while scrolling down.
+  if (container.querySelector('.ol-bgm-parallax') && !reduceMotion && win) {
+    const root = container.querySelector('.ol-root') || container;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = win.requestAnimationFrame(() => {
+        raf = 0;
+        const doc = win.document.documentElement;
+        const max = Math.max(1, doc.scrollHeight - win.innerHeight);
+        root.style.setProperty('--ol-scroll', String(Math.min(1, Math.max(0, win.scrollY / max)).toFixed(3)));
+      });
+    };
+    win.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    cleanups.push(() => { win.removeEventListener('scroll', onScroll); if (raf) win.cancelAnimationFrame(raf); });
+  }
 
   // Per-block browser behavior.
   const byId = new Map(flattenBlocks(page.blocks).map((b) => [b.id, b]));
@@ -342,6 +402,7 @@ export function hydratePage(container, page, opts = {}) {
   const stopTranslate = setupTranslate(container, page);
   const stopNav = setupNav(container, opts);
   return () => {
+    for (const fn of cleanups) fn();
     stopTranslate();
     stopNav();
     container.removeEventListener('click', onClick);

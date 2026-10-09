@@ -782,3 +782,38 @@ test('color palettes: presets are readable, apply recolors without touching font
   const many = Array.from({ length: 40 }, (_, i) => ({ id: `p${i}`, colors: { bg: '#fff', text: '#000', primary: '#00f' } }));
   assert.equal(sanitizePaletteList([...many, many[0]]).length, MAX_CUSTOM_PALETTES);
 });
+
+test('motion: more entrances, per-block entrance, speed, background motion, press, hovers and attention', async () => {
+  const { entranceAnimations, attentionAnimations, backgroundMotions, buttonHovers, renderPage, sanitizePage, createDefaultPage, newBlock, designCss, resolveDesign } = await import('../src/index.js');
+  assert.ok(entranceAnimations.list().length >= 15);
+  assert.ok(attentionAnimations.list().length >= 15);
+  assert.ok(buttonHovers.list().length >= 12);
+  for (const id of ['breathe', 'pan', 'flow', 'hue', 'parallax']) assert.ok(backgroundMotions.has(id), id);
+  const base = createDefaultPage({ slug: 'mo' });
+  const link = newBlock('link', { title: 'A', url: 'https://a.example' });
+  link.options.enter = 'pop';
+  const hidden = newBlock('link', { title: 'B', url: 'https://b.example' });
+  hidden.options.enter = 'none';
+  const plain = newBlock('link', { title: 'C', url: 'https://c.example' });
+  const page = sanitizePage({ ...base, blocks: [link, hidden, plain], design: { ...base.design, entrance: 'rise', entranceSpeed: 'slow', backgroundMotion: 'breathe', buttonPress: true } });
+  assert.equal(page.blocks[0].options.enter, 'pop');
+  const { html, css } = renderPage(page);
+  assert.match(html, /class="ol-root[^"]*ol-enter-rise[^"]*ol-bgm-breathe[^"]*ol-press/);
+  assert.match(html, new RegExp(`class="ol-block ol-b-link ol-enter ol-in-pop"[^>]*data-block-id="${link.id}"`));
+  assert.match(html, new RegExp(`class="ol-block ol-b-link"[^>]*data-block-id="${hidden.id}"`));
+  assert.match(html, new RegExp(`class="ol-block ol-b-link ol-enter"[^>]*data-block-id="${plain.id}"`));
+  assert.ok(css.includes('@keyframes ol-in-rise') && css.includes('@keyframes ol-in-pop') && css.includes('ol-bgm-breathe') && css.includes('.ol-press'));
+  assert.ok(css.includes('var(--ol-enter-speed,1)'));
+  assert.ok(designCss(resolveDesign(page.design)).includes('--ol-enter-speed:1.6;'));
+  // "Flow" only with gradient backgrounds; nothing moves in the dashboard preview (animate off).
+  const flowSolid = renderPage(sanitizePage({ ...page, design: { ...page.design, backgroundMotion: 'flow' } }));
+  assert.ok(!flowSolid.html.includes('ol-bgm-flow'));
+  const flowGrad = renderPage(sanitizePage({ ...page, design: { ...page.design, backgroundMotion: 'flow', wallpaper: { type: 'gradient' } } }));
+  assert.ok(flowGrad.html.includes('ol-bgm-flow'));
+  const preview = renderPage(page, { mode: 'preview' });
+  assert.ok(!preview.html.includes('ol-in-pop') && !preview.html.includes('ol-bgm-breathe'));
+  // New attention animation CSS is included when used.
+  const shiny = newBlock('link', { title: 'S', url: 'https://s.example' });
+  shiny.options.animation = 'shine';
+  assert.ok(renderPage(sanitizePage({ ...base, blocks: [shiny] })).css.includes('@keyframes ol-shine'));
+});
