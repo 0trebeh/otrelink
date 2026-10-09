@@ -4,9 +4,12 @@ Clon modular de Linktree: un dashboard para crear páginas de links súper perso
 
 ```
 otrelink/
-├── packages/core/     ← TODO lo modular vive aquí (bloques, temas, fondos, botones, fuentes, redes…)
-├── apps/web/          ← Next.js: API + dashboard
+├── packages/core/     ← TODO lo modular vive aquí (bloques, temas, paletas, fondos, botones, fuentes, redes, plantillas, planes…)
+├── packages/mcp/      ← Servidor MCP: un asistente de IA crea y edita páginas con un API token (ver su README)
+├── apps/web/          ← Next.js: API + dashboard + docs (/docs)
 └── apps/page/         ← Página pública (vanilla JS + Vite)
+
+../Otrelink-Admin/     ← Dashboard de administración (repo aparte)
 ```
 
 El dashboard (vista previa en vivo) y la página pública usan **el mismo renderer** de `@otrelink/core`, así que lo que ves en el editor es exactamente lo que ven tus visitantes.
@@ -15,7 +18,7 @@ El dashboard (vista previa en vivo) y la página pública usan **el mismo render
 
 ## 🚀 Puesta en marcha
 
-Requisitos: **Node.js 20.9+**.
+Requisitos: **Node.js 22**.
 
 ```bash
 npm install
@@ -32,11 +35,12 @@ npm run dev
 |---|---|
 | `npm run dev` | Levanta dashboard y página pública a la vez |
 | `npm run build` | Compila ambas apps |
-| `npm test` | Pruebas del núcleo (renderiza todos los bloques/temas/fondos, XSS, etc.) |
+| `npm test` | Pruebas del núcleo (renderiza todos los bloques/temas/fondos/plantillas, XSS, planes, paletas…) y del servidor MCP |
+| `npm run mcp` | Arranca el servidor MCP (necesita `OTRELINK_URL` y `OTRELINK_TOKEN`) |
 
 ### Variables de entorno
 
-`apps/web/.env`
+`apps/web/.env` (ver `.env.example`)
 
 | Variable | Descripción |
 |---|---|
@@ -44,14 +48,21 @@ npm run dev
 | `MONGODB_URI` / `MONGODB_DB` | Conexión a MongoDB |
 | `JWT_SECRET` | Secreto para las sesiones (obligatorio en producción) |
 | `NEXT_PUBLIC_PAGE_URL` | URL donde se sirve la página pública |
+| `APP_URL` | URL pública de esta app (detrás de un proxy; se usa en enlaces de archivos subidos y en la pantalla API) |
 | `PUBLIC_CORS_ORIGINS` | Orígenes que pueden llamar a la API pública (`*` o lista separada por comas) |
+| `ADMIN_API_KEY` | Clave de 24+ caracteres para Otrelink-Admin (vacío = API de admin apagada) |
+| `VAPID_*` · `CRON_SECRET` · `RESEND_API_KEY` · `EMAIL_FROM` | Push, cron y correos → ver **Agenda y reservas** |
+| `STRIPE_*` · `PAYPAL_*` · `BUSINESS_CONTACT_EMAIL` | Pagos → ver **Planes y pagos** |
+| `BILLING_COMPANY_NAME` · `BILLING_COMPANY_DETAILS` | Tu empresa en las facturas PDF de suscripción (detalles en varias líneas con `\n`) |
+| `BILLING_INVOICE_PREFIX` · `BILLING_INVOICE_FOOTER` | Prefijo del número (p. ej. `OTR-`) y pie de esas facturas |
 
 `apps/page/.env`
 
 | Variable | Descripción |
 |---|---|
-| `VITE_API_URL` | URL de la app Next.js |
+| `VITE_API_URL` | URL de la app Next.js (obligatoria para el build) |
 | `VITE_HOME_URL` | A dónde apunta el pie “Made with Otrelink” |
+| `VITE_BASE` | Sub-ruta donde se sirve (`/otrelink/` en GitHub Pages, `/` con dominio propio) |
 
 ---
 
@@ -61,16 +72,19 @@ Todo lo personalizable es un **registro**: una lista de módulos. Para **agregar
 
 | Qué | Dónde | Notas |
 |---|---|---|
-| Tipos de bloque | `packages/core/src/blocks/` → `index.js` | link, header, text, image, gallery, video, music, map, contact, vcard, faq, countdown, divider, share |
+| Tipos de bloque | `packages/core/src/blocks/` → `index.js` | 30 bloques: link, copy, collection, header, text, image, banner, gallery, pdf, video, embed, html, code, music, map, contact, catalog, events, status, location, route, loyalty, booking, survey, reviews, vcard, faq, countdown, divider, share |
 | Fondos (wallpapers) | `packages/core/src/wallpapers/` → `index.js` | solid, gradient, image, pattern, aurora, grain, video |
-| Estilos de botón y hover | `packages/core/src/buttons/index.js` | fill, outline, glass, hard-shadow, neon… |
-| Temas | `packages/core/src/themes.js` | Presets que combinan todo lo anterior |
-| Fuentes | `packages/core/src/fonts.js` | Google Fonts |
+| Estilos de botón y hover | `packages/core/src/buttons/index.js` | 16 estilos (fill, outline, glass, neon, 3d, cel, pop, punk, sticker…) y 12 efectos de hover |
+| Temas | `packages/core/src/themes.js` | 24 presets que combinan todo lo anterior |
+| Paletas de color | `packages/core/src/palettes.js` | 20 paletas (claras y oscuras) que recolorean sin cambiar fuentes ni formas |
+| Plantillas | `packages/core/src/templates.js` | 24 páginas listas (restaurante, food truck, tarjeta de presentación…) |
+| Fuentes | `packages/core/src/fonts.js` | 24 Google Fonts |
 | Redes sociales | `packages/core/src/socials.js` | 39 plataformas (iconos de simple-icons) |
-| Animaciones | `packages/core/src/animations.js` | De atención (por bloque) y de entrada (página) |
+| Animaciones | `packages/core/src/animations.js` | 14 de atención (por bloque), 14 de entrada (página o bloque) y 5 movimientos de fondo |
+| Planes | `packages/core/src/plans.js` | Qué incluye cada plan (`PLAN_FEATURES`, `PLANS`) |
 | Opciones del panel Style | `packages/core/src/design.js` | Grupos de campos → tarjetas automáticas en el dashboard |
-| Tipos de campo | `packages/core/src/fields.js` + `apps/web/components/fields/index.js` | text, url, color, image, list, font… |
-| Secciones del dashboard | `apps/web/sections/index.js` | Links, Profile, Theme, Wallpaper, Style, Settings, Analytics |
+| Tipos de campo | `packages/core/src/fields.js` + `apps/web/components/fields/index.js` | text, url, color, image, list, font, date, geoPoint… |
+| Secciones del dashboard | `apps/web/sections/index.js` | Links, Profile, Today, Templates, Theme, Wallpaper, Style, Orders, Invoices, Agenda, Reviews, Loyalty, Responses, Analytics, Settings |
 | Base de datos | `apps/web/lib/db/` | Drivers `mongo` y `file`; agrega el tuyo con la misma interfaz |
 
 ### Ejemplo: crear un tipo de bloque nuevo
@@ -127,14 +141,19 @@ El control aparece solo en el panel Style.
 ## ✨ Funcionalidades
 
 - **Editor** con vista previa en vivo, deshacer/rehacer (`Ctrl+Z`, `Ctrl+Shift+Z`), guardar con `Ctrl+S` y aviso de cambios sin guardar.
-- **Bloques** que se arrastran para reordenar, se activan o desactivan, se duplican y se pueden programar (mostrar desde / ocultar después). Cada uno puede llevar su propia animación.
+- **Bloques** que se arrastran para reordenar, se activan o desactivan, se duplican, se agrupan en colecciones y se pueden programar (mostrar desde / ocultar después). Cada uno puede llevar su propio estilo, animación de atención y animación de entrada.
+- **Plantillas**: 24 páginas listas con vista previa; se usan al crear una página o desde *Templates*.
 - **Perfil**: avatar (subida con redimensionado automático), insignia de verificado y 39 redes sociales que también se arrastran para reordenar.
-- **Personalización**: 12 temas, 7 tipos de fondo, 8 estilos de botón, 21 fuentes, colores con transparencia, 3 layouts de cabecera, formas de avatar, animaciones de entrada, CSS personalizado y aviso cuando el texto no se lee bien sobre el fondo.
-- **Ajustes**: cambiar el usuario (comprueba disponibilidad), SEO y Open Graph, ocultar el pie de página, aviso de contenido sensible, página privada, código QR, y exportar o importar en JSON.
-- **Analíticas**: visitas, visitantes únicos, clics, CTR, gráfico diario, bloques y redes más clicados, referrers, dispositivos y países (estos últimos detrás de Vercel o Cloudflare).
-- **Varias páginas** por cuenta (hasta 10, configurable en `lib/config.js`).
-
----
+- **Personalización**: 24 temas, 20 paletas de color (y paletas propias guardadas en la cuenta), 7 tipos de fondo, 16 estilos de botón, 12 efectos de hover, 24 fuentes, color de acento, colores con transparencia, 3 layouts de cabecera, formas de avatar, CSS personalizado y aviso cuando el texto no se lee bien sobre el fondo.
+- **Movimiento**: 14 animaciones de entrada (con velocidad, retraso entre bloques y opción de animar al hacer scroll), 14 animaciones de atención, 5 movimientos de fondo (incluido parallax) y efecto al tocar los botones. Respeta “reducir movimiento” del sistema.
+- **Contenido**: catálogo de productos, calendario de eventos (banners, carrusel, grilla o mes), mapas con estilos, bloque de código con resaltado, bloque HTML (Pro), PDF, galerías, FAQ, cuenta regresiva, vCard y más.
+- **Negocio de comida**: estado abierto/cerrado, ruta semanal, “dónde estamos hoy” (pestaña *Today*), menú con categorías, pedidos para recoger con seguimiento y tarjetas de fidelidad con QR.
+- **Facturas**: el dueño crea facturas para sus clientes y las descarga en PDF; las suscripciones a Otrelink también generan su factura.
+- **Ajustes**: cambiar el usuario (comprueba disponibilidad), SEO y Open Graph, menú de navegación para páginas largas, botón de traducción ES/EN (Google Translate), ocultar el pie de página, bloquear selección y clic derecho, aviso de contenido sensible, página privada, código QR, y exportar (sitio estático) o importar en JSON.
+- **Analíticas**: visitas, visitantes únicos, clics, CTR, gráfico diario, bloques y redes más clicados, referrers, dispositivos, países, ciudades y horas/días con más visitas.
+- **API tokens y MCP** (plan Business): scripts y asistentes de IA pueden crear y editar páginas.
+- **Varias páginas** por cuenta según el plan (Free 1, Pro 10, Business lo que asigne el admin).
+- **Docs** para usuarios en `/docs` (bloques, CSS personalizado con variables y clases, planes, API…).
 
 ## 📱 PWA (dashboard instalable)
 
@@ -181,13 +200,20 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 - Badge con reseñas por aprobar y notificación push en cada reseña nueva.
 - Colección `reviews`; las ocultas y pendientes no cuentan en el promedio. Rate limit de 10 reseñas/hora por IP + honeypot.
 
+## 🔑 API tokens y MCP (plan Business)
+
+- **Dashboard → API** (`/dashboard/api`): crear tokens `otl_…` (lectura y escritura o solo lectura, con vencimiento), copiarlo una sola vez y revocarlo. Se guarda solo el hash SHA-256.
+- Se envían como `Authorization: Bearer otl_…`. `proxy.js` solo los deja pasar a las rutas de `apps/web/lib/tokens.js` (páginas, today, analytics, slug-check, subida de archivos y lectura de pedidos); cuenta, facturación, admin y los propios tokens siguen necesitando la sesión del navegador. Límite: 120 peticiones/min por token.
+- La feature `api` solo existe en Business y se puede apagar por usuario en el admin.
+- **Servidor MCP** (`packages/mcp`): 27 herramientas para Claude Desktop, Claude Code, Cursor… (crear páginas desde plantillas, añadir y mover bloques, temas, paletas, analíticas, pedidos, “Today”, subir archivos). Configuración y lista completa en `packages/mcp/README.md`.
+
 ## 💳 Planes y pagos
 
 | Plan | Qué incluye |
 |---|---|
-| **Free** | 1 página. Sin Embed, Booking, Reviews, Survey ni fondos de foto/video. |
-| **Pro** · $10/mes | 10 páginas y todo lo anterior. |
-| **Business** | Personalizado: páginas y funciones que asignas en **Otrelink-Admin**. |
+| **Free** | 1 página con los bloques básicos, más el bloque de código y el calendario de eventos. |
+| **Pro** · $10/mes | 10 páginas y todas las funciones de página: embeds, bloque HTML, reservas, reseñas, encuestas, catálogo, pedidos, ubicación/ruta/estado, fidelidad, facturas, botón de traducción y fondos de foto/video. |
+| **Business** | Personalizado: páginas y funciones que asignas en **Otrelink-Admin**, más **API tokens y MCP**. |
 
 - Lo que permite cada plan está en `packages/core/src/plans.js` (`PLAN_FEATURES`, `PLANS`).
 - Las cuentas creadas antes de los planes (sin campo `plan`) funcionan como Pro hasta que las cambies en el admin.
@@ -197,7 +223,7 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 ### Stripe
 1. Crea el producto **Otrelink Pro** con un precio mensual de $10 → `STRIPE_PRICE_ID` (`price_…`).
 2. `STRIPE_SECRET_KEY` (`sk_…`).
-3. Webhook → `https://TU-APP/api/billing/stripe/webhook` con los eventos `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` → `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
+3. Webhook → `https://TU-APP/api/billing/stripe/webhook` con los eventos `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` e `invoice.paid` (este último crea las facturas PDF del historial de pagos) → `STRIPE_WEBHOOK_SECRET` (`whsec_…`).
 4. Activa el **Customer portal** en Stripe (Settings → Billing → Customer portal) para que puedan cambiar tarjeta o cancelar.
 
 ### PayPal
@@ -214,16 +240,18 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 
 ## 🛰️ API
 
+✔ = sesión del navegador o, en las rutas permitidas, un API token (`Authorization: Bearer otl_…`).
+
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | POST | `/api/auth/register` | — | `{ email, password, slug, name }` crea la cuenta y la primera página |
 | POST | `/api/auth/login` · `/api/auth/logout` | — | Sesión en cookie httpOnly |
-| GET | `/api/auth/me` | ✔ | Usuario actual |
+| GET | `/api/auth/me` | ✔ | Usuario actual (y `pageUrl`) |
 | GET · POST | `/api/pages` | ✔ | Listar · crear páginas |
 | GET · PUT · DELETE | `/api/pages/:id` | ✔ | Leer · guardar todo · borrar |
 | GET | `/api/pages/:id/analytics?days=30` | ✔ | Resumen de analíticas |
 | GET | `/api/slug-check?slug=` | — | Disponibilidad del usuario |
-| POST | `/api/assets` | ✔ | Subir imagen (multipart `file`, máx. 3 MB) |
+| POST | `/api/assets` | ✔ | Subir imagen (máx. 3 MB) o PDF (máx. 10 MB), multipart `file` |
 | GET | `/api/assets/:id` | — | Servir imagen |
 | GET | `/api/public/:slug` | — | Datos públicos de una página (CORS) |
 | POST | `/api/public/track` | — | Beacon de visita/clic (CORS) |
@@ -246,17 +274,66 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 | GET · POST | `/api/public/reviews?pageId&blockId&limit&before` | — | Reseñas publicadas + estadísticas · escribir una reseña (CORS) |
 | GET | `/api/reviews?pageId&blockId&status=` · `&count=1` | ✔ | Reseñas del dueño · pendientes por aprobar |
 | PATCH · DELETE | `/api/reviews/:id` | ✔ | `{ status }` (published/hidden) o `{ reply }` · borrar |
+| GET · POST | `/api/auth/verify?token=` · `/api/auth/verify/resend` | — · ✔ | Confirmar el email (enlace del correo) · reenviar el enlace |
+| GET | `/api/pages/:id/export` | ✔ | Descargar la página como sitio estático (.zip) |
+| GET · PATCH | `/api/pages/:id/today` | ✔ | Estado “Today”: abierto/cerrado, ubicación, agotados, pedidos pausados |
+| GET · PUT | `/api/pages/:id/invoicing` | ✔ | Datos del negocio para las facturas |
+| GET · PUT | `/api/palettes` | ✔ | Paletas de color guardadas en la cuenta |
+| POST · GET | `/api/public/orders` · `/api/public/orders/:id` | — | Hacer un pedido para recoger · seguir su estado (CORS) |
+| GET · PATCH | `/api/orders?pageId&scope=` · `/api/orders/:id` | ✔ | Pedidos del dueño · cambiar estado (los tokens solo pueden leer) |
+| POST · GET | `/api/public/loyalty` · `/api/public/loyalty/:id` | — | Crear la tarjeta de fidelidad del visitante · verla (CORS) |
+| GET · POST | `/api/loyalty?pageId` · `/api/loyalty/:id` | ✔ | Tarjetas del dueño · sellar, canjear o deshacer (escáner QR) |
+| GET · POST | `/api/invoices` | ✔ | Facturas del dueño · crear |
+| GET · PUT · POST · DELETE | `/api/invoices/:id` | ✔ | Ver · guardar · nuevo enlace para el cliente · borrar |
+| GET | `/api/invoices/:id/pdf` · `/api/public/invoices/:id` | ✔ · enlace | PDF de la factura · enlace público para el cliente |
+| GET | `/api/billing/invoices` · `/api/billing/invoices/:id` | ✔ | Pagos a Otrelink y su factura PDF |
+| GET · POST | `/api/tokens` · DELETE `/api/tokens/:id` | ✔ (sesión) | API tokens (Business) |
 
 ---
 
 ## 🌍 Despliegue
 
 - **apps/web** → Vercel, Render o cualquier hosting de Node (`npm run build && npm start`). Define `JWT_SECRET`, `MONGODB_URI` y `NEXT_PUBLIC_PAGE_URL`. En hostings serverless usa Mongo, porque el driver `file` necesita disco persistente.
-- **apps/page** → cualquier hosting estático (Netlify, Vercel, Cloudflare Pages). Hay que configurar el *fallback* SPA para que toda ruta sirva `index.html`, y definir `VITE_API_URL` antes de `npm run build`.
+- **apps/page** → cualquier hosting estático (Netlify, Vercel, Cloudflare Pages, Render Static Site). Hay que configurar el *fallback* SPA para que toda ruta sirva `index.html`, y definir `VITE_API_URL` antes de `npm run build`. Hoy se publica en **GitHub Pages** con `.github/workflows/static.yml` (variables `VITE_API_URL` y `VITE_HOME_URL` en *Settings → Secrets and variables → Actions → Variables*); el build copia `index.html` a `404.html` para que funcionen las rutas. Ver *Pendientes importantes* sobre la vista previa al compartir.
+- **packages/mcp** → no se despliega: cada usuario lo corre en su computadora desde este repo (ver su README).
+- **Otrelink-Admin** → app Next.js aparte; apunta a esta app con `OTRELINK_API_URL` y `OTRELINK_ADMIN_API_KEY`.
+
+
+## 📌 Pendientes importantes (tener en mente)
+
+### 1. Vista previa al compartir (título, descripción e imagen)
+Hoy la página pública es una SPA en GitHub Pages: las etiquetas `og:*` se rellenan con JavaScript y las rutas como `/otrelink/usuario` responden **404** (las sirve `404.html`). WhatsApp, Facebook, X, LinkedIn, Telegram y Slack **no ejecutan JavaScript**, así que no ven el SEO title, la descripción ni la sharing image.
+
+**Plan recomendado:** que `apps/web` (Render) genere la página en el servidor en `/<slug>` (SSR con `renderPage` del core + el script de `standalone.js` para la interactividad), con `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `twitter:*` y canonical ya escritos en el HTML.
+- Requiere el servicio de Render **siempre despierto** (plan Starter): en el plan gratis se duerme a los 15 min y los bots se rinden antes de que despierte.
+- Cambiar `NEXT_PUBLIC_PAGE_URL` a la nueva dirección y dejar GitHub Pages solo como redirección para no romper enlaces viejos.
+- Alternativa gratis: Static Site en Render que genere `slug/index.html` con las etiquetas en cada build (Deploy Hook al guardar; los cambios tardan 1–3 min en verse en la vista previa).
+- Imagen recomendada: 1200×630, PNG/JPG, < 300 KB. Después de cambiarla, refrescar la caché con el [Sharing Debugger de Facebook](https://developers.facebook.com/tools/debug/).
+
+### 2. Dominios personalizados / subdominios por página
+Ejemplo: `links.miempresa.com` → la página de ese cliente. GitHub Pages no sirve (un solo dominio por repo), hace falta un host que acepte cualquier dominio y emita HTTPS:
+
+| Opción | Costo | Nota |
+|---|---|---|
+| **Cloudflare for SaaS** (recomendada) | 100 dominios gratis, luego $0.10/mes c/u | Solo subdominios (`links.cliente.com`); dominios raíz solo en Enterprise |
+| Vercel Pro | ~$20/mes, dominios ilimitados | Admite dominio raíz |
+| Render | 2–25 incluidos según plan, luego $0.25/mes c/u | Caro a escala |
+| VPS + Caddy (on-demand TLS) | Solo el VPS | Tú mantienes el servidor |
+
+Qué hay que construir en Otrelink:
+- Colección `domains` `{ host, pageId, userId, status, verifyToken }` y feature de plan `customDomain` (Pro/Business, límite por plan desde el admin).
+- Dashboard → Settings → *Custom domain*: el usuario escribe el dominio, ve el registro DNS a crear (`CNAME links → pages.otrelink…`) y un TXT `_otrelink.<dominio>` para verificar que es suyo; botón *Verificar* y estado (pendiente / activo / error).
+- Alta y baja del dominio en el proveedor por API; cron para revisar los pendientes.
+- `GET /api/public/by-host?host=…` y la página pública buscando por dominio cuando `location.hostname` no es el de Otrelink; CORS para dominios activos.
+- Canonical, QR, botón de compartir y `og:url` con el dominio propio; 301 desde `otrelink/slug`.
+- Se monta sobre el punto 1 (el mismo servidor busca la página por dominio en vez de por slug).
+
 
 ## 🗺️ Próximos pasos
 
 - [ ] Login social (Google / GitHub)
 - [ ] Bloques con integraciones (YouTube/Spotify/Instagram feed)
 - [ ] Notificaciones por email al alcanzar N clics
-- [ ] Configuracion de subdominios
+- [ ] Dominios personalizados / subdominios por página (ver *Pendientes importantes*)
+- [ ] Vista previa al compartir con SSR (ver *Pendientes importantes*)
+- [ ] Probar pagos de Stripe (test mode) y PayPal (sandbox) antes de cobrar (ver *Planes y pagos*)
