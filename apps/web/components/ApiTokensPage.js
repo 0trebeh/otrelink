@@ -42,6 +42,8 @@ export default function ApiTokensPage({ user, origin, routes, expiryDays, rateLi
     setBusy('');
   };
 
+  const mcpUrl = `${origin}/api/mcp`;
+  const mcpHeader = `Authorization: Bearer ${created?.token || 'otl_YOUR_TOKEN'}`;
   const example = `curl ${origin}/api/pages \\\n  -H "Authorization: Bearer ${created?.token || 'otl_YOUR_TOKEN'}"`;
   const mcpConfig = JSON.stringify({
     mcpServers: {
@@ -147,12 +149,23 @@ export default function ApiTokensPage({ user, origin, routes, expiryDays, rateLi
               <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{mcpConfig}</code></pre>
               <div className="absolute top-2 right-2"><CopyButton text={mcpConfig} label="Copy" /></div>
             </div>
+            <h3 className="font-semibold mt-5 text-sm">From claude.ai or your phone (remote MCP)</h3>
+            <p className="text-sm text-muted mt-1">Nothing to install: in claude.ai go to <i>Customize → Connectors → Add custom connector</i>, paste this URL, choose <i>No sign in</i> and add the request header below. It then works in the Claude apps on any device.</p>
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
+              {[['URL', mcpUrl], ['Request header', mcpHeader]].map(([label, value]) => (
+                <div key={label} className="min-w-0 flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1 rounded-2xl code-surface px-4 py-2.5">
+                  <span className="text-[11px] uppercase tracking-wide opacity-70 w-full sm:w-28 shrink-0">{label}</span>
+                  <code className="font-mono text-[12.5px] flex-1 min-w-0 truncate">{value}</code>
+                  <CopyButton text={value} label="Copy" />
+                </div>
+              ))}
+            </div>
             <h3 className="font-semibold mt-5 text-sm">What a token can do</h3>
             <ul className="mt-2 grid gap-1 text-[13px] font-mono">
               {routes.map((r) => <li key={r} className="rounded-lg bg-soft px-3 py-1.5">{r}</li>)}
             </ul>
             <ul className="mt-4 text-sm text-muted list-disc pl-5 grid gap-1">
-              <li><b className="text-ink">Read only</b> tokens can only use GET.</li>
+              <li><b className="text-ink">Read only</b> tokens can only use GET (through the MCP, only the tools that read).</li>
               <li>Up to {rateLimit} requests per minute per token.</li>
               <li>Tokens can read your orders but can&apos;t change them, and can&apos;t touch your account, password, billing or other tokens.</li>
               <li>If a token leaks, revoke it here: it stops working immediately.</li>

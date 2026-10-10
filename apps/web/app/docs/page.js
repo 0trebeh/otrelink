@@ -502,9 +502,10 @@ export default function DocsPage() {
               ['add_block, update_block, move_block, remove_block, duplicate_block', 'Build the page block by block, inside collections too.'],
               ['set_theme, list_palettes, apply_palette, update_design', 'Change the look: theme, color palette (a preset, your colors or one brand color), fonts, buttons, accent, background.'],
               ['get_analytics, list_orders, get_today, update_today', 'Read visits and orders; change open/closed, today’s location and sold-out products.'],
-              ['upload_file', 'Upload an image or PDF from your computer.'],
+              ['upload_file', 'Upload an image or PDF (from your computer, or its content when using the remote server).'],
             ]}
           />
+          <P><b>From claude.ai or your phone:</b> there is also a remote MCP server at <C>https://YOUR-OTRELINK/api/mcp</C>, so you don’t need to install anything. In claude.ai open <i>Customize → Connectors → Add custom connector</i>, paste that URL, choose <i>No sign in</i> and add the request header <C>Authorization: Bearer otl_YOUR_TOKEN</C>. The connector then works in the Claude apps on any device. It has the same tools; <C>upload_file</C> takes the file’s content (base64) instead of a path.</P>
           <Note>The assistant saves each change right away. If you have the same page open in the editor with unsaved changes, reload it before saving there, or you will overwrite the assistant’s work.</Note>
 
           <H2 id="sharing">Sharing &amp; analytics</H2>

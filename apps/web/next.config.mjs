@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // The shared module system is plain ESM source; let Next compile it.
-  transpilePackages: ['@otrelink/core'],
+  transpilePackages: ['@otrelink/core', '@otrelink/mcp'],
   // esbuild bundles the runtime of exported websites at request time (native binary).
   serverExternalPackages: ['esbuild'],
   images: { unoptimized: true },

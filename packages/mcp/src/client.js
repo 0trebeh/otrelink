@@ -70,15 +70,17 @@ export function createClient({ baseUrl, token, fetch: doFetch = globalThis.fetch
     updateToday: async (id, patch) => (await call('PATCH', `/api/pages/${encodeURIComponent(id)}/today`, { body: patch })).today,
     analytics: (id, { days, tz } = {}) => call('GET', `/api/pages/${encodeURIComponent(id)}/analytics`, { query: { days, tz } }),
     listOrders: async (pageId, scope = 'active') => (await call('GET', '/api/orders', { query: { pageId, scope } })).orders,
-    /** Upload a local file (image or PDF). → { url, … } */
-    async uploadFile(filePath) {
-      const ext = path.extname(filePath).toLowerCase();
-      const type = MIME[ext];
+    /** Upload a file's bytes (image or PDF). `name` decides the type by its extension. → { url, … } */
+    async uploadBytes(name, bytes) {
+      const type = MIME[path.extname(String(name)).toLowerCase()];
       if (!type) throw new OtrelinkError(415, 'unsupported_type');
-      const bytes = await fs.readFile(filePath);
       const form = new FormData();
-      form.append('file', new Blob([bytes], { type }), path.basename(filePath));
+      form.append('file', new Blob([bytes], { type }), path.basename(String(name)));
       return call('POST', '/api/assets', { form });
+    },
+    /** Upload a local file (image or PDF), only for the local (stdio) server. → { url, … } */
+    async uploadFile(filePath) {
+      return this.uploadBytes(filePath, await fs.readFile(filePath));
     },
   };
 }

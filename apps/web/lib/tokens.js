@@ -30,6 +30,9 @@ export const TOKEN_ROUTES = [
   { path: /^\/api\/slug-check$/, methods: ['GET'], label: 'GET /api/slug-check' },
   { path: /^\/api\/assets$/, methods: ['POST'], label: 'POST /api/assets' },
   { path: /^\/api\/orders$/, methods: ['GET'], label: 'GET /api/orders' },
+  // Remote MCP server (claude.ai connector). Read-only tokens may use it too:
+  // MCP always uses POST, and the API calls behind each tool check the scope.
+  { path: /^\/api\/mcp$/, methods: ['GET', 'POST', 'DELETE'], label: 'POST /api/mcp', anyScope: true },
 ];
 
 /** Whether a token may call `method path`. `scope` = 'read' | 'write'. */
@@ -39,7 +42,7 @@ export function tokenAllows(path, method, scope = 'write') {
   if (!route) return { ok: false, reason: 'token_route_not_allowed' };
   if (m === 'OPTIONS' || m === 'HEAD') return { ok: true };
   if (!route.methods.includes(m)) return { ok: false, reason: 'token_route_not_allowed' };
-  if (scope !== 'write' && m !== 'GET') return { ok: false, reason: 'token_read_only' };
+  if (scope !== 'write' && m !== 'GET' && !route.anyScope) return { ok: false, reason: 'token_read_only' };
   return { ok: true };
 }
 

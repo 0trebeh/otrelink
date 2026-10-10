@@ -208,6 +208,7 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 - Se envían como `Authorization: Bearer otl_…`. `proxy.js` solo los deja pasar a las rutas de `apps/web/lib/tokens.js` (páginas, today, analytics, slug-check, subida de archivos y lectura de pedidos); cuenta, facturación, admin y los propios tokens siguen necesitando la sesión del navegador. Límite: 120 peticiones/min por token.
 - La feature `api` solo existe en Business y se puede apagar por usuario en el admin.
 - **Servidor MCP** (`packages/mcp`): 27 herramientas para Claude Desktop, Claude Code, Cursor… (crear páginas desde plantillas, añadir y mover bloques, temas, paletas, analíticas, pedidos, “Today”, subir archivos). Configuración y lista completa en `packages/mcp/README.md`.
+- **MCP remoto** (`/api/mcp`, Streamable HTTP): las mismas herramientas sin instalar nada. En claude.ai → *Customize → Connectors → Add custom connector* con la URL `https://TU-APP/api/mcp`, *No sign in* y la cabecera `Authorization: Bearer otl_…`; funciona también en la app del móvil. `upload_file` recibe el archivo en base64. `MCP_INTERNAL_URL` (opcional) cambia la dirección interna a la que llaman las herramientas (por defecto `http://127.0.0.1:$PORT`).
 
 ## 💳 Planes y pagos
 
@@ -282,6 +283,7 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 | POST | `/api/billing/stripe/webhook` · `/api/billing/paypal/webhook` | firma | Avisos de Stripe / PayPal |
 | GET | `/api/admin/stats` · `/api/admin/users` | `ADMIN_API_KEY` | Admin: estadísticas · usuarios |
 | GET · PATCH · DELETE | `/api/admin/users/:id` | `ADMIN_API_KEY` | Admin: ver, cambiar plan/límites, banear, borrar |
+| POST | `/api/mcp` | token `otl_` | Servidor MCP remoto (Streamable HTTP) para claude.ai y apps |
 | GET | `/api/referrals` | ✔ | Link, campaña activa e invitados del usuario |
 | GET | `/api/admin/referrals` | `ADMIN_API_KEY` | Admin: campañas con estadísticas y últimos referidos |
 | POST | `/api/admin/referrals/campaigns` | `ADMIN_API_KEY` | Admin: crear campaña |

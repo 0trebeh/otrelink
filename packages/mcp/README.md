@@ -137,10 +137,18 @@ npm test -w @otrelink/mcp
 
 The tests run every tool against an in-memory API (no server needed).
 
-## Next step: remote access
+## Remote server (claude.ai, phone, any device)
 
-Today the server runs on each user's computer (stdio). The next step is to publish it so anyone can connect from claude.ai or other apps with just a URL, without installing anything:
+The Otrelink app also serves these tools over HTTP at **`https://your-otrelink.com/api/mcp`** (Streamable HTTP, `apps/web/app/api/mcp/route.js`), so nothing has to be installed:
 
-1. **Serve it over HTTP**: add an endpoint (e.g. `https://your-otrelink.com/mcp`) that uses the SDK's *Streamable HTTP* transport instead of stdio. The tools stay the same.
-2. **Sign in with OAuth instead of pasting a token**: the user clicks *Connect*, logs in to Otrelink and approves access. Otrelink acts as the OAuth 2.1 server (PKCE + dynamic client registration) and issues a token linked to that user, still limited to the Business plan.
-3. **Deploy it** with the Otrelink app (Render) or as a separate service. Each request uses the caller's token, so every user only sees their own pages.
+1. In claude.ai: **Customize → Connectors → + Add → Add custom connector**.
+2. URL: `https://your-otrelink.com/api/mcp`. Sign in: **No sign in**. Request header: `Authorization: Bearer otl_…`.
+3. The connector is saved in your Claude account and is available in the Claude apps on any device.
+
+How it works:
+- **Stateless**: every request builds its own server, so restarts and several instances are fine.
+- The tools call the same app's API on `127.0.0.1:$PORT` (or `MCP_INTERNAL_URL`) with the caller's token, so plan limits, read-only tokens and the 120 requests/min limit apply as usual. The public address is passed along so uploaded files get public URLs.
+- `upload_file` takes `{ name, base64 }` (max 8 MB) instead of a path: the server never reads its own disk.
+- The server must be reachable from the internet: Claude connects from Anthropic's cloud, not from your phone. On Render's free plan, the first call after the service sleeps can take 30–50 s and may time out; try again.
+
+Later: **OAuth** sign-in (the user clicks *Connect*, logs in to Otrelink and approves), so nobody has to paste a token.

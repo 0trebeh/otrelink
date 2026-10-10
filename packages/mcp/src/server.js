@@ -28,7 +28,7 @@ Typical flow:
 4. get_page shows the outline with block ids; use them in update_block, move_block, remove_block.
 5. Look: list_themes + set_theme, list_palettes + apply_palette (colors only), or get_design_options + update_design.
 Changes are saved right away and go live if the page is published. Images must be URLs:
-use upload_file for local files. Don't invent block fields: unknown ones are ignored.
+use upload_file for files you have. Don't invent block fields: unknown ones are ignored.
 If the owner has the page open in the dashboard with unsaved changes, saving there can overwrite yours.`;
 
 const text = (s) => ({ content: [{ type: 'text', text: s }] });
@@ -47,7 +47,16 @@ const anyObject = z.record(z.string(), z.any());
 /** What PUT /api/pages/:id takes. */
 const editable = (p) => ({ slug: p.slug, profile: p.profile, socials: p.socials, blocks: p.blocks, design: p.design, settings: p.settings });
 
-export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0.0' } = {}) {
+export { createClient, OtrelinkError };
+
+/** Largest file upload_file accepts in remote mode (base64 content). */
+export const REMOTE_UPLOAD_MAX = 8 * 1024 * 1024;
+
+/**
+ * `remote: true` = hosted over HTTP (claude.ai connector, phone…): upload_file
+ * takes the file's content (base64) instead of a path, so the server never reads its own disk.
+ */
+export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0.0', remote = false } = {}) {
   const api = client || createClient({ baseUrl: process.env.OTRELINK_URL, token: process.env.OTRELINK_TOKEN });
   const server = new McpServer({ name, version }, { instructions: SERVER_INSTRUCTIONS });
 
@@ -513,12 +522,30 @@ export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0
   });
 
   // ── Files ───────────────────────────────────────────────────
-  tool('upload_file', {
-    title: 'Upload file',
-    description: 'Upload a local image (PNG, JPG, WebP, GIF, AVIF) or PDF from this computer and get its URL, for avatars, thumbnails, galleries or PDF blocks.',
-    inputSchema: { path: z.string().describe('Absolute path of the file on this computer.') },
-    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  }, async ({ path }) => json(await api.uploadFile(path), 'Uploaded. Use this url in block or profile fields.'));
+  if (remote) {
+    tool('upload_file', {
+      title: 'Upload file',
+      description: 'Upload an image (PNG, JPG, WebP, GIF, AVIF) or PDF and get its URL, for avatars, thumbnails, galleries or PDF blocks. Send the file content as base64 (max 8 MB).',
+      inputSchema: {
+        name: z.string().min(1).describe('File name with its extension, e.g. "logo.png".'),
+        base64: z.string().min(1).describe('The file content, base64-encoded (a data: URL also works).'),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    }, async ({ name: fileName, base64 }) => {
+      const clean = String(base64).replace(/^data:[^,]*,/, '').replace(/\s+/g, '');
+      if (clean.length * 0.75 > REMOTE_UPLOAD_MAX) return fail('The file is too large (max 8 MB).');
+      const bytes = Buffer.from(clean, 'base64');
+      if (!bytes.length) return fail('The base64 content is empty or invalid.');
+      return json(await api.uploadBytes(fileName, bytes), 'Uploaded. Use this url in block or profile fields.');
+    });
+  } else {
+    tool('upload_file', {
+      title: 'Upload file',
+      description: 'Upload a local image (PNG, JPG, WebP, GIF, AVIF) or PDF from this computer and get its URL, for avatars, thumbnails, galleries or PDF blocks.',
+      inputSchema: { path: z.string().describe('Absolute path of the file on this computer.') },
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    }, async ({ path }) => json(await api.uploadFile(path), 'Uploaded. Use this url in block or profile fields.'));
+  }
 
   return server;
 }
