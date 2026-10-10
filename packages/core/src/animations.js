@@ -43,6 +43,14 @@ export const attentionAnimations = createRegistry('attention', [
   },
 ]);
 
+/**
+ * A collapsible block (collection, FAQ, contact card, booking, survey…) that is
+ * open stops its attention loop, so the content doesn't move while it is read
+ * or filled in. It starts again when closed.
+ */
+export const ATTENTION_PAUSE_CSS = '.ol-root [class*="ol-anim-"]:has(details[open])>*,'
+  + '.ol-root [class*="ol-anim-"]:has(details[open])::after{animation:none}';
+
 // ── Entrance (page load or scroll) ───────────────────────────
 // `kf` = keyframes, `run` = duration (s) + easing. Speed (design) multiplies the duration.
 const SPRING = 'cubic-bezier(.2,.7,.2,1)';

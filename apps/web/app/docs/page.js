@@ -150,7 +150,7 @@ export default function DocsPage() {
 
           {/* ── Blocks ── */}
           <H2 id="blocks">Blocks</H2>
-          <P>Blocks are the pieces of your page. Every block also has <i>Animation &amp; schedule</i> options: an attention animation (it loops to draw the eye), its own entrance animation (or “Same as the page”, or none), and dates to show it from or hide it after (scheduled blocks are dimmed in the preview and hidden on the public page outside their dates).</P>
+          <P>Blocks are the pieces of your page. Every block also has <i>Animation &amp; schedule</i> options: an attention animation (it loops to draw the eye, and pauses while a block that opens — collection, FAQ, contact card, booking, survey… — is open), its own entrance animation (or “Same as the page”, or none), and dates to show it from or hide it after (scheduled blocks are dimmed in the preview and hidden on the public page outside their dates).</P>
           <P><b>Block style:</b> open a block and use <i>Style</i> to give it its own look: button style, button, text, border and shadow colors, corner radius, card colors and text color (plus opacity and blur for Glass). Anything left as “Same as the page” keeps your page design. A collection&apos;s style also applies to the blocks inside it, unless they have their own. Styled blocks get the class <C>.ol-styled</C> (and <C>.ol-bs-&lt;style&gt;</C> when they change the button style).</P>
           {categories.map((cat) => (
             <div key={cat} className="mb-6">

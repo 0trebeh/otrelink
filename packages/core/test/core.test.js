@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ATTENTION_PAUSE_CSS,
   blockTypes, themes, wallpapers, buttonStyles, fonts, socials,
   createDefaultPage, sanitizePage, sanitizeSlug, renderPage, applyTheme, newBlock, defaultDesign,
   designCss, resolveDesign, cssVariables, cssElements,
@@ -863,4 +864,15 @@ test('referrals: campaigns by dates, rewards only for Pro, limits, masks and mon
   assert.equal(extendProTrial(null, 1, now), '2026-11-09T12:00:00.000Z');
   assert.equal(extendProTrial('2026-11-09T12:00:00.000Z', 1, now), '2026-12-09T12:00:00.000Z', 'stacks');
   assert.equal(extendProTrial('2026-01-01T00:00:00.000Z', 1, now), '2026-11-09T12:00:00.000Z', 'expired → from now');
+});
+
+test('attention animations pause while a collapsible block is open', () => {
+  const page = { title: 'T', profile: { name: 'A' }, design: {}, blocks: [
+    { id: 'v', type: 'vcard', enabled: true, data: { name: 'Ana' }, options: { animation: 'pulse' } },
+  ] };
+  const { css, html } = renderPage(page, { animate: true });
+  assert.ok(html.includes('ol-anim-pulse'));
+  assert.ok(css.includes(ATTENTION_PAUSE_CSS));
+  const plain = renderPage({ ...page, blocks: [{ ...page.blocks[0], options: {} }] }, { animate: true });
+  assert.ok(!plain.css.includes(ATTENTION_PAUSE_CSS));
 });

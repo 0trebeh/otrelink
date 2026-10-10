@@ -6,7 +6,7 @@ import { adjustedImg } from './util/image.js';
 import { blockTypes, blockStyleOf, blockStyleGroups } from './blocks/index.js';
 import { buttonStyles, buttonHovers, scopedButtonCss } from './buttons/index.js';
 import { wallpapers } from './wallpapers/index.js';
-import { attentionAnimations, entranceAnimations, backgroundMotions, PRESS_CSS } from './animations.js';
+import { attentionAnimations, entranceAnimations, backgroundMotions, PRESS_CSS, ATTENTION_PAUSE_CSS } from './animations.js';
 import { googleFontsHref } from './fonts.js';
 import { designCss, resolveDesign, colorSchemeOf } from './design.js';
 import { socialHref, socialIcon, socials } from './socials.js';
@@ -255,6 +255,7 @@ export function renderPage(page, opts = {}) {
     d.buttonPress ? PRESS_CSS : '',
     ...[...usedTypes].map((t) => blockTypes.get(t).css || ''),
     ...[...usedAnims].map((a) => attentionAnimations.get(a)?.css || ''),
+    usedAnims.size ? ATTENTION_PAUSE_CSS : '',
     // Deeper blocks repeat .ol-styled so a block inside a styled collection wins over it.
     ...[...usedBlockButtons].map((k) => { const [id, depth] = k.split(':'); return scopedButtonCss(id, `.ol-bs-${id}${'.ol-styled'.repeat(Number(depth) + 1)}`); }),
     d.customCss || '',
