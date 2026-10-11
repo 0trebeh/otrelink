@@ -104,6 +104,7 @@ export async function createMongoDriver() {
       // Username reserved by an account that hasn't confirmed its email (until its link expires).
       findByPendingSlug: async (slug) => (slug ? out(await users.findOne({ pendingSlug: slug, verifyExpires: { $gt: new Date().toISOString() } })) : null),
       findByVerifyToken: async (hash) => (hash ? out(await users.findOne({ verifyTokenHash: hash })) : null),
+      findByEmailChangeToken: async (hash) => (hash ? out(await users.findOne({ emailChangeTokenHash: hash })) : null),
       // Cancelled subscriptions whose paid period is over (still on Pro).
       listProTrialEnded: async (nowIso) => (await users.find({ plan: 'pro', 'proTrial.until': { $lte: nowIso } }).limit(500).toArray()).map(out),
       listBillingEnded: async (nowIso) => (await users.find({

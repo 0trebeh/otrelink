@@ -153,6 +153,7 @@ El control aparece solo en el panel Style.
 - **Ajustes**: cambiar el usuario (comprueba disponibilidad), SEO y Open Graph, menú de navegación para páginas largas, botón de traducción ES/EN (Google Translate), ocultar el pie de página, bloquear selección y clic derecho, aviso de contenido sensible, página privada, código QR, y exportar (sitio estático) o importar en JSON.
 - **Analíticas**: visitas, visitantes únicos, clics, CTR, gráfico diario, bloques y redes más clicados, referrers, dispositivos, países, ciudades y horas/días con más visitas.
 - **API tokens y MCP** (plan Business): scripts y asistentes de IA pueden crear y editar páginas.
+- **Cuenta** (`/dashboard/account`, menú con las iniciales arriba a la derecha): plan y facturación, nombre, cambio de correo (con enlace de confirmación a la nueva dirección), contraseña (cierra las otras sesiones), cerrar sesión en otros dispositivos y eliminar la cuenta (cancela la suscripción).
 - **Referidos**: cada cuenta tiene su link de invitación; el admin crea campañas con fechas y recompensa (ver **Referidos**).
 - **Varias páginas** por cuenta según el plan (Free 1, Pro 10, Business lo que asigne el admin).
 - **Docs** para usuarios en `/docs` (bloques, CSS personalizado con variables y clases, planes, API…).
@@ -285,6 +286,11 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 | GET | `/api/admin/stats` · `/api/admin/users` | `ADMIN_API_KEY` | Admin: estadísticas · usuarios |
 | GET · PATCH · DELETE | `/api/admin/users/:id` | `ADMIN_API_KEY` | Admin: ver, cambiar plan/límites, banear, borrar |
 | POST | `/api/mcp` | token `otl_` | Servidor MCP remoto (Streamable HTTP) para claude.ai y apps |
+| GET · PATCH · DELETE | `/api/account` | ✔ sesión | Datos de la cuenta · cambiar nombre · eliminar cuenta (`{ password, confirmEmail }`) |
+| POST | `/api/account/password` | ✔ sesión | `{ current, next }`; cierra las demás sesiones |
+| POST · DELETE | `/api/account/email` | ✔ sesión | Pedir cambio de correo `{ email, password }` · cancelarlo |
+| GET | `/api/account/email/confirm?token=` | — | Enlace del correo de confirmación |
+| DELETE | `/api/account/sessions` | ✔ sesión | Cerrar sesión en los demás dispositivos |
 | GET | `/api/referrals` | ✔ | Link, campaña activa e invitados del usuario |
 | GET | `/api/admin/referrals` | `ADMIN_API_KEY` | Admin: campañas con estadísticas y últimos referidos |
 | POST | `/api/admin/referrals/campaigns` | `ADMIN_API_KEY` | Admin: crear campaña |

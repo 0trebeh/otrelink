@@ -43,6 +43,7 @@ const toc = [
   { id: 'translate', label: 'Translate button' },
   { id: 'plans', label: 'Plans' },
   { id: 'referrals', label: 'Invite friends', sub: true },
+  { id: 'account', label: 'Your account' },
   { id: 'api', label: 'API tokens' },
   { id: 'mcp', label: 'AI assistants (MCP)', sub: true },
   { id: 'sharing', label: 'Sharing & analytics' },
@@ -468,6 +469,10 @@ export default function DocsPage() {
             ]}
           />
           <P>Inviting yourself (the same email, with dots or <C>+tags</C>) doesn’t count, and each new account can only be invited once.</P>
+
+          <H2 id="account">Your account</H2>
+          <P>Open the button with your initials (top right of <i>Your pages</i>) → <i>Account</i>, or go to <C>/dashboard/account</C>. There you can see your plan and its renewal date, update your payment method, download invoices and go back to Free; change your name; change your email (we send a link to the new address and it changes when you open it); change your password (your other devices are signed out); sign out on every other device; and delete your account.</P>
+          <Note>Deleting your account removes all your pages, files, analytics, orders and bookings right away, and cancels a paid subscription without a refund for the rest of the period. It can’t be undone.</Note>
 
           <H2 id="api">API tokens</H2>
           <P>On the <b>Business</b> plan you can let your own scripts, automations or an AI assistant (through an MCP server) work on your pages without sharing your password. Open <i>Your pages → API</i> (or <C>/dashboard/api</C>) and press <i>New token</i>: give it a name, choose <i>Read &amp; write</i> or <i>Read only</i>, and when it expires (30, 90 or 365 days, or never). The token (<C>otl_…</C>) is shown <b>once</b>: copy it and keep it like a password. You can have up to 10 tokens and revoke any of them at once.</P>

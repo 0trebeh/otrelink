@@ -45,6 +45,7 @@ export async function createFileDriver() {
       // Username reserved by an account that hasn't confirmed its email (until its link expires).
       findByPendingSlug: async (slug) => clone(state.users.find((u) => slug && u.pendingSlug === slug && u.verifyExpires > now())),
       findByVerifyToken: async (hash) => clone(state.users.find((u) => hash && u.verifyTokenHash === hash)),
+      findByEmailChangeToken: async (hash) => clone(state.users.find((u) => hash && u.emailChangeTokenHash === hash)),
       // Cancelled subscriptions whose paid period is over (still on Pro).
       // Free accounts given Pro by a referral, whose free time is over.
       listProTrialEnded: async (nowIso) => clone(state.users.filter((u) => u.plan === 'pro' && u.proTrial?.until && u.proTrial.until <= nowIso)),

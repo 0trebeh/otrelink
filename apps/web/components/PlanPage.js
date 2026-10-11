@@ -208,7 +208,7 @@ function BillingHistory() {
   if (!list?.length) return null;
   const money = (n, c) => new Intl.NumberFormat([], { style: 'currency', currency: c || 'USD' }).format(n);
   return (
-    <section className="mt-10 rounded-3xl bg-panel border border-line/70 p-5 sm:p-6">
+    <section id="billing" className="scroll-mt-6 mt-10 rounded-3xl bg-panel border border-line/70 p-5 sm:p-6">
       <h2 className="font-display text-lg font-bold tracking-tight flex items-center gap-2"><ReceiptText size={18} /> Billing history</h2>
       <p className="text-sm text-muted mt-0.5">Download the invoice of each payment.</p>
       <ul className="mt-4 divide-y divide-line/70">

@@ -59,7 +59,10 @@ export async function getUser() {
     const db = await getDb();
     const user = await db.users.findById(payload.sub);
     // Banned accounts lose their sessions right away.
-    return user && !user.banned ? publicUser(user) : null;
+    if (!user || user.banned) return null;
+    // Sessions from before a password change or "sign out everywhere" stop working.
+    if (user.sessionsValidAfter && (payload.iat || 0) < Math.floor(Date.parse(user.sessionsValidAfter) / 1000)) return null;
+    return publicUser(user);
   } catch {
     return null;
   }
