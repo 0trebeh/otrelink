@@ -235,7 +235,7 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 3. Webhook → `https://TU-APP/api/billing/paypal/webhook` con los eventos `BILLING.SUBSCRIPTION.*` y `PAYMENT.SALE.COMPLETED` → `PAYPAL_WEBHOOK_ID`.
 4. `PAYPAL_MODE=sandbox` para probar, `live` en producción.
 
-Si cancelan, conservan Pro hasta el final del periodo pagado; el cron (`/api/cron/reminders`) los pasa luego a su plan anterior. `BUSINESS_CONTACT_EMAIL` es el correo del botón "Contact us".
+Si el usuario vuelve a Free (botón *Switch to Free* en `/dashboard/plan`, `POST /api/billing/cancel`), la suscripción deja de renovarse sin reembolso: conserva Pro hasta el final del periodo pagado y luego pasa a Free (Stripe avisa por webhook al terminar; con PayPal lo hace el cron `/api/cron/reminders`). Si el admin pasa a **Business** a alguien que paga Pro, su suscripción se cancela al momento (Business se cobra aparte); si la cancelación falla, el plan no cambia. `BUSINESS_CONTACT_EMAIL` es el correo del botón "Contact us".
 
 ## 🎁 Referidos
 
@@ -280,6 +280,7 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 | GET · POST | `/api/cron/reminders` | `CRON_SECRET` | Enviar recordatorios pendientes, bajar de plan suscripciones terminadas y terminar el Pro gratis de referidos |
 | POST | `/api/billing/stripe/checkout` · `portal` | ✔ | Pagar Pro con tarjeta · gestionar suscripción |
 | POST | `/api/billing/paypal/checkout` · `cancel` | ✔ | Pagar Pro con PayPal · cancelar |
+| POST | `/api/billing/cancel` | ✔ | Volver a Free: no renovar (Stripe o PayPal), Pro hasta fin del periodo |
 | POST | `/api/billing/stripe/webhook` · `/api/billing/paypal/webhook` | firma | Avisos de Stripe / PayPal |
 | GET | `/api/admin/stats` · `/api/admin/users` | `ADMIN_API_KEY` | Admin: estadísticas · usuarios |
 | GET · PATCH · DELETE | `/api/admin/users/:id` | `ADMIN_API_KEY` | Admin: ver, cambiar plan/límites, banear, borrar |

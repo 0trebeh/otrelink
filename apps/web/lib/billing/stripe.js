@@ -66,6 +66,8 @@ export async function getProPrice() {
 export const addCustomerCredit = (customerId, cents, currency, description) =>
   stripe(`/customers/${encodeURIComponent(customerId)}/balance_transactions`, { amount: -Math.abs(Math.round(cents)), currency, description });
 export const cancelSubscription = (id) => stripe(`/subscriptions/${encodeURIComponent(id)}`, null, 'DELETE');
+/** Stop renewing: the subscription (and Pro) lasts until the end of the period already paid. */
+export const cancelAtPeriodEnd = (id) => stripe(`/subscriptions/${encodeURIComponent(id)}`, { cancel_at_period_end: 'true' });
 
 /** Verify the Stripe-Signature header. Returns the parsed event or throws. */
 export function verifyWebhook(rawBody, header, secret = config.stripeWebhookSecret, toleranceSec = 300, now = Date.now()) {

@@ -45,11 +45,14 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
       window.location.href = url;
     } catch (e) { setErr(errorMessage(e)); setBusy(''); }
   };
-  const cancelPaypal = async () => {
-    if (!window.confirm('Cancel your PayPal subscription? You keep Pro until the end of the period you already paid.')) return;
+  // Back to Free: stop renewing (card or PayPal). Pro stays until the period already paid ends.
+  const proUntil = b?.endsAt || b?.currentPeriodEnd;
+  const toFree = async () => {
+    const until = b?.currentPeriodEnd ? ` until ${fmtDate(b.currentPeriodEnd)}` : ' until the end of the period you already paid';
+    if (!window.confirm(`Go back to Free?\n\nYour subscription won’t renew. You keep Pro${until} and then your account moves to Free. Nothing you built is deleted.`)) return;
     setBusy('cancel'); setErr('');
     try {
-      await api('/api/billing/paypal/cancel', { method: 'POST' });
+      await api('/api/billing/cancel', { method: 'POST' });
       const r = await api('/api/auth/me'); setUser(r.user);
     } catch (e) { setErr(errorMessage(e)); }
     setBusy('');
@@ -110,7 +113,7 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
               </Button>
             )}
             {b.provider === 'paypal' && subscribed && (
-              <Button variant="danger" onClick={cancelPaypal} disabled={!!busy}>{busy === 'cancel' && <Loader2 size={15} className="animate-spin" />} Cancel subscription</Button>
+              <Button variant="danger" onClick={toFree} disabled={!!busy}>{busy === 'cancel' && <Loader2 size={15} className="animate-spin" />} Cancel subscription</Button>
             )}
           </section>
         )}
@@ -149,7 +152,15 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
                       ? <a href={`mailto:${payments.contactEmail}?subject=${encodeURIComponent('Otrelink Business plan')}`} className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-full text-sm font-semibold bg-ink text-white hover:bg-black"><Mail size={16} /> Contact us</a>
                       : <p className="text-sm text-muted">Contact the Otrelink team to set it up.</p>
                   )}
-                  {c.id === 'free' && !current && <p className="text-sm text-muted">{subscribed ? 'Cancel your subscription to go back to Free.' : ''}</p>}
+                  {c.id === 'free' && !current && subscribed && !b.cancelAtPeriodEnd && (
+                    <>
+                      <Button onClick={toFree} disabled={!!busy}>{busy === 'cancel' && <Loader2 size={15} className="animate-spin" />} Switch to Free</Button>
+                      <p className="text-xs text-muted">Your subscription stops renewing; you keep Pro until the end of the period you paid.</p>
+                    </>
+                  )}
+                  {c.id === 'free' && !current && b && (b.cancelAtPeriodEnd || b.status === 'canceled') && plan.id === 'pro' && proUntil && (
+                    <p className="text-sm text-muted">You move to Free on {fmtDate(proUntil)}.</p>
+                  )}
                 </div>
               </section>
             );

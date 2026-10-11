@@ -453,7 +453,7 @@ export default function DocsPage() {
               ['Business', 'Custom number of pages and features, set up with the Otrelink team (each feature can be turned on or off, even the Code block), plus API tokens for your own tools and AI assistants (MCP).'],
             ]}
           />
-          <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal; you can cancel any time and keep Pro until the end of the period you paid. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>
+          <P>See and change your plan in <i>Your pages → plan button</i> (or <C>/dashboard/plan</C>). Pay with a card (Stripe) or PayPal. To stop, press <i>Switch to Free</i> on the Free plan: nothing is charged again and you keep Pro until the end of the period you paid. If you move to Business, the Otrelink team cancels your Pro subscription when they set it up, since Business is billed apart. If you go back to Free, what you already built stays saved and editable, but Pro blocks and photo/video backgrounds are not shown on your public page until you upgrade again.</P>
           <P><b>Your invoices:</b> every subscription payment appears under <i>Billing history</i> on the plan page, with a PDF invoice to download.</P>
 
           <H2 id="referrals">Invite friends</H2>

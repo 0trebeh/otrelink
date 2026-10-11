@@ -100,6 +100,9 @@ export function publicUser(u) {
     plan: { id: p.id, label: p.label, maxPages: p.maxPages, features: p.features, custom: Boolean(p.custom) },
     // Pro for free from referrals (until this date), when not paying for it.
     proTrialUntil: u.plan === 'pro' && u.proTrial?.until && new Date(u.proTrial.until) > new Date() && !['active', 'past_due'].includes(u.billing?.status) ? u.proTrial.until : null,
-    billing: u.billing ? { provider: u.billing.provider, status: u.billing.status, currentPeriodEnd: u.billing.currentPeriodEnd || null } : null,
+    billing: u.billing ? {
+      provider: u.billing.provider, status: u.billing.status, currentPeriodEnd: u.billing.currentPeriodEnd || null,
+      cancelAtPeriodEnd: Boolean(u.billing.cancelAtPeriodEnd), endsAt: u.billing.endsAt || null,
+    } : null,
   };
 }

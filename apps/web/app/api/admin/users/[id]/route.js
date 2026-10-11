@@ -24,12 +24,12 @@ async function details(db, user) {
   });
 }
 
-/** Stop charging a user (used when the admin asks for it). */
-async function cancelBilling(user) {
+/** Stop charging a user (used when the admin asks for it, or moves them to Business). */
+async function cancelBilling(user, reason = 'Cancelled by the administrator') {
   const b = user.billing;
   if (!b?.subscriptionId || !['active', 'past_due'].includes(b.status)) return null;
   if (b.provider === 'stripe') await stripe.cancelSubscription(b.subscriptionId);
-  else if (b.provider === 'paypal') await paypal.cancelSubscription(b.subscriptionId, 'Cancelled by the administrator');
+  else if (b.provider === 'paypal') await paypal.cancelSubscription(b.subscriptionId, reason);
   return { ...b, status: 'canceled', endsAt: new Date().toISOString(), downgraded: true, cancelledByAdmin: true };
 }
 
@@ -40,7 +40,9 @@ export const GET = handler(async (req, { params }) => {
   return json({ user: await details(db, user) });
 });
 
-// { plan?, limits?, banned?, bannedReason?, note?, cancelSubscription? }
+// { plan?, limits?, banned?, bannedReason?, note?, cancelSubscription?, keepSubscription? }
+// Moving a paying user to Business cancels their Pro subscription right away
+// (Business is priced and billed apart), unless keepSubscription: true.
 export const PATCH = handler(async (req, { params }) => {
   requireAdmin(req);
   const { db, user } = await load(params);
@@ -61,9 +63,13 @@ export const PATCH = handler(async (req, { params }) => {
   } else if (body.bannedReason !== undefined) patch.bannedReason = String(body.bannedReason).slice(0, 300);
   if (body.note !== undefined) patch.note = String(body.note).slice(0, 2000);
   if (body.emailVerified === true && user.emailVerified === false) await completeVerification(db, user);
-  if (body.cancelSubscription) {
+  const toBusiness = patch.plan === 'business' && user.plan !== 'business';
+  const cancelForBusiness = toBusiness && body.keepSubscription !== true;
+  if (body.cancelSubscription || cancelForBusiness) {
     try {
-      const billing = await cancelBilling(user);
+      // If this fails nothing is saved, so the plan never changes while they still pay for Pro.
+      const billing = await cancelBilling(user, cancelForBusiness ? 'Moved to the Business plan' : undefined);
+      if (billing && cancelForBusiness) billing.cancelReason = 'business';
       if (billing) patch.billing = billing;
     } catch (err) {
       return error(502, 'cancel_failed', { message: err.message });
@@ -71,7 +77,7 @@ export const PATCH = handler(async (req, { params }) => {
   }
   const updated = await db.users.update(user.id, patch);
   // Moving a referred account to Business counts as subscribing.
-  if (patch.plan === 'business' && user.plan !== 'business') await qualifyReferral(db, user.id, 'admin').catch((err) => console.error('[otrelink] referral qualify failed:', err));
+  if (toBusiness) await qualifyReferral(db, user.id, 'admin').catch((err) => console.error('[otrelink] referral qualify failed:', err));
   return json({ user: await details(db, updated) });
 });
 
