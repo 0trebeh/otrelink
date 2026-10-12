@@ -1,4 +1,8 @@
 // Central place for environment configuration.
+
+/** Env value without spaces or quotes pasted around it (a common copy-paste slip). */
+const clean = (v) => String(v || '').trim().replace(/^(['"])(.*)\1$/, '$2').trim();
+
 export const config = {
   dbDriver: process.env.DB_DRIVER || (process.env.MONGODB_URI ? 'mongo' : 'file'),
   mongoUri: process.env.MONGODB_URI || '',
@@ -22,11 +26,11 @@ export const config = {
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
   stripePriceId: process.env.STRIPE_PRICE_ID || '', // monthly Pro price (price_…)
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '', // whsec_…
-  paypalClientId: process.env.PAYPAL_CLIENT_ID || '',
-  paypalClientSecret: process.env.PAYPAL_CLIENT_SECRET || '',
-  paypalPlanId: process.env.PAYPAL_PLAN_ID || '', // monthly Pro plan (P-…)
-  paypalWebhookId: process.env.PAYPAL_WEBHOOK_ID || '',
-  paypalMode: process.env.PAYPAL_MODE === 'live' ? 'live' : 'sandbox',
+  paypalClientId: clean(process.env.PAYPAL_CLIENT_ID),
+  paypalClientSecret: clean(process.env.PAYPAL_CLIENT_SECRET),
+  paypalPlanId: clean(process.env.PAYPAL_PLAN_ID), // monthly Pro plan (P-…)
+  paypalWebhookId: clean(process.env.PAYPAL_WEBHOOK_ID),
+  paypalMode: ['live', 'production'].includes(clean(process.env.PAYPAL_MODE).toLowerCase()) ? 'live' : 'sandbox',
   // Tests only: point the payment APIs at a local mock (leave empty in real use).
   stripeApiBase: (process.env.STRIPE_API_BASE || 'https://api.stripe.com').replace(/\/$/, ''),
   paypalApiBase: (process.env.PAYPAL_API_BASE || '').replace(/\/$/, ''),

@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/db';
-import { createSubscription, paypalConfigured } from '@/lib/billing/paypal';
+import { startSubscription, paypalConfigured } from '@/lib/billing/paypal';
 import { ACTIVE } from '@/lib/billing';
 import { publicOrigin } from '@/lib/origin';
 import { handler, json, error, requireVerifiedUser, rateLimit, provider } from '@/lib/http';
@@ -12,7 +12,7 @@ export const POST = handler(async (req) => {
   const db = await getDb();
   const dbUser = await db.users.findById(user.id);
   if (ACTIVE.includes(dbUser.billing?.status)) return error(409, 'already_subscribed');
-  const url = await provider(() => createSubscription({ user, origin: publicOrigin(req) }));
+  const url = await provider(() => startSubscription({ user, origin: publicOrigin(req) }));
   if (!url) return error(502, 'paypal_error');
   return json({ url });
 });

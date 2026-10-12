@@ -29,8 +29,30 @@ async function paypal(path, body, method = body ? 'POST' : 'GET') {
   });
   if (res.status === 204) return {};
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(json.message || `PayPal ${res.status}`), { status: res.status });
+  if (!res.ok) {
+    // PayPal's own words: name, issue, field and debug_id (quote it to PayPal support).
+    const d = json.details?.[0];
+    const detail = [json.name, d?.issue, d?.field && `field ${d.field}`, d?.description, json.debug_id && `debug_id ${json.debug_id}`].filter(Boolean).join(' · ');
+    throw Object.assign(new Error(`${json.message || `PayPal ${res.status}`}${detail ? ` (${detail})` : ''}`), { status: res.status, paypal: json });
+  }
   return json;
+}
+
+/**
+ * Why creating a subscription failed with "resource does not exist": check the
+ * plan itself with the same credentials and say what is wrong, in plain words.
+ */
+export async function diagnosePlan(planId = config.paypalPlanId) {
+  const where = `PayPal ${config.paypalMode} (${base()})`;
+  if (!/^P-[A-Z0-9]+$/.test(planId)) return `PAYPAL_PLAN_ID "${planId}" doesn’t look like a plan id (P-…). A product id (PROD-…) is not a plan.`;
+  try {
+    const plan = await paypal(`/v1/billing/plans/${encodeURIComponent(planId)}`);
+    if (plan.status !== 'ACTIVE') return `The plan ${planId} exists in ${where} but its status is ${plan.status}: activate it in PayPal.`;
+    return `The plan ${planId} exists and is ACTIVE in ${where}; the problem is elsewhere (see the PayPal error above).`;
+  } catch (err) {
+    if (err.status === 404) return `The plan ${planId} doesn’t exist for these credentials in ${where}. It was probably created in the other mode (sandbox vs live) or under another PayPal (sandbox) business account than the app of PAYPAL_CLIENT_ID.`;
+    return `Couldn’t check the plan: ${err.message}`;
+  }
 }
 
 /** Start a subscription; the user approves it on PayPal. → approval URL */
@@ -48,6 +70,18 @@ export async function createSubscription({ user, origin }) {
     },
   });
   return sub.links?.find((l) => l.rel === 'approve')?.href;
+}
+
+/** createSubscription, and when PayPal says the plan doesn't exist, log why. */
+export async function startSubscription(args) {
+  try {
+    return await createSubscription(args);
+  } catch (err) {
+    if (err.status === 404 || err.paypal?.name === 'RESOURCE_NOT_FOUND' || /does not exist/i.test(err.message)) {
+      console.error('[otrelink] PayPal plan check:', await diagnosePlan().catch((e) => e.message));
+    }
+    throw err;
+  }
 }
 
 export const getSubscription = (id) => paypal(`/v1/billing/subscriptions/${encodeURIComponent(id)}`);
