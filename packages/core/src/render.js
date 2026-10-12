@@ -14,7 +14,7 @@ import { esc, safeUrl, miniMarkdown } from './util/html.js';
 import { verifiedSvg, icon } from './icons.js';
 import { navItems } from './nav.js';
 import { flattenBlocks } from './tree.js';
-import { PAGE_LANGUAGES, pageLanguage, otherLanguage, setupTranslate } from './translate.js';
+import { PAGE_LANGUAGES, pageLanguage, otherLanguage, localizePage, resolveLanguage, rememberLanguage } from './translate.js';
 
 const BASE_CSS = `
 .ol-root{position:relative;min-height:100%;font-family:var(--ol-body-font);font-size:var(--ol-body-size);color:var(--ol-text-color);-webkit-font-smoothing:antialiased;isolation:isolate}
@@ -73,8 +73,6 @@ const BASE_CSS = `
 .ol-root .ol-lang[hidden]{display:none}
 .ol-root .ol-lang button{position:relative;font:600 12px/1 system-ui,sans-serif;letter-spacing:.03em;border:0;border-radius:999px;padding:6px 10px;background:transparent;color:var(--ol-surface-fg);opacity:.7;cursor:pointer}
 .ol-root .ol-lang button[aria-pressed="true"]{background:var(--ol-surface-fg);color:var(--ol-surface);opacity:1}
-.ol-root .ol-lang[aria-busy] button[aria-pressed="true"]{animation:ol-lang-wait 1s ease-in-out infinite alternate}
-@keyframes ol-lang-wait{to{opacity:.3}}
 .ol-root.has-nav-right .ol-lang{right:auto;left:12px}
 .ol-root .ol-navmenu{position:fixed;top:12px;z-index:30;font-family:var(--ol-body-font)}
 .ol-root .ol-navmenu-left{left:max(12px,calc(50% - var(--ol-max-width)/2 - 4px))}
@@ -151,7 +149,10 @@ function renderProfile(page, d) {
  * @param {object} opts   { mode: 'live' | 'preview', animate: boolean, now: number, footerUrl: string }
  * @returns {{ html: string, css: string, fontsHref: string }}
  */
-export function renderPage(page, opts = {}) {
+export function renderPage(rawPage, opts = {}) {
+  // Second language: render the owner's translation when `opts.lang` asks for it.
+  const lang = resolveLanguage(rawPage, opts.lang);
+  const page = localizePage(rawPage, lang);
   const mode = opts.mode || 'live';
   const now = opts.now ?? Date.now();
   const animate = opts.animate ?? mode !== 'preview';
@@ -219,10 +220,10 @@ export function renderPage(page, opts = {}) {
   if (bgMotion?.wallpapers && !bgMotion.wallpapers.includes(d.wallpaper.type)) bgMotion = null;
   const motionCls = [bgMotion && `ol-bgm-${bgMotion.id}`, d.buttonPress && 'ol-press'].filter(Boolean).join(' ');
   const protect = [page.settings?.noSelect && 'ol-noselect', page.settings?.noRightClick && 'ol-nomenu'].filter(Boolean).join(' ');
-  // Translate switch: Google Translate in the visitor's browser (see translate.js).
-  const lang = pageLanguage(page);
-  const langButtons = `${[lang, otherLanguage(lang)].map((l) => `<button type="button" data-ol-lang="${l}" lang="${l}" aria-pressed="${l === lang}" title="${esc(PAGE_LANGUAGES[l].label)}">${PAGE_LANGUAGES[l].short}</button>`).join('')}`;
-  // ES / EN in the corner, or inside the navigation menu (Settings → Translate button → Show it).
+  // Language switch: the page's own language and the owner's translation (see translate.js).
+  const source = pageLanguage(rawPage);
+  const langButtons = `${[source, otherLanguage(source)].map((l) => `<button type="button" data-ol-lang="${l}" lang="${l}" aria-pressed="${l === lang}" title="${esc(PAGE_LANGUAGES[l].label)}">${PAGE_LANGUAGES[l].short}</button>`).join('')}`;
+  // ES / EN in the corner, or inside the navigation menu (Settings → Second language → Show the ES / EN switch).
   const langInMenu = page.settings?.translateButton && page.settings?.translatePlace === 'menu' && page.settings?.navMenu;
   const langSwitch = page.settings?.translateButton && !langInMenu
     ? `<nav class="ol-lang notranslate" aria-label="Language" translate="no">${langButtons}</nav>`
@@ -310,10 +311,12 @@ export function applyColorScheme(doc, scheme) {
  * Used by mountPage() and by exported static sites (HTML is pre-rendered).
  * @returns {() => void} cleanup function
  */
-export function hydratePage(container, page, opts = {}) {
+export function hydratePage(container, rawPage, opts = {}) {
+  const lang = resolveLanguage(rawPage, opts.lang);
+  const page = localizePage(rawPage, lang);
   // The dashboard preview lives inside the dashboard document: it must not change it.
   if (opts.colorScheme !== false) applyColorScheme(container.ownerDocument, colorSchemeOf(resolveDesign(page.design)));
-  if (opts.mode === 'live' && container.ownerDocument?.documentElement) container.ownerDocument.documentElement.lang = pageLanguage(page);
+  if (opts.mode === 'live' && container.ownerDocument?.documentElement) container.ownerDocument.documentElement.lang = lang;
   const cleanups = [];
   // Stagger entrance animations (Style → Layout & motion → Delay between blocks).
   const design = resolveDesign(page.design);
@@ -400,16 +403,40 @@ export function hydratePage(container, page, opts = {}) {
   const noDrag = root?.classList.contains('ol-noselect') || noMenu;
   if (noMenu) container.addEventListener('contextmenu', onMenu);
   if (noDrag) container.addEventListener('dragstart', onDrag);
-  const stopTranslate = setupTranslate(container, page);
   const stopNav = setupNav(container, opts);
-  return () => {
+  const stop = () => {
     for (const fn of cleanups) fn();
-    stopTranslate();
+    stopLang();
     stopNav();
     container.removeEventListener('click', onClick);
     container.removeEventListener('contextmenu', onMenu);
     container.removeEventListener('dragstart', onDrag);
   };
+  // ES / EN switch: render the page again in the other language, in place.
+  let inner = null;
+  const stopLang = setupLanguage(container, lang, (next) => {
+    rememberLanguage(rawPage, next, win);
+    if (opts.onLanguage) { opts.onLanguage(next); return; }
+    stop();
+    inner = mountPage(container, rawPage, { ...opts, lang: next, animate: false });
+    opts.onLanguageChange?.(next);
+  });
+  return () => (inner ? inner() : stop());
+}
+
+/** Wire the ES / EN buttons. `onPick(lang)` runs when another language is chosen. */
+function setupLanguage(container, current, onPick) {
+  const navs = [...container.querySelectorAll('.ol-root .ol-lang')];
+  if (!navs.length) return () => {};
+  const onClick = (e) => {
+    const b = e.target.closest('[data-ol-lang]');
+    if (!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (b.dataset.olLang !== current) onPick(b.dataset.olLang);
+  };
+  navs.forEach((n) => n.addEventListener('click', onClick));
+  return () => navs.forEach((n) => n.removeEventListener('click', onClick));
 }
 
 /** Navigation menu: open / close, jump to a section, mark the section on screen. */

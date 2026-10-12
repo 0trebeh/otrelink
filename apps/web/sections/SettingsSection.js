@@ -3,10 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import { Copy, Download, Upload, Check, Trash2, QrCode } from 'lucide-react';
-import { settingsFields } from '@otrelink/core';
+import { settingsFields, SETTINGS_TRANSLATABLE, otherLanguage, pageLanguage, PAGE_LANGUAGES, translationProgress } from '@otrelink/core';
 import { api, errorMessage } from '@/lib/client';
 import { Panel, Button, Input, cx } from '@/components/ui';
 import FieldList from '@/components/fields/FieldList';
+import { TranslationFields } from '@/components/editor/TranslationPanel';
 import { UpgradeNote } from '@/components/PlanLock';
 
 function SlugField({ ed }) {
@@ -57,6 +58,21 @@ function ShareCard({ url }) {
   );
 }
 
+/** Second language: overall progress and the SEO / warning texts. Block texts are translated in each block. */
+function SecondLanguagePanel({ page, set }) {
+  const lang = otherLanguage(pageLanguage(page));
+  const { done, total } = translationProgress(page, lang);
+  const t = page.translations?.[lang] || {};
+  const fields = settingsFields.filter((f) => SETTINGS_TRANSLATABLE.includes(f.key));
+  return (
+    <Panel title={`Second language · ${PAGE_LANGUAGES[lang].label}`}
+      description={`Visitors switch with the ES / EN button. Translate your title and bio in Profile, and each block in its “Translation” section. ${done} of ${total} texts translated.`}>
+      <TranslationFields fields={fields} data={page.settings} value={t.settings || {}} lang={lang}
+        onChange={(value) => set((p) => ({ ...p, translations: { ...(p.translations || {}), [lang]: { ...(p.translations?.[lang] || {}), settings: value } } }), 'tr:settings')} />
+    </Panel>
+  );
+}
+
 export default function SettingsSection({ ed }) {
   const { page, set } = ed;
   const canTranslate = Boolean(ed.plan?.features?.translate);
@@ -65,8 +81,8 @@ export default function SettingsSection({ ed }) {
   const [importErr, setImportErr] = useState('');
 
   const exportJson = () => {
-    const { profile, socials, blocks, design, settings, slug } = page;
-    const blob = new Blob([JSON.stringify({ otrelink: 1, slug, profile, socials, blocks, design, settings }, null, 2)], { type: 'application/json' });
+    const { profile, socials, blocks, design, settings, translations, slug } = page;
+    const blob = new Blob([JSON.stringify({ otrelink: 1, slug, profile, socials, blocks, design, settings, translations }, null, 2)], { type: 'application/json' });
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: `${page.slug}.otrelink.json` });
     a.click();
     URL.revokeObjectURL(a.href);
@@ -77,7 +93,7 @@ export default function SettingsSection({ ed }) {
     try {
       const data = JSON.parse(await file.text());
       if (!data || typeof data !== 'object' || !Array.isArray(data.blocks)) throw new Error();
-      set((p) => ({ ...p, profile: data.profile ?? p.profile, socials: data.socials ?? p.socials, blocks: data.blocks, design: data.design ?? p.design, settings: data.settings ?? p.settings }));
+      set((p) => ({ ...p, profile: data.profile ?? p.profile, socials: data.socials ?? p.socials, blocks: data.blocks, design: data.design ?? p.design, settings: data.settings ?? p.settings, translations: data.translations ?? {} }));
     } catch {
       setImportErr('That file is not an Otrelink export.');
     }
@@ -100,9 +116,10 @@ export default function SettingsSection({ ed }) {
         <div className="space-y-4">
           <SlugField ed={ed} />
           <FieldList fields={canTranslate ? settingsFields : settingsFields.filter((f) => !['translateButton', 'translatePlace'].includes(f.key))} values={page.settings} onChange={(k, v) => set((p) => ({ ...p, settings: { ...p.settings, [k]: v } }), `settings:${k}`)} />
-          {!canTranslate && <UpgradeNote>The translate button (ES / EN) is a Pro feature.</UpgradeNote>}
+          {!canTranslate && <UpgradeNote>A second language (ES / EN) is a Pro feature.</UpgradeNote>}
         </div>
       </Panel>
+      {canTranslate && page.settings.translateButton && <SecondLanguagePanel page={page} set={set} />}
       <Panel title="Download as website" description="A .zip with index.html, style.css, script.js and your images and PDFs. Open index.html on any computer: no server or database needed. Uses the last saved version.">
         <a href={`/api/pages/${page.id}/export`} download className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-line text-[13px] font-semibold bg-panel hover:border-ink/30">
           <Download size={15} /> Download website (.zip)

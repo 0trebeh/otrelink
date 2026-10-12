@@ -3,9 +3,10 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy, arrayMove, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
-import { profileFields, socials, socialIcon, uid } from '@otrelink/core';
+import { profileFields, socials, socialIcon, uid, PROFILE_TRANSLATABLE, otherLanguage, pageLanguage, PAGE_LANGUAGES } from '@otrelink/core';
 import { Panel, Button, Input, Select, IconButton, CoreIcon } from '@/components/ui';
 import FieldList from '@/components/fields/FieldList';
+import { TranslationFields } from '@/components/editor/TranslationPanel';
 import { restrictToVerticalAxis } from './dnd';
 
 function SocialRow({ item, onChange, onRemove }) {
@@ -43,6 +44,17 @@ export default function ProfileSection({ ed }) {
           onChange={(k, v) => set((p) => ({ ...p, profile: { ...p.profile, [k]: v } }), `profile:${k}`)}
         />
       </Panel>
+
+      {page.settings?.translateButton && (() => {
+        const lang = otherLanguage(pageLanguage(page));
+        return (
+          <Panel title={`Translation · ${PAGE_LANGUAGES[lang].label}`} description="Your title and bio in the second language. Leave one empty to show the original.">
+            <TranslationFields fields={profileFields.filter((f) => PROFILE_TRANSLATABLE.includes(f.key))} data={page.profile} lang={lang}
+              value={page.translations?.[lang]?.profile || {}}
+              onChange={(value) => set((p) => ({ ...p, translations: { ...(p.translations || {}), [lang]: { ...(p.translations?.[lang] || {}), profile: value } } }), 'tr:profile')} />
+          </Panel>
+        );
+      })()}
 
       <Panel title="Social icons" description="Small icons under your bio. Drag to reorder.">
         <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={({ active, over }) => {

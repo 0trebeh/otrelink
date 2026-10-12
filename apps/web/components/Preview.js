@@ -18,6 +18,8 @@ export default function Preview({ page, replayKey = 0, className, scale = 1 }) {
   const frameRef = useRef(null);
   const [ready, setReady] = useState(false);
   const lastReplay = useRef(replayKey);
+  // ES / EN picked in the preview stays while you edit (second language).
+  const [lang, setLang] = useState(null);
 
   // srcDoc can finish loading before React attaches onLoad (SSR/hydration).
   useEffect(() => {
@@ -48,10 +50,10 @@ export default function Preview({ page, replayKey = 0, className, scale = 1 }) {
     lastReplay.current = replayKey;
     let cleanup;
     const raf = requestAnimationFrame(() => {
-      cleanup = mountPage(root, page, { mode: 'preview', animate, interceptLinks: true, footerUrl: '#' });
+      cleanup = mountPage(root, page, { mode: 'preview', animate, interceptLinks: true, footerUrl: '#', lang: lang || undefined, onLanguage: setLang });
     });
     return () => { cancelAnimationFrame(raf); cleanup?.(); };
-  }, [page, ready, replayKey]);
+  }, [page, ready, replayKey, lang]);
 
   return (
     <div className={cx('shrink-0', className)} style={{ width: 340 * scale, height: 700 * scale }}>

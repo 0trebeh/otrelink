@@ -7,6 +7,7 @@
 //            (children only on container types such as Collection, nested up to MAX_DEPTH)
 //   design:  { theme, ...design fields, wallpaper: { type, ...wallpaper fields } },
 //   settings:{ published, language, translateButton, seoTitle, seoDescription, ogImage, hideFooter, noSelect, noRightClick, sensitive, sensitiveMessage }
+//   translations: { es: { profile, settings, blocks: { [blockId]: {...} } } } — the second language (translate.js)
 //   today:   { status, place, address, lat, lon, note, until, placeAt, soldOut, ordersPaused, updatedAt }
 //            set from the dashboard "Today" panel, saved apart from the rest (see sanitizeToday)
 // }
@@ -18,6 +19,7 @@ import { defaultsFor, sanitizeFields } from './fields.js';
 import { defaultDesign, resolveDesign, sanitizeDesign } from './design.js';
 import { uid } from './util/html.js';
 import { MAX_DEPTH } from './tree.js';
+import { sanitizeTranslations } from './translate.js';
 
 export const profileFields = [
   { key: 'title', type: 'text', label: 'Title', max: 60, default: '' },
@@ -39,8 +41,8 @@ export const settingsFields = [
   ] },
   { key: 'language', type: 'select', label: 'Page language', default: 'en', options: [{ value: 'en', label: 'English' }, { value: 'es', label: 'Español' }],
     help: 'The language your page is written in.' },
-  { key: 'translateButton', type: 'toggle', label: 'Translate button (ES / EN)', default: false,
-    help: 'Visitors can read your page in the other language. The text is translated automatically by Google Translate, in their browser.' },
+  { key: 'translateButton', type: 'toggle', label: 'Second language (ES / EN)', default: false,
+    help: 'Write your page in the other language too: each block gets a “Translation” section. Visitors switch with the ES / EN button; texts you leave empty show in the original language.' },
   { key: 'translatePlace', type: 'select', label: 'Show the ES / EN switch', default: 'corner', showIf: { key: 'translateButton', truthy: true }, options: [
     { value: 'corner', label: 'In the top corner' }, { value: 'menu', label: 'Inside the navigation menu' },
   ], help: 'Inside the menu needs “Navigation menu” on; otherwise it stays in the corner.' },
@@ -167,12 +169,16 @@ export function sanitizeBlocks(blocks) {
 
 /** Sanitize the editable content of a page (everything except owner/slug/ids). */
 export function sanitizePage(input = {}) {
+  const blocks = sanitizeBlocks(input.blocks);
+  const settings = sanitizeFields(settingsFields, input.settings || {});
   return {
     profile: sanitizeFields(profileFields, input.profile || {}),
     socials: sanitizeSocials(input.socials),
-    blocks: sanitizeBlocks(input.blocks),
+    blocks,
     design: sanitizeDesign(resolveDesign(input.design || {})),
-    settings: sanitizeFields(settingsFields, input.settings || {}),
+    settings,
+    // The owner's texts in the second language (see translate.js).
+    translations: sanitizeTranslations(input.translations, { blocks, language: settings.language, profileFields, settingsFields }),
   };
 }
 

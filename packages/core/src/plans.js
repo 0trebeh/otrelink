@@ -40,7 +40,7 @@ export const PLAN_FEATURES = {
   loyalty: { label: 'Loyalty cards', blocks: ['loyalty'], sections: ['loyalty'], group: 'business' },
   invoices: { label: 'Invoices (PDF)', sections: ['invoices'], group: 'business' },
   // Page & design
-  translate: { label: 'Translate button', group: 'page' },
+  translate: { label: 'Second language (ES / EN)', group: 'page' },
   mediaWallpaper: { label: 'Photo & video backgrounds', wallpapers: ['image', 'video'], group: 'page' },
   // Integrations
   api: { label: 'API tokens & MCP', group: 'integrations', business: true },
@@ -112,7 +112,7 @@ export function countLockedBlocks(blocks = [], plan) {
   return n;
 }
 
-/** Turn off plan features inside a page the plan doesn't allow (pickup orders, translate button). */
+/** Turn off plan features inside a page the plan doesn't allow (pickup orders, second language). */
 export function stripLockedFeatures(page, plan) {
   const orders = Boolean(plan?.features?.orders);
   const fix = (list) => (list || []).map((b) => ({

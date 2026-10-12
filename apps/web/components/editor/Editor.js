@@ -85,7 +85,7 @@ export default function Editor({ initialPage, pageUrl, plan, account }) {
     try {
       const { page: fresh } = await api(`/api/pages/${draft.id}`, {
         method: 'PUT',
-        body: { slug: draft.slug, profile: draft.profile, socials: draft.socials, blocks: draft.blocks, design: draft.design, settings: draft.settings },
+        body: { slug: draft.slug, profile: draft.profile, socials: draft.socials, blocks: draft.blocks, design: draft.design, settings: draft.settings, translations: draft.translations || {} },
       });
       setSaved({ json: contentOf(fresh), slug: fresh.slug });
       // Adopt the server's cleaned version only if nothing changed while saving.

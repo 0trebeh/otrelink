@@ -1,6 +1,6 @@
 // Otrelink public page. Plain JavaScript: fetch the page, render it with the
 // shared renderer from @otrelink/core, and send analytics beacons.
-import { mountPage, resolveDesign } from '@otrelink/core';
+import { mountPage, resolveDesign, pickLanguage, localizePage } from '@otrelink/core';
 import { getGeo, visitContext } from './geo.js';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -71,9 +71,14 @@ async function main() {
     if (res.status === 404) return showState('Page not found', `There's no page at /${slug} yet.`);
     if (!res.ok) throw new Error(String(res.status));
     const { page } = await res.json();
-    setMeta(page);
+    // Second language: ?lang=, the visitor's last choice or their browser's language.
+    const lang = pickLanguage(page, window);
+    setMeta(localizePage(page, lang));
     mountPage(app, page, {
       mode: 'live',
+      lang,
+      // The ES / EN switch re-renders in place; keep the tab title in that language.
+      onLanguageChange: (l) => setMeta(localizePage(page, l)),
       footerUrl: HOME,
       apiBase: API, // used by blocks that talk to the server (Booking)
       onTrack: (target) => track(page.id, { type: 'click', target }),

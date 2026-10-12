@@ -78,7 +78,8 @@ export default {
     { key: 'questions', type: 'list', label: 'Questions', itemLabel: 'question', max: MAX_QUESTIONS, fields: [
       { key: 'label', type: 'text', label: 'Question', required: true, max: 200 },
       { key: 'type', type: 'select', label: 'Answer type', default: 'short', options: QUESTION_TYPES },
-      { key: 'options', type: 'textarea', label: 'Options', max: 3000, help: 'One option per line.', showIf: { key: 'type', in: CHOICE_TYPES } },
+      // Answers are counted by option text, so options stay in one language (results add up).
+      { key: 'options', type: 'textarea', label: 'Options', max: 3000, help: 'One option per line.', showIf: { key: 'type', in: CHOICE_TYPES }, translate: false },
       { key: 'hint', type: 'text', label: 'Help text (optional)', max: 200 },
       { key: 'required', type: 'toggle', label: 'Required', default: false },
     ], default: [

@@ -40,7 +40,7 @@ const toc = [
   { id: 'orders', label: 'Pickup orders', sub: true },
   { id: 'loyalty', label: 'Loyalty cards', sub: true },
   { id: 'invoices', label: 'Invoices' },
-  { id: 'translate', label: 'Translate button' },
+  { id: 'translate', label: 'Second language' },
   { id: 'plans', label: 'Plans' },
   { id: 'referrals', label: 'Invite friends', sub: true },
   { id: 'account', label: 'Your account' },
@@ -369,7 +369,7 @@ export default function DocsPage() {
 
           <H2 id="code-block">Code block</H2>
           <P>The <i>Code</i> block (Content category) shows a snippet with syntax colors: SQL, HTML, CSS, JavaScript, TypeScript, JSON, Markdown / README, Python, Bash, PHP and 20 more. Choose the language, or leave <i>Detect</i>: a file name like <C>README.md</C> or <C>query.sql</C> picks it, otherwise it is guessed from the code.</P>
-          <P>Options: 8 color themes (GitHub dark and light, One Dark, Dracula, Monokai, Nord, Night Owl, Solarized light), line numbers (and the first number), highlighted lines (<C>3, 7-9</C>), wrapping long lines, a max height with scroll, text size, tab width, a top bar (window dots, simple or none) and a <i>Copy</i> button. In the editor, Tab inserts two spaces; press Esc and then Tab to move to the next field. Code is never translated by the translate button.</P>
+          <P>Options: 8 color themes (GitHub dark and light, One Dark, Dracula, Monokai, Nord, Night Owl, Solarized light), line numbers (and the first number), highlighted lines (<C>3, 7-9</C>), wrapping long lines, a max height with scroll, text size, tab width, a top bar (window dots, simple or none) and a <i>Copy</i> button. In the editor, Tab inserts two spaces; press Esc and then Tab to move to the next field. Code is not translated: it shows the same in both languages.</P>
 
           <H2 id="catalog">Catalog</H2>
           <P>Add a <i>Catalog</i> block (Content category, Pro plan) to show your products. By default it is a button that opens the catalog on your page; choose <i>Always visible</i> to show the products directly. Pick a grid (2 per row) or a list.</P>
@@ -435,13 +435,14 @@ export default function DocsPage() {
             </ul>
           </Warning>
 
-          <H2 id="translate">Translate button</H2>
-          <P>In <i>Settings</i>, choose the <b>Page language</b> (the language you write in) and turn on <b>Translate button (ES / EN)</b> (Pro plan). Your page gets a small ES / EN switch in the top corner (or, with <i>Show the ES / EN switch → Inside the navigation menu</i>, as a Language row in the menu; this needs the Navigation menu on). Choosing the other language translates the whole page with <b>Google Translate</b>, in the visitor’s browser. Nothing is stored and you don’t write translations.</P>
+          <H2 id="translate">Second language (ES / EN)</H2>
+          <P>In <i>Settings</i>, choose the <b>Page language</b> (the language you write in) and turn on <b>Second language (ES / EN)</b> (Pro plan). Then write your texts in the other language yourself: in <i>Profile → Translation</i> (title and bio), in each block’s <b>Translation</b> section (it shows the original of every text and how many are done, e.g. 3/7) and in <i>Settings → Second language</i> (SEO title, description and the sensitive-content warning). Nothing is translated by a machine.</P>
+          <P>Your page gets a small ES / EN switch in the top corner (or, with <i>Show the ES / EN switch → Inside the navigation menu</i>, as a Language row in the menu; this needs the Navigation menu on). Visitors see first the language of their browser (or the one they picked before); a link can choose it with <C>?lang=es</C> or <C>?lang=en</C>. The editor preview has the same switch.</P>
           <Warning>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Translation is automatic, so names of dishes or brand words may come out oddly. Prices, codes and the switch itself are never translated.</li>
-              <li>The page language also sets how dates and times are written (21:00 or 9:00 PM).</li>
-              <li>It uses Google’s free website translator: if Google stops it or it is blocked on a network, the switch does nothing.</li>
+              <li>Texts you leave empty show in the original language.</li>
+              <li>Only texts are translated: links, prices, images and colors are shared. Survey options stay in one language so the results add up; for order extras only the names change (prices and order stay).</li>
+              <li>Built-in labels (like “Back to top”) stay in English, and the page language sets how dates and times are written (21:00 or 9:00 PM).</li>
             </ul>
           </Warning>
 
@@ -450,7 +451,7 @@ export default function DocsPage() {
             head={['Plan', 'What it includes']}
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
-              ['Pro · $10/month', 'Up to 10 pages, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, the translate button and photo or video backgrounds.'],
+              ['Pro · $10/month', 'Up to 10 pages, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, a second language (ES / EN) and photo or video backgrounds.'],
               ['Business', 'Custom number of pages and features, set up with the Otrelink team (each feature can be turned on or off, even the Code block), plus API tokens for your own tools and AI assistants (MCP).'],
             ]}
           />

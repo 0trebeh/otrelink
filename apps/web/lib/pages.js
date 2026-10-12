@@ -1,11 +1,11 @@
 // Page helpers shared by API routes.
-import { sanitizePage, sanitizeToday, stripPrivateFields, stripLockedBlocks, stripLockedFeatures, allowsWallpaper, resolveDesign } from '@otrelink/core';
+import { sanitizePage, sanitizeToday, stripPrivateFields, stripLockedBlocks, stripLockedFeatures, allowsWallpaper, resolveDesign, pruneTranslations } from '@otrelink/core';
 
 /** Shape returned to the dashboard. */
 export const toDashboardPage = (p) => ({
   id: p.id, slug: p.slug, profile: p.profile, socials: p.socials, blocks: p.blocks,
   // New design options get their default values on pages saved before they existed.
-  design: resolveDesign(p.design || {}), settings: p.settings, createdAt: p.createdAt, updatedAt: p.updatedAt,
+  design: resolveDesign(p.design || {}), settings: p.settings, translations: p.translations || {}, createdAt: p.createdAt, updatedAt: p.updatedAt,
   today: sanitizeToday(p.today),
 });
 
@@ -33,6 +33,8 @@ export const toPublicPage = (p, plan) => {
     // Hide disabled blocks (at any depth) from the public payload entirely.
     // Private fields (e.g. a meeting link) never reach visitors through the page data.
     blocks: stripPrivateFields(blocks),
+    // Only the second language of blocks visitors can see, and only when it is on.
+    translations: clean.settings.translateButton ? pruneTranslations(clean.translations, blocks) : {},
     // Live state from the dashboard "Today" tab (location, open/closed, sold out).
     today: sanitizeToday(p.today),
   };

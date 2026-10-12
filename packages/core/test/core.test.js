@@ -568,7 +568,7 @@ test('translate switch is rendered with the page language', async () => {
   const page = sanitizePage({ ...createDefaultPage({ slug: 'x' }), settings: { language: 'es', translateButton: true } });
   const r = renderPage(page);
   assert.ok(r.html.includes('lang="es"') && r.html.includes('data-ol-lang="en"') && r.html.includes('translate="no"'));
-  assert.ok(renderPage(page, { mode: 'export' }).html.includes('data-ol-lang')); // exported sites load Google Translate too
+  assert.ok(renderPage(page, { mode: 'export' }).html.includes('data-ol-lang')); // exported sites switch language too
   assert.ok(!renderPage(sanitizePage({ ...page, settings: { language: 'es' } })).html.includes('data-ol-lang'));
 });
 
@@ -875,4 +875,48 @@ test('attention animations pause while a collapsible block is open', () => {
   assert.ok(css.includes(ATTENTION_PAUSE_CSS));
   const plain = renderPage({ ...page, blocks: [{ ...page.blocks[0], options: {} }] }, { animate: true });
   assert.ok(!plain.css.includes(ATTENTION_PAUSE_CSS));
+});
+
+test('second language: owner translations are cleaned, applied by id and switchable', async () => {
+  const { sanitizePage, localizePage, renderPage, translationProgress, resolveLanguage, pickLanguage, pruneTranslations } = await import('../src/index.js');
+  const raw = {
+    profile: { title: 'Taco Truck', bio: 'Best tacos' }, socials: [], design: {}, settings: { language: 'en', translateButton: true },
+    blocks: [
+      { id: 'b1', type: 'link', enabled: true, data: { title: 'Menu', url: 'https://x.co' } },
+      { id: 'c1', type: 'collection', enabled: true, data: { title: 'More' }, children: [
+        { id: 'f1', type: 'faq', enabled: true, data: { items: [{ id: 'i1', question: 'Open?', answer: 'Yes' }, { id: 'i2', question: 'Where?', answer: 'Here' }] } },
+      ] },
+      { id: 'k1', type: 'catalog', enabled: true, data: { products: [{ id: 'p1', name: 'Taco', price: 3, extras: 'Cheese = 1.5\nBacon = 2' }] } },
+    ],
+    translations: {
+      es: {
+        profile: { title: 'Camión de tacos', junk: 'x' },
+        blocks: { b1: { title: 'Menú', url: 'https://evil.example' }, f1: { items: { i1: { question: '¿Abierto?' }, zz: { question: 'x' } } },
+          k1: { products: { p1: { name: 'Taco ES', extras: 'Queso = 9\nTocino = 9' } } }, gone: { title: 'x' } },
+      },
+      en: { profile: { title: 'only the other language is kept' } },
+    },
+  };
+  const page = { ...raw, ...sanitizePage(raw) };
+  assert.deepEqual(Object.keys(page.translations), ['es']);
+  assert.equal(page.translations.es.blocks.b1.url, undefined); // URLs are not translatable
+  assert.equal(page.translations.es.blocks.gone, undefined); // unknown blocks dropped
+  assert.deepEqual(Object.keys(page.translations.es.blocks.f1.items), ['i1']); // unknown list items dropped
+  const es = localizePage(page, 'es');
+  assert.equal(es.profile.title, 'Camión de tacos');
+  assert.equal(es.profile.bio, 'Best tacos'); // empty translation keeps the original
+  assert.equal(es.blocks[1].children[0].data.items[0].question, '¿Abierto?');
+  assert.equal(es.blocks[1].children[0].data.items[1].question, 'Where?');
+  assert.equal(es.blocks[2].data.products[0].extras, 'Queso = 1.5\nTocino = 2'); // extras keep the original prices
+  assert.equal(localizePage(page, 'en'), page);
+  assert.ok(renderPage(page, { lang: 'es' }).html.includes('Menú'));
+  assert.ok(!renderPage({ ...page, settings: { language: 'en' } }, { lang: 'es' }).html.includes('Menú')); // switched off
+  assert.equal(resolveLanguage(page, 'fr'), 'en');
+  const prog = translationProgress(page);
+  assert.ok(prog.done === 5 && prog.total > prog.done, JSON.stringify(prog));
+  const win = { location: { search: '?lang=es' }, navigator: { languages: ['en-US'] } };
+  assert.equal(pickLanguage(page, win), 'es');
+  assert.equal(pickLanguage(page, { location: { search: '' }, navigator: { languages: ['es-VE', 'en'] } }), 'es');
+  assert.equal(pickLanguage(page, { location: { search: '' }, navigator: { languages: ['fr'] } }), 'en');
+  assert.deepEqual(Object.keys(pruneTranslations(page.translations, [page.blocks[0]]).es.blocks), ['b1']);
 });

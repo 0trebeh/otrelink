@@ -211,8 +211,10 @@ export default {
       { key: 'tags', type: 'tags', label: 'Tags (optional)', options: PRODUCT_TAGS.map((t) => ({ value: t.value, label: `${t.emoji} ${t.label}` })) },
       { key: 'allergens', type: 'text', label: 'Allergens (optional)', max: 120, placeholder: 'Contains: milk, eggs, nuts' },
       { key: 'extras', type: 'textarea', label: 'Extras (optional)', max: 800, placeholder: 'Extra cheese = 1.50\nBacon = 2\nNo onion',
+        // Second language: only the names change; prices and order stay the original ones (they are charged).
+        localize: (orig, tr) => { const o = parseExtras(orig); const t = parseExtras(tr); return o.length === t.length ? o.map((e, i) => `${t[i].name}${e.price ? ` = ${e.price}` : ''}`).join('\n') : orig; },
         help: 'One per line, with its price after “=” (no price = free). Visitors pick them when they order.' },
-      { key: 'stock', type: 'text', label: 'Stock (optional)', max: 7, placeholder: 'e.g. 12',
+      { key: 'stock', type: 'text', label: 'Stock (optional)', max: 7, placeholder: 'e.g. 12', translate: false,
         help: 'Units available. 0 = Sold out. Empty = stock is not shown. For a quick “sold out today”, use the Today tab.' },
       { key: 'badge', type: 'text', label: 'Label (optional)', max: 20, placeholder: 'New, Best seller…' },
       { key: 'url', type: 'url', label: 'Link (optional)', help: 'Product or checkout page. Without a link, the WhatsApp order is used (if set).' },

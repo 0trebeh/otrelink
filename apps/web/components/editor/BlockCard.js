@@ -6,6 +6,7 @@ import { GripVertical, ChevronDown, Copy, Trash2, BarChart3, CalendarClock, Spar
 import { blockTypes, commonBlockFields, blockStyleFields, blockStyleFieldsFor, blockStyleGroups, blockStyleOf, icon, validateFields } from '@otrelink/core';
 import { CoreIcon, IconButton, Toggle, cx } from '../ui';
 import FieldList from '../fields/FieldList';
+import TranslationPanel from './TranslationPanel';
 
 function titleOf(block, mod) {
   const d = block.data || {};
@@ -17,7 +18,7 @@ export const blockTitle = (block) => titleOf(block, blockTypes.get(block?.type))
 
 export default function BlockCard({
   block, depth = 0, expanded, dimmed, onToggleExpand, onChange, onOptions, onEnabled, onDuplicate, onDelete, clicks,
-  childrenSlot, moveTargets, onMove,
+  childrenSlot, moveTargets, onMove, translation,
 }) {
   const mod = blockTypes.get(block.type);
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
@@ -71,7 +72,10 @@ export default function BlockCard({
       {expanded && (
         <div className="border-t border-line/70 px-4 sm:px-5 py-4">
           {mod ? (
-            <FieldList fields={mod.fields} values={block.data} onChange={onChange} />
+            <>
+              <FieldList fields={mod.fields} values={block.data} onChange={onChange} />
+              {translation && <TranslationPanel block={block} mod={mod} lang={translation.lang} value={translation.value} onChange={translation.onChange} />}
+            </>
           ) : (
             <p className="text-sm text-muted">This block is hidden on your page because its type was removed. Re-install the module or delete the block.</p>
           )}

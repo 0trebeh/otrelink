@@ -45,7 +45,7 @@ const positionShape = {
 const anyObject = z.record(z.string(), z.any());
 
 /** What PUT /api/pages/:id takes. */
-const editable = (p) => ({ slug: p.slug, profile: p.profile, socials: p.socials, blocks: p.blocks, design: p.design, settings: p.settings });
+const editable = (p) => ({ slug: p.slug, profile: p.profile, socials: p.socials, blocks: p.blocks, design: p.design, settings: p.settings, translations: p.translations });
 
 export { createClient, OtrelinkError };
 
@@ -221,7 +221,7 @@ export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0
 
   tool('update_page', {
     title: 'Update page',
-    description: 'Change a page’s slug, profile (title, bio, avatar URL, verified), social icons or settings (published, navigation menu, language, translate button, SEO…). Only what you send changes; socials replaces the whole list.',
+    description: 'Change a page’s slug, profile (title, bio, avatar URL, verified), social icons or settings (published, navigation menu, language, second language (translateButton), SEO…). Only what you send changes; socials replaces the whole list.',
     inputSchema: {
       page: pageRef,
       slug: z.string().optional().describe('New public username.'),

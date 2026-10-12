@@ -10,7 +10,7 @@ import {
   blockTypes, newBlock, cloneBlock, icon, isContainerType,
   updateBlock, updateChildren, removeBlock, insertBlock, moveBlock, canMoveInto,
   parentIdOf, childrenOf, findBlock, flattenBlocks,
-  blockTracksClicks,
+  blockTracksClicks, otherLanguage, pageLanguage,
 } from '@otrelink/core';
 import { Button, CoreIcon, cx } from '@/components/ui';
 import BlockCard, { blockTitle } from '@/components/editor/BlockCard';
@@ -140,7 +140,19 @@ export default function LinksSection({ ed }) {
     if (snapshot.current) set((p) => ({ ...p, blocks: snapshot.current }));
   };
 
-  const tree = { ops, expanded, setExpanded, analytics, setAdding, moveTargets, activeId };
+  // Second language: each block edits its translation (page.translations[lang].blocks[id]).
+  const trLang = page.settings?.translateButton ? otherLanguage(pageLanguage(page)) : null;
+  const translation = trLang ? (id) => ({
+    lang: trLang,
+    value: page.translations?.[trLang]?.blocks?.[id],
+    onChange: (value) => set((p) => {
+      const t = p.translations?.[trLang] || {};
+      const blocks = { ...(t.blocks || {}) };
+      if (value && Object.keys(value).length) blocks[id] = value; else delete blocks[id];
+      return { ...p, translations: { ...(p.translations || {}), [trLang]: { ...t, blocks } } };
+    }, `tr:${id}`),
+  }) : null;
+  const tree = { ops, expanded, setExpanded, analytics, setAdding, moveTargets, activeId, translation };
   const active = activeId ? findBlock(page.blocks, activeId) : null;
 
   return (
@@ -214,6 +226,7 @@ function BlockList({ parentId, blocks, depth, tree }) {
             onEnabled={(v) => tree.ops.patch(b.id, (x) => ({ ...x, enabled: v }))}
             onDuplicate={() => tree.ops.duplicate(b.id)}
             onDelete={() => tree.ops.remove(b.id)}
+            translation={tree.translation ? tree.translation(b.id) : null}
             moveTargets={() => tree.moveTargets(b.id)}
             onMove={(target) => tree.ops.moveTo(b.id, target)}
             clicks={tree.analytics && (blockTracksClicks(b) || tree.analytics.blocks?.[b.id]) ? tree.analytics.blocks?.[b.id] || 0 : undefined}
