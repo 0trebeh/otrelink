@@ -233,7 +233,6 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 2. Crea un producto y un plan mensual de $10 → `PAYPAL_PLAN_ID` (`P-…`).
 3. Webhook → `https://TU-APP/api/billing/paypal/webhook` con los eventos `BILLING.SUBSCRIPTION.*` y `PAYMENT.SALE.COMPLETED` → `PAYPAL_WEBHOOK_ID`.
 4. `PAYPAL_MODE=sandbox` para probar, `live` en producción.
-5. ¿Error "The specified resource does not exist"? El plan es de otra cuenta o modo. `node apps/web/scripts/paypal-plan.mjs` comprueba `PAYPAL_PLAN_ID` con tus credenciales (de `apps/web/.env` o del entorno), y con `--create` crea el plan de $10/mes en la cuenta correcta e imprime el `P-…`.
 
 Si el usuario vuelve a Free (botón *Switch to Free* en `/dashboard/plan`, `POST /api/billing/cancel`), la suscripción deja de renovarse sin reembolso: conserva Pro hasta el final del periodo pagado y luego pasa a Free (Stripe avisa por webhook al terminar; con PayPal lo hace el cron `/api/cron/reminders`). Si el admin pasa a **Business** a alguien que paga Pro, su suscripción se cancela al momento (Business se cobra aparte); si la cancelación falla, el plan no cambia. `BUSINESS_CONTACT_EMAIL` es el correo del botón "Contact us".
 
