@@ -1,6 +1,6 @@
-// Otrelink MCP server: the tools an AI assistant uses to create and edit the
-// pages of the token's owner. Transport-agnostic: index.js connects it to
-// stdio; tests connect it in memory.
+// Otrelink MCP tools: what an AI assistant uses to create and edit the pages of
+// the token's owner. Served over HTTP by the web app (apps/web/app/api/mcp);
+// tests connect it in memory.
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import {
@@ -49,15 +49,13 @@ const editable = (p) => ({ slug: p.slug, profile: p.profile, socials: p.socials,
 
 export { createClient, OtrelinkError };
 
-/** Largest file upload_file accepts in remote mode (base64 content). */
+/** Largest file upload_file accepts (base64 content). */
 export const REMOTE_UPLOAD_MAX = 8 * 1024 * 1024;
 
-/**
- * `remote: true` = hosted over HTTP (claude.ai connector, phone…): upload_file
- * takes the file's content (base64) instead of a path, so the server never reads its own disk.
- */
-export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0.0', remote = false } = {}) {
-  const api = client || createClient({ baseUrl: process.env.OTRELINK_URL, token: process.env.OTRELINK_TOKEN });
+/** `client` = createClient({ baseUrl, token }) for the caller's token. */
+export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0.0' } = {}) {
+  if (!client) throw new Error('createOtrelinkServer needs a client');
+  const api = client;
   const server = new McpServer({ name, version }, { instructions: SERVER_INSTRUCTIONS });
 
   // The account (plan, page URL) is read once and refreshed when the plan may have changed.
@@ -522,30 +520,22 @@ export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0
   });
 
   // ── Files ───────────────────────────────────────────────────
-  if (remote) {
-    tool('upload_file', {
-      title: 'Upload file',
-      description: 'Upload an image (PNG, JPG, WebP, GIF, AVIF) or PDF and get its URL, for avatars, thumbnails, galleries or PDF blocks. Send the file content as base64 (max 8 MB).',
-      inputSchema: {
-        name: z.string().min(1).describe('File name with its extension, e.g. "logo.png".'),
-        base64: z.string().min(1).describe('The file content, base64-encoded (a data: URL also works).'),
-      },
-      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-    }, async ({ name: fileName, base64 }) => {
-      const clean = String(base64).replace(/^data:[^,]*,/, '').replace(/\s+/g, '');
-      if (clean.length * 0.75 > REMOTE_UPLOAD_MAX) return fail('The file is too large (max 8 MB).');
-      const bytes = Buffer.from(clean, 'base64');
-      if (!bytes.length) return fail('The base64 content is empty or invalid.');
-      return json(await api.uploadBytes(fileName, bytes), 'Uploaded. Use this url in block or profile fields.');
-    });
-  } else {
-    tool('upload_file', {
-      title: 'Upload file',
-      description: 'Upload a local image (PNG, JPG, WebP, GIF, AVIF) or PDF from this computer and get its URL, for avatars, thumbnails, galleries or PDF blocks.',
-      inputSchema: { path: z.string().describe('Absolute path of the file on this computer.') },
-      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-    }, async ({ path }) => json(await api.uploadFile(path), 'Uploaded. Use this url in block or profile fields.'));
-  }
+  // The file travels as base64: the server never reads files from its own disk.
+  tool('upload_file', {
+    title: 'Upload file',
+    description: 'Upload an image (PNG, JPG, WebP, GIF, AVIF) or PDF and get its URL, for avatars, thumbnails, galleries or PDF blocks. Send the file content as base64 (max 8 MB).',
+    inputSchema: {
+      name: z.string().min(1).describe('File name with its extension, e.g. "logo.png".'),
+      base64: z.string().min(1).describe('The file content, base64-encoded (a data: URL also works).'),
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  }, async ({ name: fileName, base64 }) => {
+    const clean = String(base64).replace(/^data:[^,]*,/, '').replace(/\s+/g, '');
+    if (clean.length * 0.75 > REMOTE_UPLOAD_MAX) return fail('The file is too large (max 8 MB).');
+    const bytes = Buffer.from(clean, 'base64');
+    if (!bytes.length) return fail('The base64 content is empty or invalid.');
+    return json(await api.uploadBytes(fileName, bytes), 'Uploaded. Use this url in block or profile fields.');
+  });
 
   return server;
 }

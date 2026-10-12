@@ -1,62 +1,45 @@
 # Otrelink MCP server
 
-Lets an AI assistant (Claude Desktop, Claude Code, Cursor…) create and edit **your** Otrelink pages: add blocks, change the design, publish, see analytics, update the food truck's location for today, and more.
+Lets an AI assistant (Claude, Claude Code, Cursor…) create and edit **your** Otrelink pages: add blocks, change the design, publish, see analytics, update the food truck's location for today, and more.
 
-It acts as you through a **personal API token** (Business plan): it can only see and change the pages of the account that owns the token.
+It runs **online**, inside the Otrelink app, at **`https://your-otrelink.com/api/mcp`** (Streamable HTTP). Nothing to install. It acts as you through a **personal API token** (Business plan): it can only see and change the pages of the account that owns the token.
 
 ## 1. Get a token
 
-In Otrelink: **Your pages → API → New token**. Choose *Read & write* (or *Read only* if the assistant should only look). Copy the `otl_…` token: it is shown only once.
+In Otrelink: **Your pages → API → New token**. Choose *Read & write* (or *Read only* if the assistant should only look). Copy the `otl_…` token: it is shown only once. The **API** page also has every config below ready to copy, with your address and token.
 
-## 2. Install
+## 2. Connect your assistant
 
-From the Otrelink folder (it uses `@otrelink/core` from this repository):
+### Claude (web, phone and desktop)
+
+1. In claude.ai: **Customize → Connectors → + Add → Add custom connector**.
+2. URL: `https://your-otrelink.com/api/mcp`. Sign in: **No sign in**. Request header: `Authorization: Bearer otl_…`.
+3. The connector is saved in your Claude account, so it is available in the Claude apps on all your devices.
+
+### Claude Code
 
 ```bash
-npm install
+claude mcp add --transport http otrelink https://your-otrelink.com/api/mcp \
+  --header "Authorization: Bearer otl_…"
 ```
 
-The server is `packages/mcp/src/index.js`. It needs two environment variables:
+### Cursor and other apps with a config file
 
-| Variable | Example |
-|---|---|
-| `OTRELINK_URL` | `https://your-otrelink.com` (the dashboard/API address, not the public page address) |
-| `OTRELINK_TOKEN` | `otl_…` |
-
-## 3. Connect your assistant
-
-Use the **absolute path** of `index.js` on your computer.
-
-### Claude Desktop
-
-Settings → Developer → Edit Config (`claude_desktop_config.json`), then restart Claude Desktop:
+Apps that only start local servers reach the URL through the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge (needs Node.js). Add this to their MCP settings (in Cursor: `.cursor/mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "otrelink": {
-      "command": "node",
-      "args": ["C:\\Users\\you\\Proyects\\Otrelink\\packages\\mcp\\src\\index.js"],
-      "env": {
-        "OTRELINK_URL": "https://your-otrelink.com",
-        "OTRELINK_TOKEN": "otl_…"
-      }
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://your-otrelink.com/api/mcp", "--header", "Authorization:${OTRELINK_AUTH}"],
+      "env": { "OTRELINK_AUTH": "Bearer otl_…" }
     }
   }
 }
 ```
 
-### Claude Code
-
-```bash
-claude mcp add otrelink -e OTRELINK_URL=https://your-otrelink.com -e OTRELINK_TOKEN=otl_… -- node /absolute/path/to/Otrelink/packages/mcp/src/index.js
-```
-
-(The server name goes **before** `-e`.)
-
-### Cursor and others
-
-Same `mcpServers` block as Claude Desktop, in `.cursor/mcp.json` (or your client's MCP settings).
+(The header has no space after `Authorization:` on purpose: on Windows, spaces inside `args` break. The space goes in `OTRELINK_AUTH`.)
 
 ## Tools
 
@@ -114,7 +97,7 @@ Same `mcpServers` block as Claude Desktop, in `.cursor/mcp.json` (or your client
 
 | Tool | What it does |
 |---|---|
-| `upload_file` | Upload a local image or PDF and get its URL |
+| `upload_file` | Upload an image or PDF (sent as base64, max 8 MB) and get its URL |
 
 ## Good to know
 
@@ -129,6 +112,14 @@ Same `mcpServers` block as Claude Desktop, in `.cursor/mcp.json` (or your client
 
 > "Today the truck is at Plaza Altamira until 10 pm and the al pastor is sold out."
 
+## How it works
+
+- `apps/web/app/api/mcp/route.js` serves the tools from `packages/mcp/src/server.js`. **Stateless**: every request builds its own server, so restarts and several instances are fine.
+- The tools call the same app's API on `127.0.0.1:$PORT` (or `MCP_INTERNAL_URL`) with the caller's token, so plan limits, read-only tokens and the 120 requests/min limit apply as usual. The public address is passed along so uploaded files get public URLs.
+- `upload_file` takes `{ name, base64 }` (max 8 MB): the server never reads its own disk.
+- Claude connects from Anthropic's cloud, so the app must be reachable from the internet. On Render's free plan the first call after the service sleeps can take 30–50 s and may time out; try again.
+- Later: **OAuth** sign-in (the user clicks *Connect*, logs in to Otrelink and approves), so nobody has to paste a token.
+
 ## Develop
 
 ```bash
@@ -136,19 +127,3 @@ npm test -w @otrelink/mcp
 ```
 
 The tests run every tool against an in-memory API (no server needed).
-
-## Remote server (claude.ai, phone, any device)
-
-The Otrelink app also serves these tools over HTTP at **`https://your-otrelink.com/api/mcp`** (Streamable HTTP, `apps/web/app/api/mcp/route.js`), so nothing has to be installed:
-
-1. In claude.ai: **Customize → Connectors → + Add → Add custom connector**.
-2. URL: `https://your-otrelink.com/api/mcp`. Sign in: **No sign in**. Request header: `Authorization: Bearer otl_…`.
-3. The connector is saved in your Claude account and is available in the Claude apps on any device.
-
-How it works:
-- **Stateless**: every request builds its own server, so restarts and several instances are fine.
-- The tools call the same app's API on `127.0.0.1:$PORT` (or `MCP_INTERNAL_URL`) with the caller's token, so plan limits, read-only tokens and the 120 requests/min limit apply as usual. The public address is passed along so uploaded files get public URLs.
-- `upload_file` takes `{ name, base64 }` (max 8 MB) instead of a path: the server never reads its own disk.
-- The server must be reachable from the internet: Claude connects from Anthropic's cloud, not from your phone. On Render's free plan, the first call after the service sleeps can take 30–50 s and may time out; try again.
-
-Later: **OAuth** sign-in (the user clicks *Connect*, logs in to Otrelink and approves), so nobody has to paste a token.

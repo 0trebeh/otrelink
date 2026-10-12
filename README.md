@@ -5,7 +5,7 @@ Clon modular de Linktree: un dashboard para crear páginas de links súper perso
 ```
 otrelink/
 ├── packages/core/     ← TODO lo modular vive aquí (bloques, temas, paletas, fondos, botones, fuentes, redes, plantillas, planes…)
-├── packages/mcp/      ← Servidor MCP: un asistente de IA crea y edita páginas con un API token (ver su README)
+├── packages/mcp/      ← Herramientas MCP (las sirve apps/web en /api/mcp): un asistente de IA crea y edita páginas con un API token
 ├── apps/web/          ← Next.js: API + dashboard + docs (/docs)
 └── apps/page/         ← Página pública (vanilla JS + Vite)
 
@@ -36,7 +36,6 @@ npm run dev
 | `npm run dev` | Levanta dashboard y página pública a la vez |
 | `npm run build` | Compila ambas apps |
 | `npm test` | Pruebas del núcleo (renderiza todos los bloques/temas/fondos/plantillas, XSS, planes, paletas…) y del servidor MCP |
-| `npm run mcp` | Arranca el servidor MCP (necesita `OTRELINK_URL` y `OTRELINK_TOKEN`) |
 
 ### Variables de entorno
 
@@ -208,8 +207,7 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 - **Dashboard → API** (`/dashboard/api`): crear tokens `otl_…` (lectura y escritura o solo lectura, con vencimiento), copiarlo una sola vez y revocarlo. Se guarda solo el hash SHA-256.
 - Se envían como `Authorization: Bearer otl_…`. `proxy.js` solo los deja pasar a las rutas de `apps/web/lib/tokens.js` (páginas, today, analytics, slug-check, subida de archivos y lectura de pedidos); cuenta, facturación, admin y los propios tokens siguen necesitando la sesión del navegador. Límite: 120 peticiones/min por token.
 - La feature `api` solo existe en Business y se puede apagar por usuario en el admin.
-- **Servidor MCP** (`packages/mcp`): 27 herramientas para Claude Desktop, Claude Code, Cursor… (crear páginas desde plantillas, añadir y mover bloques, temas, paletas, analíticas, pedidos, “Today”, subir archivos). Configuración y lista completa en `packages/mcp/README.md`.
-- **MCP remoto** (`/api/mcp`, Streamable HTTP): las mismas herramientas sin instalar nada. En claude.ai → *Customize → Connectors → Add custom connector* con la URL `https://TU-APP/api/mcp`, *No sign in* y la cabecera `Authorization: Bearer otl_…`; funciona también en la app del móvil. `upload_file` recibe el archivo en base64. `MCP_INTERNAL_URL` (opcional) cambia la dirección interna a la que llaman las herramientas (por defecto `http://127.0.0.1:$PORT`).
+- **Servidor MCP** en línea (`https://TU-APP/api/mcp`, Streamable HTTP; herramientas en `packages/mcp`): 27 herramientas para Claude, Claude Code, Cursor… (crear páginas desde plantillas, añadir y mover bloques, temas, paletas, analíticas, pedidos, “Today”, subir archivos en base64). Nada que instalar: en claude.ai → *Customize → Connectors → Add custom connector* con la URL, *No sign in* y la cabecera `Authorization: Bearer otl_…` (funciona en web, móvil y escritorio); Claude Code con `claude mcp add --transport http`; Cursor y similares con el puente `mcp-remote`. La pantalla **API** del dashboard tiene todo listo para copiar. `MCP_INTERNAL_URL` (opcional) cambia la dirección interna a la que llaman las herramientas (por defecto `http://127.0.0.1:$PORT`). Ver `packages/mcp/README.md`.
 
 ## 💳 Planes y pagos
 
@@ -322,7 +320,7 @@ Dashboard aparte en la carpeta `../Otrelink-Admin`. Usa la API `/api/admin/*` de
 
 - **apps/web** → Vercel, Render o cualquier hosting de Node (`npm run build && npm start`). Define `JWT_SECRET`, `MONGODB_URI` y `NEXT_PUBLIC_PAGE_URL`. En hostings serverless usa Mongo, porque el driver `file` necesita disco persistente.
 - **apps/page** → cualquier hosting estático (Netlify, Vercel, Cloudflare Pages, Render Static Site). Hay que configurar el *fallback* SPA para que toda ruta sirva `index.html`, y definir `VITE_API_URL` antes de `npm run build`. Hoy se publica en **GitHub Pages** con `.github/workflows/static.yml` (variables `VITE_API_URL` y `VITE_HOME_URL` en *Settings → Secrets and variables → Actions → Variables*); el build copia `index.html` a `404.html` para que funcionen las rutas. Ver *Pendientes importantes* sobre la vista previa al compartir.
-- **packages/mcp** → no se despliega: cada usuario lo corre en su computadora desde este repo (ver su README).
+- **packages/mcp** → no se despliega aparte: va dentro de `apps/web` (ruta `/api/mcp`).
 - **Otrelink-Admin** → app Next.js aparte; apunta a esta app con `OTRELINK_API_URL` y `OTRELINK_ADMIN_API_KEY`.
 
 

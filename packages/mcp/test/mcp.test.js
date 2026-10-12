@@ -39,13 +39,12 @@ function fakeApi({ plan = 'business' } = {}) {
     updateToday: async (id, patch) => { const p = get(id); p.today = sanitizeToday({ ...p.today, ...patch }); pages.set(id, p); return p.today; },
     analytics: async () => ({ days: 30, totals: { views: 3, clicks: 1 }, series: [{ date: '2026-10-01', views: 3, clicks: 1 }], hours: { views: [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0] } }),
     listOrders: async () => [{ id: 'o1', code: 'A12', status: 'new', total: 9 }],
-    uploadFile: async (p) => ({ id: 'abc', url: `https://x/api/assets/abc?${p}` }),
     uploadBytes: async (name, bytes) => ({ id: 'b64', url: `https://x/api/assets/b64?${name}&${bytes.length}` }),
   };
 }
 
-async function connect(api, opts = {}) {
-  const server = createOtrelinkServer({ client: api, ...opts });
+async function connect(api) {
+  const server = createOtrelinkServer({ client: api });
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '1' });
   await Promise.all([server.connect(a), client.connect(b)]);
@@ -216,7 +215,6 @@ test('business tools: analytics, orders, today and upload', async () => {
   const t = [...api.pages.values()][0].today;
   assert.deepEqual([t.status, t.place, t.until, t.soldOut.length], ['open', 'Downtown', '22:00', 1]);
   assert.equal((await call('update_today', { page: 'truck', until: '25:00' })).isError, true);
-  assert.match((await call('upload_file', { path: '/tmp/a.png' })).text, /api\/assets\/abc/);
   const acct = JSON.parse((await call('get_account')).text);
   assert.equal(acct.plan, 'Business');
   assert.ok(acct.featuresOn.includes('api'));
@@ -249,8 +247,8 @@ test('palettes: list and apply (preset, own colors, from one color)', async () =
   assert.equal((await call('apply_palette', { page: 'pal' })).isError, true);
 });
 
-test('remote mode: upload_file takes base64 content, never a path', async () => {
-  const { client, call } = await connect(fakeApi(), { remote: true });
+test('upload_file takes base64 content, never a path', async () => {
+  const { client, call } = await connect(fakeApi());
   const { tools } = await client.listTools();
   const up = tools.find((t) => t.name === 'upload_file');
   assert.deepEqual(Object.keys(up.inputSchema.properties).sort(), ['base64', 'name']);
@@ -261,8 +259,4 @@ test('remote mode: upload_file takes base64 content, never a path', async () => 
   assert.ok(empty.isError);
   const big = await call('upload_file', { name: 'a.png', base64: 'A'.repeat(12 * 1024 * 1024) });
   assert.match(big.text, /too large/);
-  // Local mode keeps the path argument.
-  const local = await connect(fakeApi());
-  const localUp = (await local.client.listTools()).tools.find((t) => t.name === 'upload_file');
-  assert.deepEqual(Object.keys(localUp.inputSchema.properties), ['path']);
 });

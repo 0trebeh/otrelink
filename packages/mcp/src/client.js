@@ -1,16 +1,15 @@
 // Small client for the Otrelink API, authenticated with a personal API token
 // (dashboard → API, Business plan). Every call acts as the token's owner.
-import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /** Readable messages for the API's error codes. */
 const MESSAGES = {
-  invalid_token: 'The API token is not valid. Create one in Otrelink → API and set OTRELINK_TOKEN.',
+  invalid_token: 'The API token is not valid. Create one in Otrelink → API.',
   token_expired: 'The API token expired. Create a new one in Otrelink → API.',
   token_read_only: 'This API token is read-only. Create a "Read & write" token to make changes.',
   token_route_not_allowed: 'API tokens can’t do this; it needs the Otrelink dashboard.',
   api_not_in_plan: 'API access is part of the Business plan (or it was turned off for this account).',
-  unauthorized: 'Not signed in: check OTRELINK_TOKEN.',
+  unauthorized: 'Not signed in: check the API token.',
   email_not_verified: 'The account’s email is not confirmed yet.',
   page_not_found: 'Page not found (or it belongs to another account).',
   page_limit: 'The plan’s page limit was reached.',
@@ -35,8 +34,8 @@ export class OtrelinkError extends Error {
 const MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif', '.avif': 'image/avif', '.pdf': 'application/pdf' };
 
 export function createClient({ baseUrl, token, fetch: doFetch = globalThis.fetch } = {}) {
-  if (!baseUrl) throw new Error('OTRELINK_URL is not set (e.g. https://otrelink.example.com).');
-  if (!token) throw new Error('OTRELINK_TOKEN is not set. Create a token in Otrelink → API (Business plan).');
+  if (!baseUrl) throw new Error('The Otrelink address is missing.');
+  if (!token) throw new Error('The API token is missing. Create one in Otrelink → API (Business plan).');
   const root = String(baseUrl).replace(/\/+$/, '');
 
   async function call(method, pathname, { body, query, form } = {}) {
@@ -77,10 +76,6 @@ export function createClient({ baseUrl, token, fetch: doFetch = globalThis.fetch
       const form = new FormData();
       form.append('file', new Blob([bytes], { type }), path.basename(String(name)));
       return call('POST', '/api/assets', { form });
-    },
-    /** Upload a local file (image or PDF), only for the local (stdio) server. → { url, … } */
-    async uploadFile(filePath) {
-      return this.uploadBytes(filePath, await fs.readFile(filePath));
     },
   };
 }

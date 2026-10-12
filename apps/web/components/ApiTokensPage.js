@@ -45,12 +45,16 @@ export default function ApiTokensPage({ user, origin, routes, expiryDays, rateLi
   const mcpUrl = `${origin}/api/mcp`;
   const mcpHeader = `Authorization: Bearer ${created?.token || 'otl_YOUR_TOKEN'}`;
   const example = `curl ${origin}/api/pages \\\n  -H "Authorization: Bearer ${created?.token || 'otl_YOUR_TOKEN'}"`;
+  const tok = created?.token || 'otl_YOUR_TOKEN';
+  const claudeCode = `claude mcp add --transport http otrelink ${mcpUrl} \\\n  --header "Authorization: Bearer ${tok}"`;
+  // Apps that only start local servers (Cursor, Claude Desktop's config file…) reach
+  // the URL through the mcp-remote bridge. No space in args: Windows breaks them.
   const mcpConfig = JSON.stringify({
     mcpServers: {
       otrelink: {
-        command: 'node',
-        args: ['C:\\path\\to\\Otrelink\\packages\\mcp\\src\\index.js'],
-        env: { OTRELINK_URL: origin, OTRELINK_TOKEN: created?.token || 'otl_YOUR_TOKEN' },
+        command: 'npx',
+        args: ['-y', 'mcp-remote', mcpUrl, '--header', 'Authorization:${OTRELINK_AUTH}'],
+        env: { OTRELINK_AUTH: `Bearer ${tok}` },
       },
     },
   }, null, 2);
@@ -144,13 +148,9 @@ export default function ApiTokensPage({ user, origin, routes, expiryDays, rateLi
               <div className="absolute top-2 right-2"><CopyButton text={example} label="Copy" /></div>
             </div>
             <h3 className="font-semibold mt-5 text-sm">Connect an AI assistant (MCP)</h3>
-            <p className="text-sm text-muted mt-1">Claude Desktop, Claude Code or Cursor can build and edit your pages for you with the Otrelink MCP server (<code className="font-mono text-ink">packages/mcp</code>). Add this to your assistant&apos;s MCP settings (in Claude Desktop: Settings → Developer → Edit Config) and restart it. See <a href="/docs#mcp" className="underline">the docs</a>.</p>
-            <div className="mt-3 relative">
-              <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{mcpConfig}</code></pre>
-              <div className="absolute top-2 right-2"><CopyButton text={mcpConfig} label="Copy" /></div>
-            </div>
-            <h3 className="font-semibold mt-5 text-sm">From claude.ai or your phone (remote MCP)</h3>
-            <p className="text-sm text-muted mt-1">Nothing to install: in claude.ai go to <i>Customize → Connectors → Add custom connector</i>, paste this URL, choose <i>No sign in</i> and add the request header below. It then works in the Claude apps on any device.</p>
+            <p className="text-sm text-muted mt-1">Claude and other AI assistants can build and edit your pages through the Otrelink MCP server at <code className="font-mono text-ink">{mcpUrl}</code>. Nothing to install. See <a href="/docs#mcp" className="underline">the docs</a>.</p>
+            <p className="text-sm font-medium mt-4">Claude (web, phone and desktop)</p>
+            <p className="text-sm text-muted mt-0.5">In claude.ai go to <i>Customize → Connectors → Add custom connector</i>, paste the URL, choose <i>No sign in</i> and add the request header. It works in the Claude apps on all your devices.</p>
             <div className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2">
               {[['URL', mcpUrl], ['Request header', mcpHeader]].map(([label, value]) => (
                 <div key={label} className="min-w-0 flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-1 rounded-2xl code-surface px-4 py-2.5">
@@ -159,6 +159,17 @@ export default function ApiTokensPage({ user, origin, routes, expiryDays, rateLi
                   <CopyButton text={value} label="Copy" />
                 </div>
               ))}
+            </div>
+            <p className="text-sm font-medium mt-5">Claude Code</p>
+            <div className="mt-2 relative">
+              <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{claudeCode}</code></pre>
+              <div className="absolute top-2 right-2"><CopyButton text={claudeCode} label="Copy" /></div>
+            </div>
+            <p className="text-sm font-medium mt-5">Cursor and other apps with a config file</p>
+            <p className="text-sm text-muted mt-0.5">Add this to their MCP settings (it needs Node.js) and restart the app.</p>
+            <div className="mt-2 relative">
+              <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 pt-12 sm:pt-4 sm:pr-28 overflow-x-auto"><code>{mcpConfig}</code></pre>
+              <div className="absolute top-2 right-2"><CopyButton text={mcpConfig} label="Copy" /></div>
             </div>
             <h3 className="font-semibold mt-5 text-sm">What a token can do</h3>
             <ul className="mt-2 grid gap-1 text-[13px] font-mono">

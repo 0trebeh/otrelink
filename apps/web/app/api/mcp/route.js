@@ -2,7 +2,7 @@
 // any device: add it in claude.ai → Customize → Connectors → Add custom connector
 //   URL:            https://YOUR-APP/api/mcp
 //   Request header: Authorization: Bearer otl_…   (Dashboard → API, Business plan)
-// Same tools as packages/mcp (stdio). Stateless: every request builds its own
+// Tools from packages/mcp. Stateless: every request builds its own
 // server, so it works with several instances and survives restarts.
 // The tools call this same app's API with the caller's token (so plan limits,
 // read-only tokens and the per-token rate limit all apply as usual).
@@ -57,7 +57,7 @@ async function handle(req) {
   for (const k of Object.keys(forwarded)) if (!forwarded[k]) delete forwarded[k];
   const fetchWith = (url, init = {}) => fetch(url, { ...init, headers: { ...init.headers, ...forwarded } });
   const client = createClient({ baseUrl: internalBase(), token, fetch: fetchWith });
-  const server = createOtrelinkServer({ client, remote: true });
+  const server = createOtrelinkServer({ client });
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   try {
     await server.connect(transport);

@@ -53,13 +53,13 @@ const toc = [
 
 const fieldLabel = Object.fromEntries(designGroups.flatMap((g) => g.fields.map((f) => [f.key, `${g.label} → ${f.label}`])));
 
-// Example MCP config for the docs (Claude Desktop / Cursor format).
+// Example MCP config for apps with a config file (Cursor…), through the mcp-remote bridge.
 const MCP_EXAMPLE = JSON.stringify({
   mcpServers: {
     otrelink: {
-      command: 'node',
-      args: ['C:\\path\\to\\Otrelink\\packages\\mcp\\src\\index.js'],
-      env: { OTRELINK_URL: 'https://YOUR-OTRELINK', OTRELINK_TOKEN: 'otl_…' },
+      command: 'npx',
+      args: ['-y', 'mcp-remote', 'https://YOUR-OTRELINK/api/mcp', '--header', 'Authorization:${OTRELINK_AUTH}'],
+      env: { OTRELINK_AUTH: 'Bearer otl_YOUR_TOKEN' },
     },
   },
 }, null, 2);
@@ -497,7 +497,10 @@ export default function DocsPage() {
           <Note><b>Read only</b> tokens can only use GET. Each token can make up to 120 requests per minute. Tokens can&apos;t change your account, password, billing, orders, bookings or other tokens (orders can only be read); those still need you signed in. Requests with a token never use your browser session.</Note>
 
           <H3 id="mcp">AI assistants (MCP)</H3>
-          <P>With an API token, an AI assistant that supports MCP (Claude Desktop, Claude Code, Cursor…) can work on your pages for you: “create a page from the restaurant template, call it Café Luna and use the Forest theme”, “add a FAQ with our hours”, “today the truck is at Plaza Altamira until 10 pm and the al pastor is sold out”. The server is in <C>packages/mcp</C>; run <C>npm install</C> once, then add it to your assistant with your Otrelink address and token (<i>API → Connect an AI assistant</i> has the exact config to copy):</P>
+          <P>With an API token, an AI assistant that supports MCP (Claude Desktop, Claude Code, Cursor…) can work on your pages for you: “create a page from the restaurant template, call it Café Luna and use the Forest theme”, “add a FAQ with our hours”, “today the truck is at Plaza Altamira until 10 pm and the al pastor is sold out”. The server is online at <C>https://YOUR-OTRELINK/api/mcp</C>: nothing to install. <i>API → Connect an AI assistant</i> has everything ready to copy, with your address and token.</P>
+          <P><b>Claude (web, phone and desktop):</b> in claude.ai open <i>Customize → Connectors → Add custom connector</i>, paste the URL, choose <i>No sign in</i> and add the request header <C>Authorization: Bearer otl_YOUR_TOKEN</C>. The connector is saved in your Claude account, so it works in the Claude apps on all your devices.</P>
+          <P><b>Claude Code:</b> <C>claude mcp add --transport http otrelink https://YOUR-OTRELINK/api/mcp --header "Authorization: Bearer otl_YOUR_TOKEN"</C></P>
+          <P><b>Cursor and other apps with a config file</b> (they need Node.js):</P>
           <pre className="rounded-2xl code-surface text-[12.5px] font-mono p-4 overflow-x-auto mb-4 max-w-[68ch]"><code>{MCP_EXAMPLE}</code></pre>
           <Table
             head={['Tools', 'What the assistant can do']}
@@ -507,10 +510,9 @@ export default function DocsPage() {
               ['add_block, update_block, move_block, remove_block, duplicate_block', 'Build the page block by block, inside collections too.'],
               ['set_theme, list_palettes, apply_palette, update_design', 'Change the look: theme, color palette (a preset, your colors or one brand color), fonts, buttons, accent, background.'],
               ['get_analytics, list_orders, get_today, update_today', 'Read visits and orders; change open/closed, today’s location and sold-out products.'],
-              ['upload_file', 'Upload an image or PDF (from your computer, or its content when using the remote server).'],
+              ['upload_file', 'Upload an image or PDF you give the assistant.'],
             ]}
           />
-          <P><b>From claude.ai or your phone:</b> there is also a remote MCP server at <C>https://YOUR-OTRELINK/api/mcp</C>, so you don’t need to install anything. In claude.ai open <i>Customize → Connectors → Add custom connector</i>, paste that URL, choose <i>No sign in</i> and add the request header <C>Authorization: Bearer otl_YOUR_TOKEN</C>. The connector then works in the Claude apps on any device. It has the same tools; <C>upload_file</C> takes the file’s content (base64) instead of a path.</P>
           <Note>The assistant saves each change right away. If you have the same page open in the editor with unsaved changes, reload it before saving there, or you will overwrite the assistant’s work.</Note>
 
           <H2 id="sharing">Sharing &amp; analytics</H2>
