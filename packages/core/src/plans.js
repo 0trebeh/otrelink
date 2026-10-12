@@ -25,11 +25,11 @@ export const FEATURE_GROUPS = [
  */
 export const PLAN_FEATURES = {
   // Content blocks
-  code: { label: 'Code block', blocks: ['code'], group: 'content', free: true },
+  code: { label: 'Code block', blocks: ['code'], group: 'content' },
   embed: { label: 'Embeds', blocks: ['embed'], group: 'content' },
   html: { label: 'HTML block', blocks: ['html'], group: 'content' },
   // Bookings & visitors
-  events: { label: 'Events calendar', blocks: ['events'], group: 'activity', free: true },
+  events: { label: 'Events calendar', blocks: ['events'], group: 'activity' },
   booking: { label: 'Booking & agenda', blocks: ['booking'], sections: ['agenda'], group: 'activity' },
   reviews: { label: 'Reviews', blocks: ['reviews'], sections: ['reviews'], group: 'activity' },
   survey: { label: 'Surveys', blocks: ['survey'], sections: ['responses'], group: 'activity' },

@@ -179,7 +179,8 @@ test('plan limits: locked blocks and backgrounds are refused before saving', asy
   assert.equal(r.isError, true);
   assert.match(r.text, /doesn’t include the "catalog" block/);
   assert.equal((await call('update_design', { page: 'free-page', design: { wallpaper: { type: 'video' } } })).isError, true);
-  assert.equal((await call('add_block', { page: 'free-page', type: 'code', data: { code: 'x' } })).isError, undefined);
+  assert.equal((await call('add_block', { page: 'free-page', type: 'code', data: { code: 'x' } })).isError, true); // Code block is Pro
+  assert.equal((await call('add_block', { page: 'free-page', type: 'link', data: { title: 'x', url: 'https://x.co' } })).isError, undefined);
 });
 
 test('design: set_theme and update_design (partial, wallpaper merge, unknown keys)', async () => {

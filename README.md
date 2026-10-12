@@ -213,8 +213,8 @@ Bloque **Reviews** (categoría Contact): el botón muestra el promedio (★ 4.8 
 
 | Plan | Qué incluye |
 |---|---|
-| **Free** | 1 página con los bloques básicos, más el bloque de código y el calendario de eventos. |
-| **Pro** · $10/mes | 10 páginas y todas las funciones de página: embeds, bloque HTML, reservas, reseñas, encuestas, catálogo, pedidos, ubicación/ruta/estado, fidelidad, facturas, segundo idioma (ES/EN) y fondos de foto/video. |
+| **Free** | 1 página con los bloques básicos. |
+| **Pro** · $10/mes | 10 páginas y todas las funciones de página: bloque de código, calendario de eventos, embeds, bloque HTML, reservas, reseñas, encuestas, catálogo, pedidos, ubicación/ruta/estado, fidelidad, facturas, segundo idioma (ES/EN) y fondos de foto/video. |
 | **Business** | Personalizado: páginas y funciones que asignas en **Otrelink-Admin**, más **API tokens y MCP**. |
 
 - Lo que permite cada plan está en `packages/core/src/plans.js` (`PLAN_FEATURES`, `PLANS`).

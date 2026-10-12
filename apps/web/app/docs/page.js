@@ -451,7 +451,7 @@ export default function DocsPage() {
             head={['Plan', 'What it includes']}
             rows={[
               ['Free', '1 page with links, socials and the basic blocks (text, images, video, music, maps, PDF, contact, collections) and analytics.'],
-              ['Pro · $10/month', 'Up to 10 pages, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, a second language (ES / EN) and photo or video backgrounds.'],
+              ['Pro · $10/month', 'Up to 10 pages, the Code block, the Events calendar, Embeds, the HTML block, Booking & agenda, Reviews, Surveys, the product Catalog, pickup orders, location / route / open status, loyalty cards, a second language (ES / EN) and photo or video backgrounds.'],
               ['Business', 'Custom number of pages and features, set up with the Otrelink team (each feature can be turned on or off, even the Code block), plus API tokens for your own tools and AI assistants (MCP).'],
             ]}
           />
