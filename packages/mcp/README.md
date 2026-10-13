@@ -85,6 +85,15 @@ Apps that only start local servers reach the URL through the [`mcp-remote`](http
 | `apply_palette` | Recolor a page: a preset, your own colors, or one brand color |
 | `update_design` | Change colors, fonts, buttons, accent, background… |
 
+**Second language (ES / EN)**
+
+| Tool | What it does |
+|---|---|
+| `get_translations` | Texts that can be translated (profile, SEO, every block and list item), with the original and the current translation; `missingOnly` for what's left |
+| `translate` | Write translations: `target` = `profile`, `settings` or a block id; `texts` for fields, `items` for list items (FAQ, products, events…). Empty string removes one |
+
+Turn the ES / EN switch on first with `update_page` → `settings: { translateButton: true }` (Pro plan).
+
 **Business**
 
 | Tool | What it does |
@@ -111,6 +120,8 @@ Apps that only start local servers reach the URL through the [`mcp-remote`](http
 > "Create a page `cafe-luna` from the restaurant template, change the title to Café Luna, use the Forest theme and add a FAQ with our opening hours."
 
 > "Today the truck is at Plaza Altamira until 10 pm and the al pastor is sold out."
+
+> "Turn on the second language on `taco-loco` and translate everything that's missing into Spanish."
 
 ## How it works
 

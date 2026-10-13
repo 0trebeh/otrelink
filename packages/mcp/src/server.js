@@ -7,6 +7,8 @@ import {
   blockTypes, themes, applyTheme, allowsBlock, allowsWallpaper, featureForWallpaper, featureForBlock,
   designFields, cloneBlock, socials, sanitizeSlug, productKey, TEMPLATES,
   palettes, applyPalette, paletteFromColor, sanitizePalette,
+  translatableFields, pageLanguage, otherLanguage, PAGE_LANGUAGES, PROFILE_TRANSLATABLE, SETTINGS_TRANSLATABLE,
+  translationProgress, flattenBlocks,
 } from '@otrelink/core';
 import { createClient, OtrelinkError } from './client.js';
 import {
@@ -27,6 +29,7 @@ Typical flow:
    Blocks inside a "collection" use parentId. Positions use index, beforeId or afterId.
 4. get_page shows the outline with block ids; use them in update_block, move_block, remove_block.
 5. Look: list_themes + set_theme, list_palettes + apply_palette (colors only), or get_design_options + update_design.
+6. Second language (ES / EN): update_page settings { translateButton: true }, then get_translations → translate.
 Changes are saved right away and go live if the page is published. Images must be URLs:
 use upload_file for files you have. Don't invent block fields: unknown ones are ignored.
 If the owner has the page open in the dashboard with unsaved changes, saving there can overwrite yours.`;
@@ -517,6 +520,128 @@ export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0
     const p = await resolvePage(page);
     const today = await api.updateToday(p.id, patch);
     return json(today, `“Today” updated on ${p.slug}.`);
+  });
+
+  // ── Second language ─────────────────────────────────────────
+  // page.translations[lang] = { profile, settings, blocks: { [blockId]: { field, list: { [itemId]: { sub } } } } }
+  const trInfo = (p) => {
+    const source = pageLanguage(p);
+    const lang = otherLanguage(source);
+    return { source, lang, t: p.translations?.[lang] || {}, enabled: Boolean(p.settings?.translateButton) };
+  };
+  const pair = (original, translation) => ({ original, translation: translation || '' });
+  const filled = (v) => String(v || '').trim() !== '';
+
+  tool('get_translations', {
+    title: 'Get translations',
+    description: 'The texts of a page that can be written in its second language (ES / EN), with the original and the current translation of each: profile, settings (SEO, warning) and every block (list items by id). Use the keys and ids with translate.',
+    inputSchema: { page: pageRef, blockId: z.string().optional().describe('Only this block.'), missingOnly: z.boolean().optional().describe('Only texts without a translation yet.') },
+    annotations: READ,
+  }, async ({ page, blockId, missingOnly }) => {
+    const p = await resolvePage(page);
+    const { source, lang, t, enabled } = trInfo(p);
+    const keep = (o) => !missingOnly || !filled(o.translation);
+    const texts = (keys, data, tr) => Object.fromEntries(keys.filter((k) => filled(data?.[k])).map((k) => [k, pair(data[k], tr?.[k])]).filter(([, o]) => keep(o)));
+    const blocks = [];
+    for (const b of flattenBlocks(p.blocks)) {
+      if (blockId && b.id !== blockId) continue;
+      const mod = blockTypes.get(b.type);
+      if (!mod) continue;
+      const bt = t.blocks?.[b.id] || {};
+      const out = { id: b.id, type: b.type, texts: {}, lists: {} };
+      for (const f of translatableFields(mod.fields)) {
+        if (f.type === 'list') {
+          const items = (b.data?.[f.key] || []).map((item) => ({
+            itemId: item.id,
+            texts: texts(f.fields.map((sf) => sf.key), item, bt[f.key]?.[item.id]),
+          })).filter((it) => Object.keys(it.texts).length);
+          if (items.length) out.lists[f.key] = items;
+        } else if (filled(b.data?.[f.key])) {
+          const o = pair(b.data[f.key], bt[f.key]);
+          if (keep(o)) out.texts[f.key] = o;
+        }
+      }
+      if (!Object.keys(out.lists).length) delete out.lists;
+      if (Object.keys(out.texts).length || out.lists) blocks.push(out);
+    }
+    if (blockId && !findBlock(p.blocks, blockId)) return fail(`No block ${blockId} on this page (see get_page).`);
+    const { done, total } = translationProgress(p, lang);
+    const result = {
+      language: `${source} (${PAGE_LANGUAGES[source].label})`,
+      secondLanguage: `${lang} (${PAGE_LANGUAGES[lang].label})`,
+      switchOn: enabled,
+      progress: `${done} of ${total} texts translated`,
+      ...(blockId ? {} : {
+        profile: texts(PROFILE_TRANSLATABLE, p.profile, t.profile),
+        settings: texts(SETTINGS_TRANSLATABLE, p.settings, t.settings),
+      }),
+      blocks,
+    };
+    const note = enabled ? '' : 'The ES / EN switch is off: turn it on with update_page settings { translateButton: true } (Pro plan) so visitors can see the translation.';
+    return json(result, note);
+  });
+
+  tool('translate', {
+    title: 'Write translations',
+    description: 'Write texts in the page’s second language. target = "profile", "settings" or a block id. texts = { field: "translated text" } (empty string removes it); items = { listField: { itemId: { subField: "…" } } } for list items (FAQ, products, events…). Only text fields are translatable (not URLs, prices, colors). Texts left empty show the original.',
+    inputSchema: {
+      page: pageRef,
+      target: z.string().min(1).describe('"profile", "settings" or a block id (from get_translations / get_page).'),
+      texts: z.record(z.string(), z.string()).optional(),
+      items: z.record(z.string(), z.record(z.string(), z.record(z.string(), z.string()))).optional(),
+    },
+    annotations: WRITE,
+  }, async ({ page, target, texts = {}, items = {} }) => {
+    const warnings = [];
+    const { page: saved } = await editPage(page, (p) => {
+      const { lang, enabled } = trInfo(p);
+      if (!enabled) warnings.push('The ES / EN switch is off: turn it on with update_page settings { translateButton: true } so visitors can see it.');
+      const all = { ...(p.translations || {}) };
+      const tl = { ...(all[lang] || {}) };
+      const apply = (base, allowed) => {
+        const next = { ...(base || {}) };
+        for (const [k, v] of Object.entries(texts)) {
+          if (!allowed.includes(k)) { warnings.push(`"${k}" can’t be translated here (translatable: ${allowed.join(', ') || 'none'}).`); continue; }
+          if (filled(v)) next[k] = v; else delete next[k];
+        }
+        return next;
+      };
+      if (target === 'profile' || target === 'settings') {
+        if (Object.keys(items).length) warnings.push('items only apply to blocks.');
+        tl[target] = apply(tl[target], target === 'profile' ? PROFILE_TRANSLATABLE : SETTINGS_TRANSLATABLE);
+      } else {
+        const b = findBlock(p.blocks, target)?.block;
+        if (!b) throw new Error(`No block ${target} on this page (see get_page).`);
+        const fields = translatableFields(blockTypes.get(b.type)?.fields || []);
+        const plain = fields.filter((f) => f.type !== 'list').map((f) => f.key);
+        const blocks = { ...(tl.blocks || {}) };
+        const bt = apply(blocks[target], plain);
+        for (const [listKey, byItem] of Object.entries(items)) {
+          const lf = fields.find((f) => f.type === 'list' && f.key === listKey);
+          if (!lf) { warnings.push(`"${listKey}" is not a translatable list of this block.`); continue; }
+          const subs = lf.fields.map((sf) => sf.key);
+          const ids = new Set((b.data?.[listKey] || []).map((it) => it.id));
+          const map = { ...(bt[listKey] || {}) };
+          for (const [itemId, row] of Object.entries(byItem)) {
+            if (!ids.has(itemId)) { warnings.push(`No item ${itemId} in ${listKey}.`); continue; }
+            const next = { ...(map[itemId] || {}) };
+            for (const [sk, v] of Object.entries(row)) {
+              if (!subs.includes(sk)) { warnings.push(`"${listKey}.${sk}" can’t be translated (translatable: ${subs.join(', ')}).`); continue; }
+              if (filled(v)) next[sk] = v; else delete next[sk];
+            }
+            if (Object.keys(next).length) map[itemId] = next; else delete map[itemId];
+          }
+          if (Object.keys(map).length) bt[listKey] = map; else delete bt[listKey];
+        }
+        if (Object.keys(bt).length) blocks[target] = bt; else delete blocks[target];
+        tl.blocks = blocks;
+      }
+      all[lang] = tl;
+      p.translations = all;
+    });
+    const { lang } = trInfo(saved);
+    const { done, total } = translationProgress(saved, lang);
+    return text([`Saved (${PAGE_LANGUAGES[lang].label}). ${done} of ${total} texts translated.`, ...warnings.map((w) => `Note: ${w}`)].join('\n'));
   });
 
   // ── Files ───────────────────────────────────────────────────

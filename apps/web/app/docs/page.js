@@ -510,6 +510,7 @@ export default function DocsPage() {
               ['list_pages, get_page, create_page, update_page, publish_page, delete_page, check_slug', 'Create pages (empty or from a template), change the profile, socials, settings and slug, publish or hide, delete (it must confirm).'],
               ['add_block, update_block, move_block, remove_block, duplicate_block', 'Build the page block by block, inside collections too.'],
               ['set_theme, list_palettes, apply_palette, update_design', 'Change the look: theme, color palette (a preset, your colors or one brand color), fonts, buttons, accent, background.'],
+              ['get_translations, translate', 'Write your page in its second language (ES / EN): see what is left and translate the profile, SEO texts and every block.'],
               ['get_analytics, list_orders, get_today, update_today', 'Read visits and orders; change open/closed, today’s location and sold-out products.'],
               ['upload_file', 'Upload an image or PDF you give the assistant.'],
             ]}

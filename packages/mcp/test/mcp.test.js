@@ -61,8 +61,8 @@ test('exposes every tool, with instructions', async () => {
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
     'add_block', 'apply_palette', 'check_slug', 'create_page', 'delete_page', 'duplicate_block', 'get_account', 'get_analytics',
-    'get_block_type', 'get_design_options', 'get_page', 'get_today', 'list_block_types', 'list_orders', 'list_pages',
-    'list_palettes', 'list_templates', 'list_themes', 'move_block', 'publish_page', 'remove_block', 'set_theme', 'update_block',
+    'get_block_type', 'get_design_options', 'get_page', 'get_today', 'get_translations', 'list_block_types', 'list_orders', 'list_pages',
+    'list_palettes', 'list_templates', 'list_themes', 'move_block', 'publish_page', 'remove_block', 'set_theme', 'translate', 'update_block',
     'update_design', 'update_page', 'update_today', 'upload_file',
   ]);
   assert.ok(tools.find((t) => t.name === 'delete_page').annotations.destructiveHint);
@@ -260,4 +260,38 @@ test('upload_file takes base64 content, never a path', async () => {
   assert.ok(empty.isError);
   const big = await call('upload_file', { name: 'a.png', base64: 'A'.repeat(12 * 1024 * 1024) });
   assert.match(big.text, /too large/);
+});
+
+test('second language: get_translations lists the texts, translate writes them (blocks, list items, profile)', async () => {
+  const api = fakeApi();
+  const { call } = await connect(api);
+  await call('create_page', { slug: 'bilingual', title: 'Taco Truck' });
+  const added = await call('add_block', { page: 'bilingual', type: 'link', data: { title: 'Menu', url: 'https://x.co' } });
+  const linkId = added.text.match(/id=(\S+?)\./)[1];
+  const faq = await call('add_block', { page: 'bilingual', type: 'faq', data: { items: [{ question: 'Open?', answer: 'Yes' }] } });
+  const faqId = faq.text.match(/id=(\S+?)\./)[1];
+  let r = await call('get_translations', { page: 'bilingual' });
+  assert.match(r.text, /switch is off/);
+  const info = JSON.parse(r.text.slice(r.text.indexOf('\n\n{') + 2));
+  assert.equal(info.secondLanguage, 'es (Español)');
+  assert.equal(info.profile.title.original, 'Taco Truck');
+  const itemId = info.blocks.find((b) => b.id === faqId).lists.items[0].itemId;
+  await call('update_page', { page: 'bilingual', settings: { translateButton: true } });
+  r = await call('translate', { page: 'bilingual', target: linkId, texts: { title: 'Menú', url: 'https://evil.example' } });
+  assert.match(r.text, /Saved \(Español\)/);
+  assert.match(r.text, /"url" can’t be translated/);
+  r = await call('translate', { page: 'bilingual', target: faqId, items: { items: { [itemId]: { question: '¿Abierto?', answer: 'Sí' }, nope: { question: 'x' } } } });
+  assert.match(r.text, /No item nope/);
+  await call('translate', { page: 'bilingual', target: 'profile', texts: { title: 'Camión de tacos' } });
+  const stored = [...api.pages.values()][0];
+  assert.equal(stored.translations.es.blocks[linkId].title, 'Menú');
+  assert.equal(stored.translations.es.blocks[linkId].url, undefined);
+  assert.deepEqual(stored.translations.es.blocks[faqId].items[itemId], { question: '¿Abierto?', answer: 'Sí' });
+  assert.equal(stored.translations.es.profile.title, 'Camión de tacos');
+  r = await call('get_translations', { page: 'bilingual', missingOnly: true });
+  assert.ok(!r.text.includes('Menú'));
+  // Empty string removes a translation.
+  await call('translate', { page: 'bilingual', target: linkId, texts: { title: '' } });
+  assert.equal([...api.pages.values()][0].translations.es.blocks?.[linkId], undefined);
+  assert.equal((await call('translate', { page: 'bilingual', target: 'b_missing', texts: { title: 'x' } })).isError, true);
 });
