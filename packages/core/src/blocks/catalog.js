@@ -121,10 +121,10 @@ const CATALOG_CSS = `.ol-root .ol-catalog{container-type:inline-size;display:fle
 .ol-root .ol-cat-item{position:relative;display:flex;flex-direction:column;background:var(--ol-surface);color:var(--ol-surface-fg);border-radius:var(--ol-surface-radius);overflow:hidden;min-width:0}
 .ol-root .is-list .ol-cat-item{flex-direction:row;align-items:stretch}
 .ol-root .ol-cat-media{display:grid;place-items:center;aspect-ratio:1/1;overflow:hidden;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent);color:color-mix(in srgb,var(--ol-surface-fg) 40%,transparent)}
-.ol-root .is-list .ol-cat-media{width:96px;flex:none;align-self:flex-start}
+.ol-root .is-list .ol-cat-media{width:104px;flex:none;align-self:stretch;aspect-ratio:auto;min-height:104px}
 .ol-root .ol-cat-media img{width:100%;height:100%;display:block;object-fit:cover}
 .ol-root .ol-cat-badges{position:absolute;top:8px;left:8px;display:flex;flex-wrap:wrap;gap:4px;max-width:calc(100% - 16px)}
-.ol-root .ol-cat-badge,.ol-root .ol-cat-off{font-size:.68em;font-weight:800;padding:3px 8px;border-radius:999px;line-height:1.3;background:var(--ol-surface-fg);color:var(--ol-surface)}
+.ol-root .ol-cat-badge,.ol-root .ol-cat-off{font-size:.68em;font-weight:800;padding:3px 8px;border-radius:999px;line-height:1.3;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))}
 .ol-root .ol-cat-off{background:#dc2626;color:#fff}
 .ol-root .ol-cat-info{flex:1;display:flex;flex-direction:column;gap:4px;padding:10px 12px 12px;min-width:0}
 .ol-root .ol-cat-name{margin:0;font-weight:700;line-height:1.25;overflow-wrap:anywhere}

@@ -158,7 +158,7 @@ export default {
 .ol-root .ol-survey-scale{display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:4px}
 .ol-root .ol-survey-scale .ol-survey-opt{padding:9px 0;justify-content:center;font-weight:700;font-variant-numeric:tabular-nums;border-radius:9px;font-size:.85em}
 .ol-root .ol-survey-scale .ol-survey-opt input{position:absolute;opacity:0;pointer-events:none}
-.ol-root .ol-survey-scale .ol-survey-opt:has(input:checked){background:var(--ol-surface-fg);color:var(--ol-surface)}
+.ol-root .ol-survey-scale .ol-survey-opt:has(input:checked){background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))}
 .ol-root .ol-survey-scale-ends{display:flex;justify-content:space-between;font-size:.75em;opacity:.6}
 .ol-root .ol-survey-stars{display:flex;flex-direction:row-reverse;justify-content:flex-end;gap:2px}
 .ol-root .ol-survey-stars input{position:absolute;opacity:0;width:1px;height:1px}
@@ -168,7 +168,7 @@ export default {
 .ol-root .ol-survey-stars input:focus-visible+label{outline:2px solid var(--ol-surface-fg)}
 .ol-root .ol-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .ol-root .ol-survey-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
-.ol-root .ol-survey-submit{font:inherit;cursor:pointer;border:0;border-radius:999px;min-height:46px;font-weight:700;background:var(--ol-surface-fg);color:var(--ol-surface)}
+.ol-root .ol-survey-submit{font:inherit;cursor:pointer;border:0;border-radius:999px;min-height:46px;font-weight:700;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))}
 .ol-root .ol-survey-submit[disabled]{opacity:.5;cursor:default}
 .ol-root .ol-survey-done{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0}
 .ol-root .ol-survey-done-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:color-mix(in srgb,var(--ol-surface-fg) 9%,transparent)}

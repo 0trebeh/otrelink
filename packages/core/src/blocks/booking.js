@@ -147,13 +147,13 @@ export default {
 .ol-root .ol-book-day strong{font-size:1.15em}
 .ol-root .ol-book-slots{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .ol-root .ol-book-slot{padding:9px 0;border-radius:10px;border:1.5px solid color-mix(in srgb,var(--ol-surface-fg) 15%,transparent);background:transparent;font-weight:600;font-variant-numeric:tabular-nums}
-.ol-root .ol-book [aria-pressed="true"]{background:var(--ol-surface-fg);color:var(--ol-surface);border-color:var(--ol-surface-fg)}
+.ol-root .ol-book [aria-pressed="true"]{background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface));border-color:var(--ol-surface-fg)}
 .ol-root .ol-book-form{display:flex;flex-direction:column;gap:8px}
 .ol-root .ol-book-form input,.ol-root .ol-book-form textarea{font:inherit;color:var(--ol-surface-fg);background:transparent;border:1.5px solid color-mix(in srgb,var(--ol-surface-fg) 18%,transparent);border-radius:10px;padding:10px 12px;width:100%;box-sizing:border-box}
 .ol-root .ol-book-form textarea{min-height:70px;resize:vertical}
 .ol-root .ol-book-hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
 .ol-root .ol-book-summary{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--ol-surface-fg) 7%,transparent);font-size:.9em}
-.ol-root .ol-book-submit,.ol-root .ol-book-cal{border:0;border-radius:999px;min-height:46px;font-weight:700;background:var(--ol-surface-fg);color:var(--ol-surface)!important;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.ol-root .ol-book-submit,.ol-root .ol-book-cal{border:0;border-radius:999px;min-height:46px;font-weight:700;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))!important;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .ol-root .ol-book-cal{background:color-mix(in srgb,var(--ol-surface-fg) 9%,transparent);color:var(--ol-surface-fg)!important}
 .ol-root .ol-book-submit[disabled]{opacity:.5;cursor:default}
 .ol-root .ol-book-back{align-self:center;border:0;background:transparent;padding:0;font-size:.85em;opacity:.75;text-decoration:underline}
@@ -177,7 +177,7 @@ export default {
 .ol-root .ol-book-mine-item.is-confirmed .ol-book-status{color:#0f9d58;opacity:1}
 .ol-root .ol-book-mine-item.is-cancelled{opacity:.6}
 .ol-root .ol-book-mine-item.is-cancelled strong{text-decoration:line-through}
-.ol-root .ol-book-cal-sm{flex:none;min-height:36px;padding:0 14px;font-size:.85em;background:var(--ol-surface-fg);color:var(--ol-surface)!important}
+.ol-root .ol-book-cal-sm{flex:none;min-height:36px;padding:0 14px;font-size:.85em;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))!important}
 .ol-root .ol-book-again{margin-top:6px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--ol-surface-fg) 12%,transparent)}`,
 };
 

@@ -79,7 +79,7 @@ export const designGroups = [
       { key: 'surfaceTextColor', type: 'color', label: 'Card text color', default: '#111111' },
       { key: 'surfaceRadius', type: 'range', label: 'Card radius', min: 0, max: 32, default: 16, unit: 'px' },
       { key: 'accentColor', type: 'color', label: 'Accent color', default: '', allowEmpty: true, emptyBadge: 'Auto', emptyText: 'Same as the card text',
-        help: 'Buy / Order buttons in the catalog, event date badges and the selected calendar day. Empty = the card text color.' },
+        help: 'Buy / Order buttons and badges in the catalog, event date badges, booking and form buttons, and the selected calendar day. Empty = the card text color.' },
       { key: 'accentTextColor', type: 'color', label: 'Accent text color', default: '', allowEmpty: true, emptyBadge: 'Auto', emptyText: 'Same as the card color' },
     ],
   },

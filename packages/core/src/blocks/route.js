@@ -103,7 +103,7 @@ export default {
 .ol-root .ol-route-day.is-today+.ol-route-day{border-top:0}
 .ol-root .ol-route-dayname{margin:0 0 4px;font-size:.78em;font-weight:800;text-transform:uppercase;letter-spacing:.06em;opacity:.65;display:flex;align-items:center;gap:6px}
 .ol-root .is-today .ol-route-dayname{opacity:1}
-.ol-root .ol-route-badge,.ol-root .ol-route-now{font-size:.85em;letter-spacing:0;text-transform:none;padding:2px 8px;border-radius:999px;background:var(--ol-surface-fg);color:var(--ol-surface);font-weight:700}
+.ol-root .ol-route-badge,.ol-root .ol-route-now{font-size:.85em;letter-spacing:0;text-transform:none;padding:2px 8px;border-radius:999px;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface));font-weight:700}
 .ol-root .ol-route-now{background:#16a34a;color:#fff;font-size:.7em;vertical-align:middle}
 .ol-root .ol-route-stop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:4px 0}
 .ol-root .ol-route-info{min-width:0}
@@ -111,5 +111,5 @@ export default {
 .ol-root .ol-route-addr,.ol-root .ol-route-note{margin:2px 0 0;font-size:.82em;opacity:.75;overflow-wrap:anywhere}
 .ol-root .ol-route-side{display:flex;align-items:center;gap:8px;flex:none}
 .ol-root .ol-route-time{font-size:.82em;font-weight:600;opacity:.8;font-variant-numeric:tabular-nums;white-space:nowrap}
-.ol-root .ol-route-go{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ol-surface-fg);color:var(--ol-surface)!important}`,
+.ol-root .ol-route-go{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--ol-accent,var(--ol-surface-fg));color:var(--ol-accent-fg,var(--ol-surface))!important}`,
 };

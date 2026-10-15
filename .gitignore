@@ -7,3 +7,5 @@ data/
 Temp/
 *.log
 Vercel.txt
+.agents
+.taste-skill/
