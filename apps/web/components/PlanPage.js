@@ -145,6 +145,11 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
                         </Button>
                       )}
                       {!payments.stripe && !payments.paypal && <p className="text-sm text-muted">Online payments are not available yet.</p>}
+                      {(payments.stripe || payments.paypal) && (
+                        <p className="text-xs text-muted leading-relaxed">
+                          ${PLANS.pro.price} USD per month, charged today and <b>renewing automatically every month</b> until you cancel. Cancel any time on this page in one click. By subscribing you agree to the <a href="/terms" target="_blank" className="underline">Terms</a> and the <a href="/refunds" target="_blank" className="underline">Refund Policy</a>.
+                        </p>
+                      )}
                     </>
                   )}
                   {c.id === 'business' && !current && (
@@ -193,7 +198,7 @@ export default function PlanPage({ user: initialUser, pagesUsed, payments }) {
             </tbody>
           </table>
         </section>
-        <p className="text-xs text-muted mt-4 inline-flex items-center gap-1.5"><Sparkles size={13} /> Payments are processed by Stripe and PayPal. You can cancel any time; Pro stays until the end of the period you paid.</p>
+        <p className="text-xs text-muted mt-4 inline-flex items-center gap-1.5"><Sparkles size={13} /> Payments are processed by Stripe and PayPal. You can cancel any time; Pro stays until the end of the period you paid. See the <a href="/refunds" className="underline">Refund Policy</a>.</p>
         <BillingHistory />
       </main>
     </div>

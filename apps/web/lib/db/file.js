@@ -10,7 +10,7 @@ const ASSETS = path.join(DIR, 'assets');
 
 export async function createFileDriver() {
   await fs.mkdir(ASSETS, { recursive: true });
-  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [], tokens: [], referrals: [], referralCampaigns: [] };
+  let state = { users: [], pages: [], events: [], assets: [], bookings: [], push: [], responses: [], reviews: [], orders: [], cards: [], invoices: [], payments: [], tokens: [], referrals: [], referralCampaigns: [], consents: [] };
   try { state = { ...state, ...JSON.parse(await fs.readFile(FILE, 'utf8')) }; } catch { /* first run */ }
 
   let writing = Promise.resolve();
@@ -292,6 +292,16 @@ export async function createFileDriver() {
         state.invoices = state.invoices.filter((x) => x.pageId !== pageId);
         await persist();
       },
+    },
+    // Acceptance of the Terms and Privacy Policy (proof of consent: kept when an account is deleted).
+    consents: {
+      record: async (c) => {
+        const doc = { id: crypto.randomUUID(), createdAt: now(), ...c };
+        state.consents.push(doc);
+        await persist();
+        return clone(doc);
+      },
+      listByUser: async (userId) => clone(state.consents.filter((x) => x.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))),
     },
     // Subscription payments to Otrelink (Stripe / PayPal), shown as invoices to the user.
     payments: {

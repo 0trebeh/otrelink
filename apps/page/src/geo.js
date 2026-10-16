@@ -49,8 +49,26 @@ async function tryProvider(p, ms) {
   };
 }
 
+// EEA, UK and Switzerland (plus EU regions outside Europe): ePrivacy rules need consent for
+// non-essential storage, so visitors there get statistics without an ID or IP geolocation.
+const STRICT_TZ = /^(Europe\/|Atlantic\/(Canary|Madeira|Azores|Reykjavik|Faroe)$|Arctic\/Longyearbyen$|Asia\/(Nicosia|Famagusta)$|Africa\/Ceuta$|Indian\/(Reunion|Mayotte)$|America\/(Guadeloupe|Martinique|Cayenne|St_Barthelemy|Marigot)$|(GB|GB-Eire|Eire|Iceland|Portugal|Poland)$)/;
+
+/**
+ * True when this visit must not use a visitor ID or IP geolocation: the visitor
+ * is in a region with consent rules (by time zone) or their browser sends a
+ * Global Privacy Control signal. See the Cookie Policy.
+ */
+export function privacyMode() {
+  try {
+    if (navigator.globalPrivacyControl === true) return true;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    return STRICT_TZ.test(tz);
+  } catch { return true; }
+}
+
 /** Approximate location, or null. Never throws. */
 export async function getGeo() {
+  if (privacyMode()) return null;
   try {
     const c = JSON.parse(sessionStorage.getItem(CACHE) || 'null');
     if (c && Date.now() - c.t < CACHE_MS) return c.geo;

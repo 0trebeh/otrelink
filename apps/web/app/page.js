@@ -3,6 +3,7 @@ import { getUser } from '@/lib/auth';
 import { blockTypes, themes, wallpapers, buttonStyles, fonts, socials } from '@otrelink/core';
 import { Logo } from '@/components/ui';
 import LandingDemo from '@/components/LandingDemo';
+import SiteFooter from '@/components/SiteFooter';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,7 @@ export default async function Home() {
           <LandingDemo />
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

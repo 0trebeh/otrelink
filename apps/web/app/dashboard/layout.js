@@ -3,6 +3,8 @@ import { getUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import VerifyGate from '@/components/VerifyGate';
 import { DashboardTheme } from '@/components/ThemeToggle';
+import LegalUpdateBanner from '@/components/LegalUpdateBanner';
+import { hasCurrentConsent } from '@/lib/legal';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,5 +17,9 @@ export default async function DashboardLayout({ children }) {
     const full = await db.users.findById(user.id);
     return <><DashboardTheme /><VerifyGate email={user.email} pendingSlug={full?.pendingSlug || ''} /></>;
   }
-  return <><DashboardTheme />{children}</>;
+  // Accounts that accepted an older version of the Terms / Privacy Policy (or none, created before them).
+  const db = await getDb();
+  const full = await db.users.findById(user.id);
+  const needsConsent = !hasCurrentConsent(full);
+  return <><DashboardTheme />{children}{needsConsent && <LegalUpdateBanner firstTime={!full?.legal} />}</>;
 }

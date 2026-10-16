@@ -1,7 +1,7 @@
 // Otrelink public page. Plain JavaScript: fetch the page, render it with the
 // shared renderer from @otrelink/core, and send analytics beacons.
 import { mountPage, resolveDesign, pickLanguage, localizePage } from '@otrelink/core';
-import { getGeo, visitContext } from './geo.js';
+import { getGeo, visitContext, privacyMode } from './geo.js';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 const HOME = import.meta.env.VITE_HOME_URL || API;
@@ -18,6 +18,8 @@ function getSlug() {
 }
 
 function visitorId() {
+  // No stored ID where consent would be needed (EEA/UK/CH) or with Global Privacy Control.
+  if (privacyMode()) return '';
   try {
     let id = localStorage.getItem('ol_v');
     if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('ol_v', id); }

@@ -27,6 +27,7 @@ export async function createMongoDriver() {
   const cards = db.collection('loyalty_cards');
   const invoices = db.collection('invoices');
   const payments = db.collection('payments');
+  const consents = db.collection('consents');
   const counters = db.collection('counters');
   const limits = db.collection('rate_limits');
   const tokens = db.collection('api_tokens');
@@ -63,6 +64,7 @@ export async function createMongoDriver() {
     [invoices, { pageId: 1, number: 1 }, { unique: true }],
     [payments, { provider: 1, providerId: 1 }, { unique: true }],
     [payments, { userId: 1, createdAt: -1 }, {}],
+    [consents, { userId: 1, createdAt: -1 }, {}],
     // Rate-limit counters delete themselves when their window ends.
     [limits, { expiresAt: 1 }, { expireAfterSeconds: 0 }],
     [users, { verifyTokenHash: 1 }, { sparse: true }],
@@ -295,6 +297,15 @@ export async function createMongoDriver() {
       update: async (id, patch) => out(await invoices.findOneAndUpdate({ _id: id }, { $set: { ...patch, updatedAt: new Date().toISOString() } }, { returnDocument: 'after' })),
       remove: async (id) => { await invoices.deleteOne({ _id: id }); },
       removeMany: async ({ pageId }) => { await invoices.deleteMany({ pageId }); },
+    },
+    // Acceptance of the Terms and Privacy Policy (proof of consent: kept when an account is deleted).
+    consents: {
+      record: async (c) => {
+        const doc = { _id: crypto.randomUUID(), createdAt: new Date().toISOString(), ...c };
+        await consents.insertOne(doc);
+        return out(doc);
+      },
+      listByUser: async (userId) => (await consents.find({ userId }).sort({ createdAt: -1 }).limit(100).toArray()).map(out),
     },
     payments: {
       record: async (p) => {

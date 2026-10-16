@@ -22,6 +22,7 @@ const MESSAGES = {
   weak_password: 'Use at least 8 characters for your password.',
   invalid_slug: 'Use 3–30 letters, numbers, dots, dashes or underscores.',
   email_taken: 'An account with this email already exists. Log in instead.',
+  terms_required: 'Please accept the Terms of Service and the Privacy Policy to create your account.',
   slug_taken: 'That username is taken. Try another one.',
   invalid_credentials: 'Email or password is incorrect.',
   wrong_password: 'Your current password is not correct.',

@@ -6,6 +6,7 @@ import { handler, json, error, readJson, rateLimit } from '@/lib/http';
 import { newVerification, sendVerificationEmail, verificationEnabled } from '@/lib/verify';
 import { publicOrigin } from '@/lib/origin';
 import { recordSignup } from '@/lib/referrals';
+import { recordConsent } from '@/lib/legal';
 
 export const POST = handler(async (req) => {
   await rateLimit(req, 'register', 15, 15 * 60 * 1000);
@@ -19,6 +20,8 @@ export const POST = handler(async (req) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return error(400, 'invalid_email');
   if (password.length < 8) return error(400, 'weak_password');
   if (!slug) return error(400, 'invalid_slug');
+  // Both boxes on the sign-up form: Terms (+ Refund Policy) and Privacy (+ Cookie Policy).
+  if (body.acceptTerms !== true || body.acceptPrivacy !== true) return error(400, 'terms_required');
 
   const db = await getDb();
   if (await db.users.findByEmail(email)) return error(409, 'email_taken');
@@ -34,6 +37,8 @@ export const POST = handler(async (req) => {
     // No page until the email is confirmed: keep the chosen username for then.
     ...(verify ? { ...verify.patch, pendingSlug: slug, pendingTitle: name || `@${slug}` } : {}),
   });
+  // Proof of what was accepted (versions, time, IP, browser) + current versions on the account.
+  await db.users.update(user.id, await recordConsent(db, req, { userId: user.id, email, method: 'signup' }));
   // Signed up with someone's referral link (…/register?ref=CODE).
   if (body.ref) await recordSignup(db, user, body.ref);
   if (verify) {

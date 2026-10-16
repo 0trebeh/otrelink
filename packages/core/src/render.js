@@ -62,8 +62,8 @@ const BASE_CSS = `
 .ol-root .ol-toggle-body{margin-top:8px;animation:ol-toggle-in .2s ease}
 @keyframes ol-toggle-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .ol-root .ol-embed-title{margin:0 0 8px;font-weight:600;text-align:center}
-.ol-root .ol-footer{margin-top:auto;padding-top:40px;text-align:center;font-size:12px}
-.ol-root .ol-footer a{color:var(--ol-text-color);opacity:.7;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:color-mix(in srgb,var(--ol-text-color) 8%,transparent);font-weight:600}
+.ol-root .ol-footer{margin-top:auto;padding-top:40px;text-align:center;font-size:12px;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px}
+.ol-root .ol-footer a{color:var(--ol-text-color);opacity:.75;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:color-mix(in srgb,var(--ol-text-color) 8%,transparent);font-weight:600}
 .ol-root .ol-block-scheduled{opacity:.45;outline:1px dashed currentColor;outline-offset:3px;border-radius:var(--ol-btn-radius)}
 .ol-root .ol-gate{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .ol-root .ol-gate div{background:#fff;color:#111;border-radius:20px;padding:24px;max-width:340px;text-align:center;font-family:system-ui,sans-serif}
@@ -209,7 +209,9 @@ export function renderPage(rawPage, opts = {}) {
   const wp = wallpapers.resolve(d.wallpaper.type);
   const footer = page.settings?.hideFooter
     ? ''
-    : `<footer class="ol-footer ol-enter"><a href="${esc(opts.footerUrl || '/')}" target="_blank" rel="noopener">🔗 Made with Otrelink</a></footer>`;
+    : `<footer class="ol-footer ol-enter"><a href="${esc(opts.footerUrl || '/')}" target="_blank" rel="noopener">🔗 Made with Otrelink</a>`
+      // Visitors' data (statistics, forms) is processed by Otrelink: link its privacy notice.
+      + `<a class="ol-footer-privacy" href="${esc(`${String(opts.footerUrl || '').replace(/\/$/, '')}/privacy`)}" target="_blank" rel="noopener">Privacy</a></footer>`;
   const gate = page.settings?.sensitive
     ? `<div class="ol-gate" role="dialog" aria-modal="true"><div><p>${esc(page.settings.sensitiveMessage)}</p><button type="button" data-ol-gate>Continue</button></div></div>`
     : '';

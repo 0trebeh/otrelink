@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Gift } from 'lucide-react';
 import { api, errorMessage } from '@/lib/client';
 import { Button, Input, Logo } from './ui';
+import { LegalLinks } from './SiteFooter';
 
 export default function AuthForm({ mode, pageUrl }) {
   const router = useRouter();
   const isRegister = mode === 'register';
   const [form, setForm] = useState({ email: '', password: '', name: '', slug: '' });
+  // Sign-up only: both boxes are required (and checked again by the server, which records the consent).
+  const [accept, setAccept] = useState({ terms: false, privacy: false });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [slugState, setSlugState] = useState(null);
@@ -36,7 +39,8 @@ export default function AuthForm({ mode, pageUrl }) {
     e.preventDefault();
     setBusy(true); setErr('');
     try {
-      const r = await api(`/api/auth/${mode}`, { method: 'POST', body: isRegister && ref ? { ...form, ref } : form });
+      const body = isRegister ? { ...form, acceptTerms: accept.terms, acceptPrivacy: accept.privacy, ...(ref ? { ref } : {}) } : form;
+      const r = await api(`/api/auth/${mode}`, { method: 'POST', body });
       if (isRegister) { try { localStorage.removeItem('ol-ref'); } catch { /* ignore */ } }
       router.push(r.pageId ? `/dashboard/${r.pageId}` : '/dashboard');
       router.refresh();
@@ -69,6 +73,19 @@ export default function AuthForm({ mode, pageUrl }) {
           {isRegister && <Input aria-label="Display name" placeholder="Display name" value={form.name} onChange={up('name')} className="h-11" />}
           <Input required type="email" aria-label="Email" placeholder="Email" autoComplete="email" value={form.email} onChange={up('email')} className="h-11" autoFocus={!isRegister} />
           <Input required type="password" aria-label="Password" placeholder={isRegister ? 'Password (8+ characters)' : 'Password'} minLength={isRegister ? 8 : undefined} autoComplete={isRegister ? 'new-password' : 'current-password'} value={form.password} onChange={up('password')} className="h-11" />
+          {isRegister && (
+            <fieldset className="space-y-2.5 pt-1">
+              <legend className="sr-only">Legal agreements</legend>
+              <label className="flex items-start gap-2.5 text-sm leading-snug cursor-pointer">
+                <input type="checkbox" required checked={accept.terms} onChange={(e) => setAccept((a) => ({ ...a, terms: e.target.checked }))} className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]" />
+                <span>I am at least 18 years old and I agree to the <Link href="/terms" target="_blank" className="font-semibold underline underline-offset-2">Terms of Service</Link> and the <Link href="/refunds" target="_blank" className="font-semibold underline underline-offset-2">Refund Policy</Link>.</span>
+              </label>
+              <label className="flex items-start gap-2.5 text-sm leading-snug cursor-pointer">
+                <input type="checkbox" required checked={accept.privacy} onChange={(e) => setAccept((a) => ({ ...a, privacy: e.target.checked }))} className="mt-0.5 size-4 shrink-0 accent-[var(--color-accent)]" />
+                <span>I have read the <Link href="/privacy" target="_blank" className="font-semibold underline underline-offset-2">Privacy Policy</Link> and the <Link href="/cookies" target="_blank" className="font-semibold underline underline-offset-2">Cookie Policy</Link>, and I agree to how my data is handled.</span>
+              </label>
+            </fieldset>
+          )}
           {err && <p className="text-sm text-danger" role="alert">{err}</p>}
           <Button type="submit" variant="primary" size="lg" className="w-full" disabled={busy}>
             {busy && <Loader2 size={17} className="animate-spin" />} {isRegister ? 'Create account' : 'Log in'}
@@ -78,6 +95,7 @@ export default function AuthForm({ mode, pageUrl }) {
           {isRegister ? 'Already have an account? ' : 'New to Otrelink? '}
           <Link href={isRegister ? '/login' : '/register'} className="font-semibold text-accent-ink underline underline-offset-2">{isRegister ? 'Log in' : 'Create an account'}</Link>
         </p>
+        <LegalLinks className="mt-8" />
       </div>
     </main>
   );
