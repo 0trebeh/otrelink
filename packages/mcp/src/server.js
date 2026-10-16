@@ -168,7 +168,7 @@ export function createOtrelinkServer({ client, name = 'otrelink', version = '1.0
 
   tool('list_templates', {
     title: 'List templates',
-    description: 'Ready-made pages (restaurant, food truck, musician, business card…) to start from with create_page.',
+    description: 'Ready-made pages (restaurant, food truck, musician, business card…) to start from with create_page. Each comes in two versions: Classic, the default (id ending in "-v1"), and v2 Experimental (plain id). Use the Classic one unless the owner asks for v2.',
     inputSchema: { category: z.string().optional().describe(`One of: ${templateCategories().join(', ')}.`) },
     annotations: READ,
   }, async ({ category }) => json(listTemplates(category)));

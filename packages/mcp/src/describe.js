@@ -96,6 +96,7 @@ function isDark(hex) {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
 }
 
+// Each template comes in two versions: Classic, the default (id + "-v1"), and v2 Experimental (id); `family` links them.
 export const listTemplates = (category) => templateList()
   .filter((t) => !category || t.category.toLowerCase() === category.toLowerCase())
   .map((t) => ({ ...t }));

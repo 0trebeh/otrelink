@@ -8,6 +8,7 @@
 import { newBlock, applyTheme, sanitizePage } from './page.js';
 import { defaultDesign, resolveDesign } from './design.js';
 import { uid } from './util/html.js';
+import { TEMPLATES_V1 } from './templates-v1.js';
 
 const ex = 'https://example.com';
 // A date some days from today ("YYYY-MM-DD"), so countdowns and events stay in the future.
@@ -467,7 +468,8 @@ const CSS_WEDDING = `.ol-root .ol-profile{gap:0;margin-bottom:24px}
 
 export const TEMPLATE_CATEGORIES = ['Personal', 'Creators', 'Business', 'Food', 'Services', 'Events'];
 
-export const TEMPLATES = [
+// v2: the redesign. Same ids as before, so pages and links that name a template keep working.
+const TEMPLATES_V2 = [
   {
     id: 'minimal', name: 'Minimal', category: 'Personal', description: 'Quiet and exact: a name, one object, three links.',
     theme: 'air',
@@ -1295,6 +1297,18 @@ export const TEMPLATES = [
   },
 ];
 
+/** Template versions shown in the gallery; the first one is the default. */
+export const TEMPLATE_VERSIONS = [
+  { id: 1, label: 'Classic', description: 'The templates built on the themes, with photos and entrance animations.' },
+  { id: 2, label: 'v2 · Experimental', description: 'A phone-first redesign: each template has its own art direction and scroll animations. Still being refined.' },
+];
+
+/** Every template, both versions. `family` = the template's id in v2; v1 ids end in "-v1". */
+export const TEMPLATES = [
+  ...TEMPLATES_V1,
+  ...TEMPLATES_V2.map((t) => ({ ...t, family: t.id, version: 2 })),
+];
+
 const byId = new Map(TEMPLATES.map((t) => [t.id, t]));
 
 /** Build the page content of a template: { profile, socials, blocks, design, settings }. */
@@ -1309,7 +1323,8 @@ export function buildTemplatePage(id) {
     return b;
   };
   const themed = applyTheme(defaultDesign(), t.theme);
-  const customCss = [t.design?.customCss, MOTION_CSS].filter(Boolean).join('\n');
+  // The scroll-driven picture reveal belongs to v2 only.
+  const customCss = [t.design?.customCss, t.version === 1 ? '' : MOTION_CSS].filter(Boolean).join('\n');
   const design = resolveDesign({ ...themed, ...(t.design || {}), customCss, wallpaper: { ...themed.wallpaper, ...(t.design?.wallpaper || {}) } });
   const page = sanitizePage({
     profile: { avatar: '', verified: false, ...t.profile },
@@ -1322,4 +1337,4 @@ export function buildTemplatePage(id) {
 }
 
 /** Template list for galleries (no blocks). */
-export const templateList = () => TEMPLATES.map(({ id, name, category, description, theme }) => ({ id, name, category, description, theme }));
+export const templateList = () => TEMPLATES.map(({ id, name, category, description, theme, family, version }) => ({ id, name, category, description, theme, family, version }));

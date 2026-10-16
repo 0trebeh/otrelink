@@ -105,7 +105,7 @@ export default function PagesList({ user, pages, pageUrl, limit }) {
             <input required autoFocus aria-label="Username for the page" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s/g, ''))} className="flex-1 h-11 px-1 text-sm outline-none min-w-0" placeholder="yourbrand" />
           </div>
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-soft px-3 py-2.5">
-            <span className="text-sm min-w-0"><span className="block text-xs text-muted">Start from</span><b className="truncate block">{template ? TEMPLATES.find((t) => t.id === template)?.name : 'A blank page'}</b></span>
+            <span className="text-sm min-w-0"><span className="block text-xs text-muted">Start from</span><b className="truncate block">{template ? (({ name, version } = {}) => name && (version === 2 ? `${name} (v2 Experimental)` : name))(TEMPLATES.find((t) => t.id === template)) : 'A blank page'}</b></span>
             <span className="flex gap-1 shrink-0">
               {template && <Button size="sm" variant="ghost" onClick={() => setTemplate('')}>Blank</Button>}
               <Button size="sm" onClick={() => setPicking(true)}><LayoutTemplate size={14} /> {template ? 'Change' : 'Templates'}</Button>

@@ -701,10 +701,17 @@ test('invoices: totals, money and cleaning', async () => {
   assert.equal(allowsSection(PLANS.pro, 'invoices'), true);
 });
 
-test('24 templates build valid pages', async () => {
-  const { TEMPLATES, TEMPLATE_CATEGORIES, buildTemplatePage, renderPage, blockTypes, themes } = await import('../src/index.js');
-  assert.equal(TEMPLATES.length, 24);
-  assert.equal(new Set(TEMPLATES.map((t) => t.id)).size, 24);
+test('24 templates in two versions (Classic + v2 Experimental) build valid pages', async () => {
+  const { TEMPLATES, TEMPLATE_CATEGORIES, TEMPLATE_VERSIONS, buildTemplatePage, renderPage, blockTypes, themes } = await import('../src/index.js');
+  assert.equal(TEMPLATES.length, 48);
+  assert.equal(new Set(TEMPLATES.map((t) => t.id)).size, 48);
+  assert.deepEqual(TEMPLATE_VERSIONS.map((v) => v.id), [1, 2]);
+  for (const t of TEMPLATES.filter((x) => x.version === 2)) {
+    assert.equal(t.family, t.id);
+    assert.ok(TEMPLATES.some((o) => o.id === `${t.id}-v1` && o.family === t.id && o.version === 1), t.id);
+  }
+  assert.ok(!buildTemplatePage('musician-v1').design.customCss.includes('ol-sv'), 'v1 has no scroll reveal');
+  assert.ok(buildTemplatePage('musician').design.customCss.includes('ol-sv'));
   for (const t of TEMPLATES) {
     assert.ok(TEMPLATE_CATEGORIES.includes(t.category) && themes.has(t.theme), t.id);
     const page = buildTemplatePage(t.id);
